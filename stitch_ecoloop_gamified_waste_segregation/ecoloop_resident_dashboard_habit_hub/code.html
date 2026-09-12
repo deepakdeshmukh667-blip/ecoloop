@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-fixed": "#002113", "on-error": "#ffffff", "primary-fixed-dim": "#4edea3", "secondary-container": "#dae2fd", "on-tertiary-fixed": "#2a1700", "error": "#ba1a1a", "on-primary-fixed-variant": "#005236", "surface-container-low": "#eff4ff", "on-primary": "#ffffff", "primary-container": "#10b981", "primary": "#006c49", "on-secondary-container": "#5c647a", "inverse-surface": "#213145", "surface-container-high": "#dce9ff", "outline-variant": "#bbcabf", "on-secondary-fixed": "#131b2e", "surface-container": "#e5eeff", "error-container": "#ffdad6", "inverse-primary": "#4edea3", "on-tertiary-container": "#523200", "outline": "#6c7a71", "surface-bright": "#f8f9ff", "surface-container-lowest": "#ffffff", "on-secondary": "#ffffff", "background": "#f8f9ff", "inverse-on-surface": "#eaf1ff", "on-surface": "#0b1c30", "tertiary-fixed": "#ffddb8", "surface-dim": "#cbdbf5", "on-error-container": "#93000a", "tertiary-container": "#e29100", "on-primary-container": "#00422b", "tertiary": "#855300", "surface-tint": "#006c49", "tertiary-fixed-dim": "#ffb95f", "secondary-fixed": "#dae2fd", "on-secondary-fixed-variant": "#3f465c", "on-surface-variant": "#3c4a42", "secondary": "#565e74", "on-tertiary-fixed-variant": "#653e00", "on-tertiary": "#ffffff", "surface-variant": "#d3e4fe", "secondary-fixed-dim": "#bec6e0", "surface-container-highest": "#d3e4fe", "surface": "#f8f9ff", "on-background": "#0b1c30", "primary-fixed": "#6ffbbe" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin-desktop": "3rem", "space-xl": "2rem", "margin-tablet": "2rem", "gutter": "1rem", "space-sm": "0.5rem", "space-md": "1rem", "space-2xl": "3rem", "margin": "1rem", "space-lg": "1.5rem", "gutter-desktop": "1.5rem", "space-xs": "0.25rem" }, "fontFamily": { "headline-sm": [ "Plus Jakarta Sans" ], "headline-lg": [ "Plus Jakarta Sans" ], "headline-md": [ "Plus Jakarta Sans" ], "body-sm": [ "Inter" ], "body-lg": [ "Inter" ], "label-lg": [ "Inter" ], "display-lg": [ "Plus Jakarta Sans" ], "headline-lg-mobile": [ "Plus Jakarta Sans" ], "label-md": [ "Inter" ], "body-md": [ "Inter" ], "display-lg-mobile": [ "Plus Jakarta Sans" ], "label-sm": [ "Inter" ] }, "fontSize": { "headline-sm": [ "1.125rem", { "lineHeight": "1.625rem", "letterSpacing": "0em", "fontWeight": "600" } ], "headline-lg": [ "2rem", { "lineHeight": "2.5rem", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-md": [ "1.375rem", { "lineHeight": "1.875rem", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-sm": [ "0.875rem", { "lineHeight": "1.375rem", "fontWeight": "400" } ], "body-lg": [ "1.125rem", { "lineHeight": "1.75rem", "fontWeight": "400" } ], "label-lg": [ "0.9375rem", { "lineHeight": "1.25rem", "letterSpacing": "0.01em", "fontWeight": "600" } ], "display-lg": [ "3rem", { "lineHeight": "3.5rem", "letterSpacing": "-0.03em", "fontWeight": "800" } ], "headline-lg-mobile": [ "1.625rem", { "lineHeight": "2.125rem", "letterSpacing": "-0.015em", "fontWeight": "700" } ], "label-md": [ "0.8125rem", { "lineHeight": "1.125rem", "letterSpacing": "0.015em", "fontWeight": "500" } ], "body-md": [ "1rem", { "lineHeight": "1.5rem", "fontWeight": "400" } ], "display-lg-mobile": [ "2.25rem", { "lineHeight": "2.75rem", "letterSpacing": "-0.02em", "fontWeight": "800" } ], "label-sm": [ "0.6875rem", { "lineHeight": "0.875rem", "letterSpacing": "0.04em", "fontWeight": "600" } ] } } } };</script></head><body class="bg-background font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 h-16 z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="w-full h-16 px-gutter-desktop flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><img alt="EcoLoop Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WUTxqgszDJO8apQ8SvqOeDrJm-uTQzIySyxDc_DvBsKE0ZaN-GMReYRjm0gg3gqtl5j-B5ikhAxlrAPNYJoGFiWPoGEsYg7H47YZjpodmn7PuMoytMxEGUpf-mAX3HcDpCGW140u37DLK1xPemrjI1hhBG7F_lKbeMIwXnEI-4qxZFZkirMCA5cDfmTs4WBL8-kmCZFRhKj93Ao1f6NegCDkhyyqGSQWXQl6oumGAuQk0M5H0EaclUZ4o"/><span class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">EcoLoop</span></div><div class="hidden xl:flex items-center bg-surface-container-low p-space-xs rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.02)]"><button class="px-space-md py-space-xs rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md transition-all" type="button">Resident Experience</button><button class="px-space-md py-space-xs rounded-full text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-all" type="button">Society Admin Portal</button></div><div class="hidden lg:flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface cursor-pointer"><span class="material-symbols-outlined text-primary text-[18px]">apartment</span><span class="font-label-md text-label-md font-semibold text-on-surface">Green Valley Residency - Tower B</span><span class="material-symbols-outlined text-[16px]">expand_more</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-primary-fixed text-on-primary-fixed shadow-[0_2px_8px_-2px_rgba(16,185,129,0.3)]"><span class="material-symbols-outlined text-[18px]">eco</span><span class="font-label-md text-label-md font-bold tracking-tight">420 pts</span></div><button class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" id="theme-toggle" type="button"><span class="material-symbols-outlined text-[20px]">dark_mode</span></button><button class="relative w-9 h-9 flex items-center justify-center rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOis3m7zgieoMMRzXJGNk_Pw--99SwC5MHSn4lrnST_E7Z76wtbIWzBcHphxkMcjz-u6hmqANXIPNEoQBVZjeE_LIKMD7uUYdwfafJoxQyJJBNyVe7g-nyXbEXnqCGMXiuTk11FVaCF5nfRwE5v9MfXDVEwOf_nIBylX-7v_ey660CwsjS664F5dN3RHyJKP2e2GThZKguz7GhlgI23_ZELVivNOCiurdW5OBo7neIDG3TBpCHg4PU"/><div class="hidden sm:flex flex-col text-left"><span class="font-label-md text-label-md font-bold text-on-surface leading-tight">Deepak S.</span><span class="font-label-sm text-label-sm text-on-surface-variant">Apt 402</span></div></div></div></div></header><aside class="fixed left-0 top-16 bottom-0 w-64 bg-surface-container-lowest hidden md:flex flex-col justify-between py-space-lg px-space-md z-40 shadow-[0_1px_8px_rgba(0,0,0,0.02)]"><nav class="flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-label-md text-label-md font-bold rounded-lg shadow-[0_2px_8px_-2px_rgba(16,185,129,0.25)]"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-label-md text-label-md" data-path="ai-scan-and-segregation" href="#"><span class="material-symbols-outlined text-[20px]">center_focus_strong</span>AI Scan &amp; Segregate</a><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm transition-colors bg-primary-container text-on-primary-container font-label-md text-label-md font-bold rounded-lg shadow-[0_2px_8px_-2px_rgba(16,185,129,0.25)]" data-path="resident-dashboard" href="#"><span class="material-symbols-outlined text-[20px]">dashboard</span>My Habit Hub</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-label-md text-label-md" data-path="community-leaderboard" href="#"><span class="material-symbols-outlined text-[20px]">leaderboard</span>Tower Leaderboard</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-label-md text-label-md" data-path="waste-audits-and-history" href="#"><span class="material-symbols-outlined text-[20px]">receipt_long</span>Audit Logs</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-label-md text-label-md" data-path="society-analytics" href="#"><span class="material-symbols-outlined text-[20px]">analytics</span>Society Analytics</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-label-md text-label-md" data-path="rewards-store" href="#"><span class="material-symbols-outlined text-[20px]">redeem</span>Eco Rewards</a></nav><div class="flex flex-col gap-space-sm bg-surface-container-low p-space-md rounded-xl"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Monthly Target</span><span class="font-label-sm text-label-sm font-bold text-primary">92%</span></div><div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden"><div class="h-full rounded-full bg-primary-container w-[92%]"></div></div><p class="font-label-sm text-label-sm text-on-surface-variant">8 scans away from the Zero Contamination Pin.</p></div></aside><div class="md:pl-64"><main class="w-full pt-16 bg-background min-h-[calc(100vh-4rem)]"><div class="flex flex-col w-full">
+<div class="w-full max-w-7xl mx-auto px-margin sm:px-margin-tablet lg:px-margin-desktop py-space-xl flex flex-col gap-space-xl">
+<!-- Top Greeting Section with Quick Stats Highlight -->
+<section class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-lg">
+<div class="flex flex-col gap-space-xs">
+<div class="inline-flex items-center gap-space-xs self-start px-space-sm py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-primary">verified</span>
+<span>Verified Habit Routine</span>
+<span class="text-outline-variant">•</span>
+<span>Green Valley Residency, Apt 402B</span>
+</div>
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface tracking-tight font-extrabold">
+          Good morning, Deepak <span class="inline-block animate-pulse">👋</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+          Your daily segregation turns community waste into verified clean resources. Zero landfill pledge is live for Tower B.
+        </p>
+</div>
+<!-- Quick Action Mini-Pills -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-full bg-surface-container text-on-surface hover:bg-surface-container-high transition-all shadow-sm" onclick="openSimulatedModal('spotCheckModal')" type="button">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">casino</span>
+<span class="font-label-md text-label-md font-semibold">Simulate Spot Check</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-full bg-secondary-container text-on-secondary-fixed font-label-md text-label-md font-semibold hover:opacity-95 transition-all shadow-sm" onclick="openSimulatedModal('rewardModal')" type="button">
+<span class="material-symbols-outlined text-[18px]">redeem</span>
+<span>Redeem Café Voucher (420/500 pts)</span>
+</button>
+</div>
+</section>
+<!-- Bento Grid Section: Action Deck & Habit Score Engine -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-stretch">
+<!-- Primary Waste Verification Hub (7 cols) -->
+<div class="lg:col-span-7 flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg md:p-space-xl shadow-sm relative overflow-hidden">
+<!-- Ambient Decorative Emerald Glow -->
+<div class="absolute -right-24 -top-24 w-72 h-72 rounded-full bg-primary-fixed/25 blur-3xl pointer-events-none"></div>
+<div class="flex flex-col gap-space-md z-10">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-bold">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+              ACTIVE VERIFICATION WINDOW
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Daily Cutoff: 8:00 PM</span>
+</div>
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md pt-space-xs">
+<div class="flex flex-col">
+<span class="font-headline-lg text-headline-lg font-extrabold text-on-surface tracking-tight">Today's Segregation</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Step 1 of 3: Wet, Dry or Hazardous verification</span>
+</div>
+<!-- Interactive Segment Status Pill -->
+<div class="flex items-center gap-1.5 px-space-md py-1.5 rounded-full bg-surface-container font-label-md text-label-md font-semibold text-primary">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>2 of 3 Completed</span>
+</div>
+</div>
+<!-- Segregation Verification Stream -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm my-space-xs">
+<!-- Wet Waste Item -->
+<div class="flex flex-col p-space-md rounded-lg bg-surface-container-low transition-transform hover:-translate-y-0.5">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed">
+<span class="material-symbols-outlined text-[18px]">compost</span>
+</span>
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="mt-space-sm flex flex-col">
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Wet Waste</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">08:15 AM • AI Validated</span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-bold">+10 pts earned</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Organic</span>
+</div>
+</div>
+<!-- Dry Waste Item -->
+<div class="flex flex-col p-space-md rounded-lg bg-surface-container-low transition-transform hover:-translate-y-0.5">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary-container text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[18px]">recycling</span>
+</span>
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="mt-space-sm flex flex-col">
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Dry Waste</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">12:30 PM • AI Validated</span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-bold">+10 pts earned</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Clean Paper</span>
+</div>
+</div>
+<!-- Special Waste Item (Pending) -->
+<div class="flex flex-col p-space-md rounded-lg bg-surface-container transition-transform hover:-translate-y-0.5 relative">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-high text-tertiary">
+<span class="material-symbols-outlined text-[18px]">battery_alert</span>
+</span>
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">pending</span>
+</div>
+<div class="mt-space-sm flex flex-col">
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Special Waste</span>
+<span class="font-body-sm text-body-sm text-tertiary font-medium">Pending verification</span>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-tertiary font-semibold">+15 pts eligible</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">E-waste/Med</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Big Hero CTA Trigger -->
+<div class="mt-space-lg flex flex-col sm:flex-row items-center gap-space-md z-10">
+<button class="w-full sm:w-auto flex-1 flex items-center justify-center gap-space-sm px-space-xl py-space-md rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-bold shadow-[0_10px_20px_-5px_rgba(16,185,129,0.35)] hover:bg-primary transition-all active:scale-[0.98]" id="openScannerBtn" onclick="toggleScannerUI()" type="button">
+<span class="material-symbols-outlined text-[24px]">photo_camera</span>
+<span>📷 Verify Today's Waste</span>
+</button>
+<button class="w-full sm:w-auto px-space-lg py-space-md rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container font-label-md text-label-md font-semibold transition-colors text-center" onclick="alert('Viewing Tower B Segregation Guidelines: Separate bio-waste, wash glass/plastics thoroughly, seal sanitary items securely in red paper wrappers.')" type="button">
+            Sorting Rules Guide
+          </button>
+</div>
+<!-- Collapsible Interactive Scanner Viewport Simulation (Appears on click) -->
+<div class="hidden mt-space-lg p-space-md rounded-xl bg-surface-container-high relative overflow-hidden transition-all duration-300" id="simulatedScannerHUD">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse"></span>
+<span class="font-label-md text-label-md font-bold text-on-surface">Live Habit AI Viewfinder</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface" onclick="toggleScannerUI()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Camera Screen simulation with HUD bounding boxes -->
+<div class="relative w-full h-56 rounded-lg overflow-hidden bg-inverse-surface flex items-center justify-center">
+<img class="w-full h-full object-cover opacity-60" data-alt="A clean modern indoor kitchen recycling station with distinct color-coded bins for wet, dry, and special waste on a slate countertop with natural morning light and lush green indoor house plants." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoejCfmH76Kaf202wz1aAS6VZDki0ouXLPYpgAgUVgSn6PhcPtDwhUrGUyrARoEKCvkjwUpOw9OCNAN82Gt2gujvrx90aFdE8lnEuGPw4KiAvgPGG3ufrUgkAgeQaSUmheMgUnoBOtCCtOdv3ZQB3FjD9ybD2ZJjLm4i1g3swuayAMy3VyQBU2d4fPvBxvszLe09fZ_w3RCVgl2VzFbjTQdehzQ0KvD_buqIxueNhRL45Lq79v76FN"/>
+<!-- Simulated AI Bounding Box -->
+<div class="absolute inset-8 border-2 border-dashed border-primary-fixed rounded-lg flex flex-col justify-between p-space-sm pointer-events-none">
+<div class="flex justify-between items-start">
+<span class="px-space-xs py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-bold">
+                  AI Confidence: 98.4%
+                </span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-lowest/90 text-on-surface font-label-sm text-label-sm">
+                  Class: Sanitary/Special
+                </span>
+</div>
+<div class="text-center font-label-md text-label-md text-surface-bright drop-shadow-md">
+                Hold still • Align item inside target frame
+              </div>
+</div>
+</div>
+<div class="mt-space-md flex flex-wrap items-center justify-between gap-space-sm">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Photo audit verified locally before transmission</span>
+<button class="px-space-md py-space-sm rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md font-bold hover:bg-primary transition-all" onclick="confirmScanSuccess()" type="button">
+              Capture &amp; Verify Bin Placement
+            </button>
+</div>
+</div>
+</div>
+<!-- Habit Vitality Arc & Quick Stats (5 cols) -->
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Scorecard with Progress Arc & Badges -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between h-full">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">Aggregate Metric</span>
+<span class="font-headline-md text-headline-md font-bold text-on-surface">Eco Habit Index</span>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-bold tracking-tight">
+              Super Segregator
+            </span>
+</div>
+<!-- Circular Chart Visualization -->
+<div class="py-space-md flex flex-col sm:flex-row items-center gap-space-lg">
+<div class="relative w-36 h-36 flex-shrink-0 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90" viewbox="0 0 120 120">
+<circle class="text-surface-container" cx="60" cy="60" fill="transparent" r="50" stroke="currentColor" stroke-width="12"></circle>
+<!-- 92% of 314 circumference is approx 288 -->
+<circle class="text-primary-container transition-all duration-1000" cx="60" cy="60" fill="transparent" r="50" stroke="currentColor" stroke-dasharray="314.16" stroke-dashoffset="25.13" stroke-linecap="round" stroke-width="12"></circle>
+</svg>
+<div class="absolute flex flex-col items-center justify-center text-center">
+<span class="font-display-lg text-display-lg-mobile font-extrabold text-on-surface leading-none">92</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">/ 100 PTS</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs text-center sm:text-left">
+<div class="flex items-center justify-center sm:justify-start gap-space-xs text-primary font-bold font-headline-sm text-headline-sm">
+<span class="material-symbols-outlined text-[22px]">workspace_premium</span>
+<span>Top 5% in Tower</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Your verification consistency places you above 95% of community households this month.
+              </p>
+<div class="mt-space-xs flex items-center justify-center sm:justify-start gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-container font-label-sm text-label-sm text-on-surface">90% Verified</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-container font-label-sm text-label-sm text-on-surface">Zero Contamination</span>
+</div>
+</div>
+</div>
+<!-- Quick Metric Dual Strip -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-md bg-surface-container-low rounded-lg p-space-md">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Accumulated Balance</span>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-md text-headline-md font-extrabold text-on-surface">420</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">pts</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">80 pts until voucher</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Daily Streak</span>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="font-headline-md text-headline-md font-extrabold text-on-surface">7 Days</span>
+<span class="material-symbols-outlined text-tertiary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-bold mt-1">Streak multiplier 1.2x</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Habit Breakdown & 7-Day Consistency Track -->
+<section class="flex flex-col gap-space-md bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div>
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">Weekly Segregation Journey</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Audited habit verification based on 28-day routine consistency, not discarded volume.</p>
+</div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm font-semibold text-primary px-space-md py-1 rounded-full bg-primary-fixed">
+<span class="material-symbols-outlined text-[16px]">format_image_left</span>
+<span>90% 4-Week Habit Index</span>
+</div>
+</div>
+<!-- 7-Day Interactive Matrix -->
+<div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-space-sm pt-space-sm">
+<!-- Monday -->
+<div class="flex flex-col items-center justify-between p-space-md rounded-lg bg-surface-container-low min-h-[140px] text-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant">Mon, Oct 21</span>
+<div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center my-space-xs">
+<span class="material-symbols-outlined text-[22px]">done_all</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm font-bold text-primary">Verified</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+20 pts</span>
+</div>
+</div>
+<!-- Tuesday -->
+<div class="flex flex-col items-center justify-between p-space-md rounded-lg bg-surface-container-low min-h-[140px] text-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant">Tue, Oct 22</span>
+<div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center my-space-xs">
+<span class="material-symbols-outlined text-[22px]">done_all</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm font-bold text-primary">Verified</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+20 pts</span>
+</div>
+</div>
+<!-- Wednesday (Random Spot Check Passed) -->
+<div class="flex flex-col items-center justify-between p-space-md rounded-lg bg-secondary-container min-h-[140px] text-center relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-12 h-12 bg-primary-container/20 rounded-full"></div>
+<span class="font-label-md text-label-md font-bold text-on-secondary-fixed">Wed, Oct 23</span>
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center my-space-xs shadow-sm">
+<span class="material-symbols-outlined text-[22px]">casino</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm font-extrabold text-on-primary-container">Spot Passed</span>
+<span class="font-label-sm text-label-sm font-bold text-primary">+40 pts (2x)</span>
+</div>
+</div>
+<!-- Thursday -->
+<div class="flex flex-col items-center justify-between p-space-md rounded-lg bg-surface-container-low min-h-[140px] text-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant">Thu, Oct 24</span>
+<div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center my-space-xs">
+<span class="material-symbols-outlined text-[22px]">done_all</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm font-bold text-primary">Verified</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+20 pts</span>
+</div>
+</div>
+<!-- Friday -->
+<div class="flex flex-col items-center justify-between p-space-md rounded-lg bg-surface-container-low min-h-[140px] text-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant">Fri, Oct 25</span>
+<div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center my-space-xs">
+<span class="material-symbols-outlined text-[22px]">done_all</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm font-bold text-primary">Verified</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+20 pts</span>
+</div>
+</div>
+<!-- Saturday -->
+<div class="flex flex-col items-center justify-between p-space-md rounded-lg bg-surface-container-low min-h-[140px] text-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant">Sat, Oct 26</span>
+<div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center my-space-xs">
+<span class="material-symbols-outlined text-[22px]">done_all</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm font-bold text-primary">Verified</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+20 pts</span>
+</div>
+</div>
+<!-- Sunday (Today / In Progress) -->
+<div class="flex flex-col items-center justify-between p-space-md rounded-lg bg-surface-container min-h-[140px] text-center">
+<span class="font-label-md text-label-md font-bold text-on-surface">Sun, Oct 27</span>
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-tertiary flex items-center justify-center my-space-xs">
+<span class="material-symbols-outlined text-[22px]">hourglass_top</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm font-bold text-tertiary">1 Pending</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+15 pts left</span>
+</div>
+</div>
+</div>
+<!-- Privacy-First Commitment Banner -->
+<div class="flex items-start gap-space-sm p-space-md rounded-lg bg-surface-container-low text-on-surface">
+<span class="material-symbols-outlined text-primary text-[22px] mt-0.5">verified_user</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold">Privacy-First Habit Verification System</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            🎲 Spot checks are occasional and privacy-safe to verify genuine segregation habits, never continuous surveillance. Visual data stays securely ephemeral.
+          </p>
+</div>
+</div>
+</section>
+<!-- Split Community Grid: Tower Leaderboard & Inter-Tower Challenge -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Society Leaderboard Preview (7 cols) -->
+<div class="lg:col-span-7 flex flex-col gap-space-md bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">Friendly Competition</span>
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">Tower B Resident Leaderboard</h3>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Your Rank</span>
+<div class="font-headline-md text-headline-md font-extrabold text-primary">#3 of 48</div>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">trending_up</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">You are only 18 pts behind #2 Rahul to take silver!</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant hidden sm:inline">Updated 10m ago</span>
+</div>
+<!-- Leaderboard Rows -->
+<div class="flex flex-col gap-space-xs">
+<!-- Rank 1 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-space-md">
+<span class="w-7 text-center font-display-lg-mobile text-headline-sm font-black text-tertiary-container">1</span>
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Portrait photograph of an smiling Indian female professional in sustainable eco-friendly residential community attire with bright natural backlight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-wPJWmqD_SXTbNINCAeSeVk5yf5YQbJs2uUdDxEzZU4KXo7k2VVESYvOCO-rRyQ_41rssgkFUPL7gKTiu_lrnErBjhYC6Ykk5PSAdgggKh7ARfxbMEp4JGIOm2b4gxNsoSXncgl6BPL0kN9hKJDFripeunU4Bia60lPKIDdsEu59GAyHSEN4z5eMJ89NIt00yYCsD6Lb0Cw8RE9Q31OHiz3mvHd8PR365_TkDQYglFMEbGEX3Z5I9"/>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Priya M.</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Apt 704 • 14-day streak</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-md text-label-md font-extrabold text-on-surface">580 pts</span>
+<span class="material-symbols-outlined text-tertiary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+</div>
+<!-- Rank 2 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-space-md">
+<span class="w-7 text-center font-display-lg-mobile text-headline-sm font-black text-secondary">2</span>
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A portrait shot of an Indian male eco-ambassador resident smiling with spectacles in front of lush terrace garden plants." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4PweyZ6xvzdpPCAq6FajbcgJ2BJnTtuUEv9rXsqQSOUGP2-gJe76vywoGPnPV9NnsRfbsHmsBuZYPuBksPeyJqbOJvvWuiA-ivKaIEXhtTSPX6vbqxw_RF58_KHZJrQmi_AkqQ4XCPOkn_VJqRcLeu_USYbPX5CfPrTy7f5NJ15BprmI1bDDwELBMCBuMtAxBuXrSA8XCJ_ApaeEVyYGDH-bkrFiz6ZSHtB-f1H7hDg8Yns9I7bWA"/>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Rahul K.</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Apt 201 • 9-day streak</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-md text-label-md font-extrabold text-on-surface">438 pts</span>
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+</div>
+<!-- Rank 3 (User) -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-primary-fixed/30 transition-colors">
+<div class="flex items-center gap-space-md">
+<span class="w-7 text-center font-display-lg-mobile text-headline-sm font-black text-primary">3</span>
+<img class="w-10 h-10 rounded-full object-cover ring-2 ring-primary" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOis3m7zgieoMMRzXJGNk_Pw--99SwC5MHSn4lrnST_E7Z76wtbIWzBcHphxkMcjz-u6hmqANXIPNEoQBVZjeE_LIKMD7uUYdwfafJoxQyJJBNyVe7g-nyXbEXnqCGMXiuTk11FVaCF5nfRwE5v9MfXDVEwOf_nIBylX-7v_ey660CwsjS664F5dN3RHyJKP2e2GThZKguz7GhlgI23_ZELVivNOCiurdW5OBo7neIDG3TBpCHg4PU"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Deepak S.</span>
+<span class="px-1.5 py-0.2 rounded bg-primary-container text-on-primary-container font-label-sm text-label-sm font-bold">YOU</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Apt 402B • 7-day streak</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-md text-label-md font-extrabold text-primary">420 pts</span>
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-[20px]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+</div>
+</div>
+<button class="mt-space-xs w-full py-space-sm rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface font-label-md text-label-md font-semibold text-center transition-colors" onclick="alert('Navigating to full Community Tower Leaderboard...')" type="button">
+          View Complete Tower Standings
+        </button>
+</div>
+<!-- Inter-Tower Accuracy Battle (5 cols) -->
+<div class="lg:col-span-5 flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">Bi-Weekly Society Derby</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">timer</span> 4 Days Left
+            </span>
+</div>
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">Tower B vs Tower A</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Winning tower members receive 15% discount on quarterly society maintenance fees.</p>
+<!-- Accuracy Comparative Visualizer -->
+<div class="mt-space-md flex flex-col gap-space-md">
+<!-- Tower B (Leading) -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-space-xs">
+<span>🏢 Tower B (Your Tower)</span>
+<span class="text-primary font-bold text-label-sm font-label-sm">Leader</span>
+</span>
+<span class="font-headline-sm text-headline-sm font-extrabold text-primary">94%</span>
+</div>
+<div class="w-full h-3 rounded-full bg-surface-container overflow-hidden">
+<div class="h-full rounded-full bg-primary-container w-[94%] transition-all duration-1000"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">520 kg verified segregated • 0.8% contamination</span>
+</div>
+<!-- Tower A (Challenger) -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant">🏢 Tower A</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface-variant">89%</span>
+</div>
+<div class="w-full h-3 rounded-full bg-surface-container overflow-hidden">
+<div class="h-full rounded-full bg-secondary-fixed-dim w-[89%] transition-all duration-1000"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">498 kg verified segregated • 3.2% contamination</span>
+</div>
+</div>
+</div>
+<!-- Society Eco Impact Metric Callout -->
+<div class="mt-space-lg p-space-md rounded-lg bg-surface-container-low flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">forest</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">Community Compost Generated</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">320 kg organic compost donated to society botanical garden this month!</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Navigation Workflow Switchers -->
+<section class="bg-surface-container-low rounded-xl p-space-lg">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm mb-space-md">
+<div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-on-surface">Experience Flows</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Seamlessly transition across resident modules</p>
+</div>
+<span class="font-label-sm text-label-sm font-medium text-on-surface-variant">EcoLoop v2.4 Modular Architecture</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Flow 1 -->
+<button class="flex flex-col text-left p-space-md rounded-lg bg-surface-container-lowest hover:bg-surface transition-all shadow-sm group" onclick="toggleScannerUI()" type="button">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center mb-space-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[22px]">photo_camera</span>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-on-surface">AI Scan Waste</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Instant camera classification with confidence indicator.</span>
+</button>
+<!-- Flow 2 -->
+<button class="flex flex-col text-left p-space-md rounded-lg bg-surface-container-lowest hover:bg-surface transition-all shadow-sm group" onclick="openSimulatedModal('spotCheckModal')" type="button">
+<div class="w-10 h-10 rounded-lg bg-secondary-container text-on-secondary-fixed flex items-center justify-center mb-space-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[22px]">casino</span>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Spot Check Alert</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Test verification audit prompts with 2x point bonus.</span>
+</button>
+<!-- Flow 3 -->
+<button class="flex flex-col text-left p-space-md rounded-lg bg-surface-container-lowest hover:bg-surface transition-all shadow-sm group" onclick="alert('Navigating to Audit Logs: Deepak S. has 124 successful historical verifications with zero flagged anomalies.')" type="button">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center mb-space-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[22px]">receipt_long</span>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Habit History</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Transparent immutable audit log of prior waste batches.</span>
+</button>
+<!-- Flow 4 -->
+<button class="flex flex-col text-left p-space-md rounded-lg bg-surface-container-lowest hover:bg-surface transition-all shadow-sm group" onclick="openSimulatedModal('rewardModal')" type="button">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center mb-space-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[22px]">card_giftcard</span>
+</div>
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Eco Rewards Hub</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Redeem points for zero-waste grocery &amp; coffee vouchers.</span>
+</button>
+</div>
+</section>
+<!-- Simulated Spot Check Modal Overlay -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center p-margin bg-inverse-surface/40 backdrop-blur-sm" id="spotCheckModal">
+<div class="bg-surface-container-lowest rounded-xl max-w-md w-full p-space-lg shadow-xl flex flex-col gap-space-md animate-in fade-in zoom-in-95 duration-200">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs text-primary font-bold font-headline-sm text-headline-sm">
+<span class="material-symbols-outlined text-[24px]">casino</span>
+<span>🎲 Spot Check Notification</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface" onclick="closeSimulatedModal('spotCheckModal')" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface">
+          You have been selected for a random privacy-first habit audit! Capture a quick photo of your kitchen bin before handover to claim a <strong>double point bonus (+40 pts)</strong>.
+        </p>
+<div class="p-space-sm rounded-lg bg-surface-container-low font-label-sm text-label-sm text-on-surface-variant">
+          Audits occur less than twice monthly per flat to safeguard comfort while guaranteeing genuine community sorting fidelity.
+        </div>
+<div class="flex items-center justify-end gap-space-sm pt-space-xs">
+<button class="px-space-md py-space-sm rounded-lg bg-surface-container text-on-surface font-label-md text-label-md font-semibold" onclick="closeSimulatedModal('spotCheckModal')" type="button">
+            Dismiss
+          </button>
+<button class="px-space-md py-space-sm rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md font-bold hover:bg-primary transition-all" onclick="closeSimulatedModal('spotCheckModal'); toggleScannerUI();" type="button">
+            Open AI Camera
+          </button>
+</div>
+</div>
+</div>
+<!-- Simulated Reward Redemption Modal Overlay -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center p-margin bg-inverse-surface/40 backdrop-blur-sm" id="rewardModal">
+<div class="bg-surface-container-lowest rounded-xl max-w-md w-full p-space-lg shadow-xl flex flex-col gap-space-md animate-in fade-in zoom-in-95 duration-200">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs text-tertiary-container font-bold font-headline-sm text-headline-sm">
+<span class="material-symbols-outlined text-[24px]">redeem</span>
+<span>Eco Reward Progress</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface" onclick="closeSimulatedModal('rewardModal')" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-space-xs">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">Café Green Artisian Voucher</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Valid at local society organic bistro for complimentary beverage &amp; bakery snack.</span>
+</div>
+<!-- Progress to goal -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="font-bold text-on-surface">420 of 500 points</span>
+<span class="text-primary font-bold">84% achieved</span>
+</div>
+<div class="w-full h-2.5 rounded-full bg-surface-container overflow-hidden">
+<div class="h-full rounded-full bg-tertiary-container w-[84%]"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1">4 more days of verified sorting needed.</span>
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-space-xs">
+<button class="px-space-md py-space-sm rounded-lg bg-surface-container text-on-surface font-label-md text-label-md font-semibold" onclick="closeSimulatedModal('rewardModal')" type="button">
+            Got it
+          </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function toggleScannerUI() {
+    const scanner = document.getElementById('simulatedScannerHUD');
+    if (scanner.classList.contains('hidden')) {
+      scanner.classList.remove('hidden');
+      scanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      scanner.classList.add('hidden');
+    }
+  }
+
+  function confirmScanSuccess() {
+    const scanner = document.getElementById('simulatedScannerHUD');
+    scanner.classList.add('hidden');
+    alert('🎉 Special Waste successfully classified and verified! +15 Eco Points credited to Deepak S.');
+  }
+
+  function openSimulatedModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  function closeSimulatedModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.add('hidden');
+  }
+</script></main></div><nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-container-lowest/95 backdrop-blur-xl flex items-center justify-around z-50 shadow-[0_-2px_12px_rgba(0,0,0,0.06)] px-space-sm" data-active-classes="text-primary font-bold"><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 text-primary font-bold" data-path="resident-dashboard" href="#"><span class="material-symbols-outlined text-[22px]">home</span><span class="font-label-sm text-label-sm">Hub</span></a><a class="flex flex-col items-center justify-center -mt-5" data-path="ai-scan-and-segregation" href="#"><div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-[0_6px_16px_rgba(16,185,129,0.4)]"><span class="material-symbols-outlined text-[26px]">photo_camera</span></div><span class="font-label-sm text-label-sm mt-1 text-primary font-semibold">Scan</span></a><a class="flex flex-col items-center justify-center gap-0.5 text-on-surface-variant" data-path="community-leaderboard" href="#"><span class="material-symbols-outlined text-[22px]">military_tech</span><span class="font-label-sm text-label-sm">Ranks</span></a><a class="flex flex-col items-center justify-center gap-0.5 text-on-surface-variant" data-path="waste-audits-and-history" href="#"><span class="material-symbols-outlined text-[22px]">history</span><span class="font-label-sm text-label-sm">Logs</span></a></nav></body></html>

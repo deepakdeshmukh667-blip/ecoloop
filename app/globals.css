@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #f8f9ff;
+    --surface: #f8f9ff;
+    --surface-lowest: #ffffff;
+    --surface-low: #eff4ff;
+    --surface-container: #e5eeff;
+    --surface-high: #dce9ff;
+    --surface-highest: #d3e4fe;
+    --on-surface: #0b1c30;
+    --on-surface-variant: #3c4a42;
+    --primary: #006c49;
+    --primary-container: #10b981;
+    --on-primary: #ffffff;
+    --border: #e2e8f0;
+  }
+
+  .dark {
+    --background: #0b1120;
+    --surface: #0f172a;
+    --surface-lowest: #131d31;
+    --surface-low: #1a263e;
+    --surface-container: #1e293b;
+    --surface-high: #27354f;
+    --surface-highest: #334155;
+    --on-surface: #f8fafc;
+    --on-surface-variant: #94a3b8;
+    --primary: #10b981;
+    --primary-container: #006c49;
+    --on-primary: #ffffff;
+    --border: #334155;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--on-surface);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Material Symbols Outlined Icon utilities */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(108, 122, 113, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 122, 113, 0.4);
+}

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><title>Leaderboard</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;min-height:100%;margin:0;padding:0;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {darkMode: "class",theme: {extend: {"colors": {"secondary": "#565e74","inverse-surface": "#213145","on-secondary-fixed": "#131b2e","on-background": "#0b1c30","surface-container": "#e5eeff","outline-variant": "#bbcabf","surface-tint": "#006c49","secondary-fixed-dim": "#bec6e0","on-tertiary-fixed": "#2a1700","on-secondary-container": "#5c647a","on-primary-fixed": "#002113","surface-container-highest": "#d3e4fe","error-container": "#ffdad6","on-tertiary-container": "#523200","error": "#ba1a1a","primary-container": "#10b981","inverse-primary": "#4edea3","on-primary-fixed-variant": "#005236","surface-variant": "#d3e4fe","surface-container-low": "#eff4ff","on-secondary-fixed-variant": "#3f465c","on-surface-variant": "#3c4a42","on-surface": "#0b1c30","on-error": "#ffffff","on-tertiary-fixed-variant": "#653e00","on-primary": "#ffffff","on-error-container": "#93000a","surface-dim": "#cbdbf5","surface": "#f8f9ff","primary-fixed": "#6ffbbe","tertiary-container": "#e29100","outline": "#6c7a71","secondary-fixed": "#dae2fd","secondary-container": "#dae2fd","primary-fixed-dim": "#4edea3","on-secondary": "#ffffff","on-primary-container": "#00422b","tertiary-fixed": "#ffddb8","primary": "#006c49","tertiary": "#855300","background": "#f8f9ff","surface-bright": "#f8f9ff","tertiary-fixed-dim": "#ffb95f","on-tertiary": "#ffffff","inverse-on-surface": "#eaf1ff","surface-container-lowest": "#ffffff","surface-container-high": "#dce9ff"},"borderRadius": {"DEFAULT": "0.25rem","lg": "0.5rem","xl": "0.75rem","full": "9999px"},"spacing": {"space-xs": "0.25rem","space-sm": "0.5rem","space-lg": "1.5rem","gutter-desktop": "1.5rem","gutter": "1rem","margin-desktop": "3rem","margin-tablet": "2rem","margin": "1rem","space-2xl": "3rem","space-xl": "2rem","space-md": "1rem"},"fontFamily": {"body-sm": ["Inter"],"label-lg": ["Inter"],"headline-md": ["Plus Jakarta Sans"],"headline-lg": ["Plus Jakarta Sans"],"label-sm": ["Inter"],"body-md": ["Inter"],"headline-sm": ["Plus Jakarta Sans"],"display-lg": ["Plus Jakarta Sans"],"label-md": ["Inter"],"body-lg": ["Inter"],"display-lg-mobile": ["Plus Jakarta Sans"],"headline-lg-mobile": ["Plus Jakarta Sans"]},"fontSize": {"body-sm": ["0.875rem",{"lineHeight": "1.375rem","fontWeight": "400"}],"label-lg": ["0.9375rem",{"lineHeight": "1.25rem","letterSpacing": "0.01em","fontWeight": "600"}],"headline-md": ["1.375rem",{"lineHeight": "1.875rem","letterSpacing": "-0.01em","fontWeight": "600"}],"headline-lg": ["2rem",{"lineHeight": "2.5rem","letterSpacing": "-0.02em","fontWeight": "700"}],"label-sm": ["0.6875rem",{"lineHeight": "0.875rem","letterSpacing": "0.04em","fontWeight": "600"}],"body-md": ["1rem",{"lineHeight": "1.5rem","fontWeight": "400"}],"headline-sm": ["1.125rem",{"lineHeight": "1.625rem","letterSpacing": "0em","fontWeight": "600"}],"display-lg": ["3rem",{"lineHeight": "3.5rem","letterSpacing": "-0.03em","fontWeight": "800"}],"label-md": ["0.8125rem",{"lineHeight": "1.125rem","letterSpacing": "0.015em","fontWeight": "500"}],"body-lg": ["1.125rem",{"lineHeight": "1.75rem","fontWeight": "400"}],"display-lg-mobile": ["2.25rem",{"lineHeight": "2.75rem","letterSpacing": "-0.02em","fontWeight": "800"}],"headline-lg-mobile": ["1.625rem",{"lineHeight": "2.125rem","letterSpacing": "-0.015em","fontWeight": "700"}]}}}};</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface flex flex-col min-h-full selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><img alt="Brand logo. - Primary color: #10b981
+- Font: plusJakartaSans
+- Mode: light
+- Roundness: rounded-md
+" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1WUTxqgszDJO8apQ8SvqOeDrJm-uTQzIySyxDc_DvBsKE0ZaN-GMReYRjm0gg3gqtl5j-B5ikhAxlrAPNYJoGFiWPoGEsYg7H47YZjpodmn7PuMoytMxEGUpf-mAX3HcDpCGW140u37DLK1xPemrjI1hhBG7F_lKbeMIwXnEI-4qxZFZkirMCA5cDfmTs4WBL8-kmCZFRhKj93Ao1f6NegCDkhyyqGSQWXQl6oumGAuQk0M5H0EaclUZ4o"/><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-on-surface truncate leading-tight">EcoLoop</span><span class="font-label-sm text-label-sm text-primary font-semibold">•</span><span class="font-label-sm text-label-sm text-primary font-semibold tracking-wide uppercase truncate">Leaderboard</span></div><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Green Valley Residency</span></div></div><div class="flex items-center gap-space-sm flex-shrink-0"><div class="flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-full shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)]"><span class="material-symbols-outlined text-[16px] text-tertiary-container">bolt</span><span class="font-label-sm text-label-sm text-on-surface font-semibold">420</span><span class="font-label-sm text-label-sm text-on-surface-variant">pts</span></div><a class="flex items-center justify-center rounded-full active:scale-95 transition-transform" data-path="profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1Vn71mnc2vGZ_tee0dQ-i-zPIXVN2jwhpXki2urnFQ8JKfEeWWM1Fm__OG0Wd5gBJiiMa5SP73n14GWxQNUCD9I6F96DuX4eWoMNNdFtGBBwv_i6tZNZ0zp7KuIxgwz0g_8OUBPK3OJQj0gy0vmlhjoONRiIBYFn5FTdV2QYhBZGPcnPRmw2zvKVpxTmUCWZhJuQha0_y84ompyocmKIIsqfu47XW5iFh7muYb4HR97vEv_cD13HQATCU4"/></a></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface"><div class="flex flex-col w-full px-margin pb-space-xl space-y-space-md">
+<!-- Scope & Derby Pill Tabs -->
+<div class="flex items-center justify-center p-1 bg-surface-container-low rounded-full shadow-sm mt-space-sm">
+<button class="flex-1 py-2 px-space-md rounded-full font-label-lg text-label-lg text-center transition-all bg-surface-container-lowest text-primary shadow-sm flex items-center justify-center gap-1.5" id="tab-residents" onclick="switchScope('residents')">
+<span class="material-symbols-outlined text-[18px]">group</span>
+<span>Residents</span>
+</button>
+<button class="flex-1 py-2 px-space-md rounded-full font-label-lg text-label-lg text-center text-on-surface-variant transition-all hover:text-on-surface flex items-center justify-center gap-1.5" id="tab-societies" onclick="switchScope('societies')">
+<span class="material-symbols-outlined text-[18px]">apartment</span>
+<span>Societies</span>
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+</button>
+</div>
+<!-- Time Horizon Segmented Filter -->
+<div class="flex items-center justify-between gap-space-xs px-1">
+<button class="time-pill px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold transition-all shadow-sm flex items-center gap-1" onclick="setTimeframe(this)">
+<span class="material-symbols-outlined text-[14px]">event_upcoming</span>
+<span>This Week</span>
+</button>
+<button class="time-pill px-space-md py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-md text-label-md font-medium transition-all" onclick="setTimeframe(this)">
+<span>This Month</span>
+</button>
+<button class="time-pill px-space-md py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-md text-label-md font-medium transition-all" onclick="setTimeframe(this)">
+<span>All Time</span>
+</button>
+</div>
+<!-- Personal Sticky Motivational Pin Card -->
+<div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary-container via-primary to-primary text-on-primary p-space-md shadow-lg shadow-primary-container/25">
+<div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-on-primary/10 blur-xl pointer-events-none"></div>
+<div class="flex items-start justify-between relative z-10">
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<img alt="Deepak S." class="w-12 h-12 rounded-full object-cover shadow-sm ring-2 ring-on-primary/30" src="https://lh3.googleusercontent.com/aida/AEtjO1Vn71mnc2vGZ_tee0dQ-i-zPIXVN2jwhpXki2urnFQ8JKfEeWWM1Fm__OG0Wd5gBJiiMa5SP73n14GWxQNUCD9I6F96DuX4eWoMNNdFtGBBwv_i6tZNZ0zp7KuIxgwz0g_8OUBPK3OJQj0gy0vmlhjoONRiIBYFn5FTdV2QYhBZGPcnPRmw2zvKVpxTmUCWZhJuQha0_y84ompyocmKIIsqfu47XW5iFh7muYb4HR97vEv_cD13HQATCU4"/>
+<span class="absolute -bottom-1 -right-1 bg-tertiary-container text-on-tertiary-container text-[11px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">#3</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<h2 class="font-headline-sm text-headline-sm leading-snug">Deepak S.</h2>
+<span class="font-label-sm text-label-sm text-on-primary/80 bg-on-primary/15 px-2 py-0.5 rounded-full">Apt 402B</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-label-sm text-label-sm text-on-primary/90 font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[15px] text-tertiary-fixed">bolt</span>
+              420 pts
+            </span>
+<span class="text-on-primary/40">•</span>
+<span class="font-label-sm text-label-sm text-on-primary/90 font-medium flex items-center gap-0.5">
+<span>🔥</span> 7d streak
+            </span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-[10px] uppercase font-bold tracking-wider text-on-primary/70">Top 5%</span>
+<span class="font-headline-md text-headline-md font-extrabold text-on-primary">#3</span>
+</div>
+</div>
+<!-- Motivational Gap Target -->
+<div class="mt-space-sm pt-space-xs border-t border-on-primary/15 flex items-center justify-between relative z-10 text-on-primary">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-[18px] text-tertiary-fixed animate-bounce">electric_bolt</span>
+<p class="font-label-md text-label-md truncate">
+<strong class="font-semibold text-tertiary-fixed">18 pts</strong> to overtake Rahul K. for #2!
+        </p>
+</div>
+<a class="shrink-0 bg-surface-container-lowest text-on-surface font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm font-semibold active:scale-95 transition-transform" data-path="verify" href="#">
+        Log Scan
+      </a>
+</div>
+</div>
+<!-- Top 3 Podium Visual Display -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Weekly Podium</h3>
+<span class="font-label-sm text-label-sm text-primary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">verified</span> Live Verified
+      </span>
+</div>
+<div class="flex items-end justify-center gap-2 pt-space-sm pb-1">
+<!-- 2nd Place: Rahul Nair -->
+<div class="flex-1 flex flex-col items-center">
+<div class="relative mb-1">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high shadow-sm flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Warm documentary style portrait of an Indian male neighbor in his late 20s smiling casually against warm apartment indoor greenery." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfqoUAEROPngLKuq0QsxyZAY3hPmFbmeS5nZ3TnW-XcHizTdpZX0u6GUYcAy7mbvXIAvPYN5WoGH9tXo1OFI5_vAPnAmCi5UpsUYzC3x9RJsHIDvrTcq2pca7fd2yab7JNcQaGusrWu2VnOzSqG36Tr0XwXXU46IbODuTwEb8V0Bb0l06drfJsUhZUDm7QEav-ywI3ZyyBkXtFtQpncsthMJUJuaBivBLeTLwQ46SbwYUCidcNji-U"/>
+</div>
+<span class="absolute -top-1.5 -right-1.5 text-base">🥈</span>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface truncate w-full text-center">Rahul N.</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[11px]">438 pts</span>
+<div class="w-full h-16 bg-surface-container rounded-t-lg mt-1.5 flex flex-col items-center justify-center text-on-surface-variant">
+<span class="font-headline-sm text-headline-sm font-bold">2</span>
+</div>
+</div>
+<!-- 1st Place: Priya Patel -->
+<div class="flex-1 flex flex-col items-center">
+<div class="relative mb-1">
+<span class="material-symbols-outlined text-[20px] text-tertiary-container absolute -top-4 left-1/2 -translate-x-1/2">crown</span>
+<div class="w-14 h-14 rounded-full overflow-hidden bg-surface-container-high shadow-md ring-2 ring-tertiary-container flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Candid, warm portrait of an eco-conscious smiling Indian woman resident wearing a sage green polo in bright natural morning sunlight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoOXWhGKZ52tbgt89jrPcOM1A_Q_5tGoL61gguyTxnQ8z_VcJHC5tI9X7WpZgZlXM4slcy8uAThsKDzRhv60tcXOUcoaZ5o5g3a1G8l7EXl30bKsBrUuHU-dJ-u-ifEJ346xxf-VUhU0nePzISJJ7xR2Mik5HKSuq4pWeGx2fdvgJWD8lUFRmMu-9xaJRyuSdPdVULSS_JOZ43n6MI_3qlGGQJNppbQnCQVeLt4csKmsdwX5XDx9AY"/>
+</div>
+<span class="absolute -bottom-1 -right-1 text-base">🥇</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-on-surface truncate w-full text-center">Priya Patel</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold text-[11px]">580 pts</span>
+<div class="w-full h-24 bg-primary-container text-on-primary-container rounded-t-lg mt-1.5 flex flex-col items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-[22px]">workspace_premium</span>
+<span class="font-headline-md text-headline-md font-extrabold">1</span>
+</div>
+</div>
+<!-- 3rd Place: Deepak S. (You) -->
+<div class="flex-1 flex flex-col items-center">
+<div class="relative mb-1">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high shadow-sm ring-2 ring-primary flex items-center justify-center">
+<img alt="You" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1Vn71mnc2vGZ_tee0dQ-i-zPIXVN2jwhpXki2urnFQ8JKfEeWWM1Fm__OG0Wd5gBJiiMa5SP73n14GWxQNUCD9I6F96DuX4eWoMNNdFtGBBwv_i6tZNZ0zp7KuIxgwz0g_8OUBPK3OJQj0gy0vmlhjoONRiIBYFn5FTdV2QYhBZGPcnPRmw2zvKVpxTmUCWZhJuQha0_y84ompyocmKIIsqfu47XW5iFh7muYb4HR97vEv_cD13HQATCU4"/>
+</div>
+<span class="absolute -top-1.5 -right-1.5 text-base">🥉</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-primary truncate w-full text-center">Deepak (You)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[11px]">420 pts</span>
+<div class="w-full h-12 bg-surface-container rounded-t-lg mt-1.5 flex flex-col items-center justify-center text-on-surface-variant">
+<span class="font-headline-sm text-headline-sm font-bold">3</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Resident Standings List -->
+<div class="space-y-2">
+<div class="flex items-center justify-between px-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Resident Standings</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">64 Active Units</span>
+</div>
+<!-- Rank 1: Priya Patel -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="w-7 text-center font-headline-sm text-headline-sm font-bold text-tertiary">1</span>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait of an Indian woman community champion with hair tied back in a joyful modern eco building backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAfoMg8GpoCH-MF13BEByACwU60XA_LOphLfUhIjB93aop93q59kHT8nx7FFR-dM6r9uQh_o6fHfX9BoZF8PY6zkJxZ2hIQxo0RDWrQP_n4IjOJLkO9tpb7c6qH5wGGPuxN34jCNr1EZ18ghF5EXFbDdtXeEOGtM1YZB77hlKJb2ILRhTPFo5fLnXx2rd2-8L7KiA6EnknY53qoPiaSbRn_e8SMtvApxKGuqMGfz1vfbvHkrPyRfGH"/>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-1.5">
+<p class="font-label-lg text-label-lg text-on-surface truncate font-semibold">Priya Patel</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Apt 704</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-primary font-label-sm text-label-sm font-semibold">
+              Super Segregator
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center">
+              🔥 14d streak
+            </span>
+</div>
+</div>
+</div>
+<div class="text-right shrink-0 ml-2">
+<p class="font-headline-sm text-headline-sm font-bold text-on-surface">580</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">pts</span>
+</div>
+</div>
+<!-- Rank 2: Rahul Nair -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="w-7 text-center font-headline-sm text-headline-sm font-bold text-secondary">2</span>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Friendly young Indian man with glasses looking confident, clean casual apartment backdrop with daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjKhZ3U6GPAgp9cVJd-sLBGblaUOMt-xZxmJSqMyU5DtMBbLYg5zyvjLi19BC35oPVxHD3G1vXv2MymXZf38_09Lwld2d3zx7NylFPgaGJqpWwHCI4srEMNKHND-W9AUA0QeAvHAD2Hpa7SlKQ9ID24fsltSBVbibAdoMdWEzgshCgH8PzvTGYtOUUHwFn3g4n2wdOPCaLUj85liJ54fhn9eHW-7TED4P71GJACjxEr1WyqEWeOdMJ"/>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-1.5">
+<p class="font-label-lg text-label-lg text-on-surface truncate font-semibold">Rahul Nair</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Apt 201</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-secondary-container font-label-sm text-label-sm font-semibold">
+              Waste Warrior
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center">
+              🔥 9d streak
+            </span>
+</div>
+</div>
+</div>
+<div class="text-right shrink-0 ml-2">
+<p class="font-headline-sm text-headline-sm font-bold text-on-surface">438</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">pts</span>
+</div>
+</div>
+<!-- Rank 3: Deepak S. (YOU) Highlighted in Emerald -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-primary-fixed/30 shadow-md">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="w-7 text-center font-headline-sm text-headline-sm font-extrabold text-primary">3</span>
+<div class="relative shrink-0">
+<img alt="Deepak S." class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1Vn71mnc2vGZ_tee0dQ-i-zPIXVN2jwhpXki2urnFQ8JKfEeWWM1Fm__OG0Wd5gBJiiMa5SP73n14GWxQNUCD9I6F96DuX4eWoMNNdFtGBBwv_i6tZNZ0zp7KuIxgwz0g_8OUBPK3OJQj0gy0vmlhjoONRiIBYFn5FTdV2QYhBZGPcnPRmw2zvKVpxTmUCWZhJuQha0_y84ompyocmKIIsqfu47XW5iFh7muYb4HR97vEv_cD13HQATCU4"/>
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-primary-container border-2 border-surface"></span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-1.5">
+<p class="font-label-lg text-label-lg text-primary font-bold truncate">Deepak S. (You)</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Apt 402B</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="px-2 py-0.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-bold">
+              Rising Star
+            </span>
+<span class="font-label-sm text-label-sm text-primary font-semibold flex items-center">
+              🔥 7d streak
+            </span>
+</div>
+</div>
+</div>
+<div class="text-right shrink-0 ml-2">
+<p class="font-headline-sm text-headline-sm font-extrabold text-primary">420</p>
+<span class="font-label-sm text-label-sm text-primary font-semibold">pts</span>
+</div>
+</div>
+<!-- Rank 4: Ananya Mehta -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="w-7 text-center font-headline-sm text-headline-sm font-semibold text-on-surface-variant">4</span>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait of an Indian professional woman with a pleasant warm smile standing indoors with subtle home plants." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3WNEyOKPGMX-JWwr0Rh4RLGbbHjkHFKRv84MCR5uj3kWaI9HKdpt36lfx9bBh4BALbJ5ZP-JtLkMx20zQEzgYRkiaT927rQtys7SCpEBHnDJSfuXU-kxZQqYtmlnFClZTKxF9fr6_QKtrbx60Mthcg4fEetwvnzYKvSdp4kBCBAkbW6tEfQB5tosOZdLQQFsp4aoDjxwBBs2uofq4p9zfW_W0IonIDAZaHRLZ1_hLJEO2B7pImKfT"/>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-1.5">
+<p class="font-label-lg text-label-lg text-on-surface truncate font-semibold">Ananya Mehta</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Apt 506</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center">
+              🔥 11d streak
+            </span>
+<span class="text-on-surface-variant text-[10px]">•</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Zero Wet Rejects</span>
+</div>
+</div>
+</div>
+<div class="text-right shrink-0 ml-2">
+<p class="font-headline-sm text-headline-sm font-bold text-on-surface">395</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">pts</span>
+</div>
+</div>
+<!-- Rank 5: Vikram Joshi -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="w-7 text-center font-headline-sm text-headline-sm font-semibold text-on-surface-variant">5</span>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait of a middle aged Indian man with cheerful expression in a naturally lit urban apartment setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbXQ9C62i4jwtU_gkeJqBV_OelPZTRxmUtq2f5I0xJpaBUdzsvj8Vv7_FMgyhX7UKGETQnSE4h6ylihKsGbEwVmvoQEBiuLqoqPCzCPTHTS40E9jUn6jhCOiC89x2FPSAFwRURkSKJOGYBJmx3vcns1hsChlsX2HvrglOnxNdur000KG-HEjKbAYA5bFKHsGfZw514aA16eTb-Pet2qZrnEM4EA3uFW-etz8YzIYhwcxaSpqm6CHgJ"/>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-1.5">
+<p class="font-label-lg text-label-lg text-on-surface truncate font-semibold">Vik Vikram Joshi</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Apt 114</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center">
+              🔥 5d streak
+            </span>
+<span class="text-on-surface-variant text-[10px]">•</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Compost Pioneer</span>
+</div>
+</div>
+</div>
+<div class="text-right shrink-0 ml-2">
+<p class="font-headline-sm text-headline-sm font-bold text-on-surface">360</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">pts</span>
+</div>
+</div>
+</div>
+<!-- Society Derby Inter-Community Standings Preview Section -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">domain</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface leading-tight">MCGM Society Derby</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ward 88B Municipal Division</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm font-semibold text-primary bg-primary-fixed/40 px-2 py-0.5 rounded-full">
+        Round 4 of 6
+      </span>
+</div>
+<!-- Inter-Society List -->
+<div class="space-y-2 pt-1">
+<!-- 1. Green Valley (Your Society) -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm">
+<div class="flex items-center justify-between mb-1.5">
+<div class="flex items-center gap-2 min-w-0">
+<span class="w-5 font-bold text-headline-sm text-primary">1</span>
+<span class="font-label-lg text-label-lg font-bold text-on-surface truncate">Green Valley Residency</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-primary text-on-primary font-bold">You</span>
+<span class="text-base">🏆</span>
+</div>
+<span class="font-headline-sm text-headline-sm font-bold text-primary">94%</span>
+</div>
+<!-- Segregation Meter Bar -->
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500" style="width: 94%"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm mt-1">
+<span>Avg Segregation Compliance</span>
+<span class="text-primary font-medium">9.4 tons diverted</span>
+</div>
+</div>
+<!-- 2. Sunrise Heights -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm">
+<div class="flex items-center justify-between mb-1.5">
+<div class="flex items-center gap-2 min-w-0">
+<span class="w-5 font-bold text-headline-sm text-secondary">2</span>
+<span class="font-label-lg text-label-lg font-semibold text-on-surface truncate">Sunrise Heights</span>
+</div>
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">91%</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-secondary-container h-full rounded-full transition-all duration-500" style="width: 91%"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm mt-1">
+<span>Avg Segregation Compliance</span>
+<span>8.9 tons diverted</span>
+</div>
+</div>
+<!-- 3. Palm Grove Heights -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm">
+<div class="flex items-center justify-between mb-1.5">
+<div class="flex items-center gap-2 min-w-0">
+<span class="w-5 font-bold text-headline-sm text-on-surface-variant">3</span>
+<span class="font-label-lg text-label-lg font-semibold text-on-surface truncate">Palm Grove Heights</span>
+</div>
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">88%</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-outline-variant h-full rounded-full transition-all duration-500" style="width: 88%"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm mt-1">
+<span>Avg Segregation Compliance</span>
+<span>8.1 tons diverted</span>
+</div>
+</div>
+</div>
+<!-- Community Civic Encouragement Banner -->
+<div class="p-space-sm rounded-lg bg-primary-fixed/40 flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[22px]">energy_savings_leaf</span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">Ward Rebate Unlock</p>
+<p class="font-body-sm text-body-sm text-on-surface font-medium leading-tight mt-0.5">
+          Green Valley is leading the MCGM Ward 88B green rebate standings! Keep this pace for a <strong>5% property tax rebate</strong> next quarter.
+        </p>
+</div>
+</div>
+</div>
+<!-- Weekly Reward Pool & Countdown Teaser -->
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">card_giftcard</span>
+</div>
+<div>
+<p class="font-headline-sm text-headline-sm text-on-surface font-bold">₹10,000 Green Pool</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Weekly resets in 2d 14h • Top 10 split rewards</p>
+</div>
+</div>
+<a class="text-primary font-label-lg text-label-lg font-semibold flex items-center gap-0.5 hover:underline" data-path="rewards" href="#">
+<span>Rules</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</a>
+</div>
+</div>
+<script>
+  function switchScope(scope) {
+    const resTab = document.getElementById('tab-residents');
+    const socTab = document.getElementById('tab-societies');
+    if (!resTab || !socTab) return;
+
+    if (scope === 'residents') {
+      resTab.className = 'flex-1 py-2 px-space-md rounded-full font-label-lg text-label-lg text-center transition-all bg-surface-container-lowest text-primary shadow-sm flex items-center justify-center gap-1.5';
+      socTab.className = 'flex-1 py-2 px-space-md rounded-full font-label-lg text-label-lg text-center text-on-surface-variant transition-all hover:text-on-surface flex items-center justify-center gap-1.5';
+    } else {
+      socTab.className = 'flex-1 py-2 px-space-md rounded-full font-label-lg text-label-lg text-center transition-all bg-surface-container-lowest text-primary shadow-sm flex items-center justify-center gap-1.5';
+      resTab.className = 'flex-1 py-2 px-space-md rounded-full font-label-lg text-label-lg text-center text-on-surface-variant transition-all hover:text-on-surface flex items-center justify-center gap-1.5';
+    }
+  }
+
+  function setTimeframe(btn) {
+    const allPills = document.querySelectorAll('.time-pill');
+    allPills.forEach(p => {
+      p.className = 'time-pill px-space-md py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-md text-label-md font-medium transition-all';
+    });
+    btn.className = 'time-pill px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold transition-all shadow-sm flex items-center gap-1';
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-2px_16px_rgba(0,0,0,0.06)]" data-active-classes="text-primary font-semibold [&amp;&gt;div]:bg-surface-container-high"><div class="h-16 px-space-xs flex items-center justify-around relative"><a class="flex flex-col items-center justify-center min-w-[56px] h-12 rounded-lg text-on-surface-variant transition-all active:scale-95" data-path="home" href="#"><div class="flex items-center justify-center px-space-sm py-0.5 rounded-full transition-colors"><span class="material-symbols-outlined text-[22px]">home</span></div><span class="font-label-sm text-label-sm mt-0.5">Home</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] h-12 rounded-lg transition-all active:scale-95 text-primary font-semibold [&amp;&gt;div]:bg-surface-container-high" data-path="leaderboard" href="#"><div class="flex items-center justify-center px-space-sm py-0.5 rounded-full transition-colors"><span class="material-symbols-outlined text-[22px]">leaderboard</span></div><span class="font-label-sm text-label-sm mt-0.5">Ranks</span></a><div class="relative -top-5 flex flex-col items-center"><a class="w-14 h-14 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-[0px_10px_20px_-5px_rgba(16,185,129,0.45)] hover:scale-105 active:scale-95 transition-transform" data-path="verify" href="#"><span class="material-symbols-outlined text-[28px]">photo_camera</span></a><span class="font-label-sm text-label-sm text-on-surface font-semibold mt-1">Verify</span></div><a class="flex flex-col items-center justify-center min-w-[56px] h-12 rounded-lg text-on-surface-variant transition-all active:scale-95" data-path="rewards" href="#"><div class="flex items-center justify-center px-space-sm py-0.5 rounded-full transition-colors"><span class="material-symbols-outlined text-[22px]">featured_seasonal_and_gifts</span></div><span class="font-label-sm text-label-sm mt-0.5">Rewards</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 rounded-lg text-on-surface-variant transition-all active:scale-95" data-path="profile" href="#"><div class="flex items-center justify-center px-space-sm py-0.5 rounded-full transition-colors"><span class="material-symbols-outlined text-[22px]">person</span></div><span class="font-label-sm text-label-sm mt-0.5">Profile</span></a></div></nav></body></html>
