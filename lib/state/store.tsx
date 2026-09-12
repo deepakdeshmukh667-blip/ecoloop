@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import {
   Profile,
   Society,
@@ -105,6 +106,9 @@ interface AppContextType {
   setIsSpotCheckModalOpen: (open: boolean) => void;
   isRewardModalOpen: boolean;
   setIsRewardModalOpen: (open: boolean) => void;
+
+  // Supabase Auth
+  signOut: (portal?: 'resident' | 'admin') => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -171,6 +175,91 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         root.classList.add('dark');
       } else {
         root.classList.remove('dark');
+      }
+    }
+  };
+
+  // Synchronize authenticated user profile with Supabase
+  useEffect(() => {
+    try {
+      const supabase = createClient();
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+            .then(({ data: profileData }) => {
+              if (profileData) {
+                setProfile((prev) => ({
+                  ...prev,
+                  id: profileData.id,
+                  email: profileData.email || prev.email,
+                  full_name: profileData.full_name || prev.full_name,
+                  role: profileData.role || prev.role,
+                  eco_points: profileData.eco_points ?? prev.eco_points,
+                  current_streak: profileData.current_streak ?? prev.current_streak,
+                  consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : prev.consistency_score,
+                  total_verifications: profileData.total_verifications ?? prev.total_verifications,
+                }));
+                if (profileData.role) {
+                  setActiveRole(profileData.role);
+                }
+              }
+            });
+        }
+      });
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        if (session?.user) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileData) {
+            setProfile((prev) => ({
+              ...prev,
+              id: profileData.id,
+              email: profileData.email || prev.email,
+              full_name: profileData.full_name || prev.full_name,
+              role: profileData.role || prev.role,
+              eco_points: profileData.eco_points ?? prev.eco_points,
+              current_streak: profileData.current_streak ?? prev.current_streak,
+              consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : prev.consistency_score,
+              total_verifications: profileData.total_verifications ?? prev.total_verifications,
+            }));
+            if (profileData.role) {
+              setActiveRole(profileData.role);
+            }
+          }
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    } catch (err) {
+      console.error('Supabase auth initialization error:', err);
+    }
+  }, []);
+
+  const signOut = async (portal: 'resident' | 'admin' = 'resident') => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Error signing out:', err);
+    }
+    if (typeof window !== 'undefined') {
+      if (portal === 'admin') {
+        window.location.href = '/admin/login';
+      } else {
+        window.location.href = '/resident/login';
       }
     }
   };
@@ -422,6 +511,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setIsSpotCheckModalOpen,
         isRewardModalOpen,
         setIsRewardModalOpen,
+        signOut,
       }}
     >
       {children}

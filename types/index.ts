@@ -1,4 +1,4 @@
-export type UserRole = 'resident' | 'society_admin' | 'municipal_admin';
+export type UserRole = 'resident' | 'admin' | 'society_admin' | 'municipal_admin';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 

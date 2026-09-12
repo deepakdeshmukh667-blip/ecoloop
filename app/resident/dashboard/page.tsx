@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import TopNavBar from '@/components/TopNavBar';
@@ -10,6 +10,14 @@ import { useApp } from '@/lib/state/store';
 
 export default function ResidentDashboardPage() {
   const router = useRouter();
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setIsUnauthorized(params.get('error') === 'unauthorized_admin');
+    }
+  }, []);
   const {
     profile,
     verifications,
@@ -33,6 +41,23 @@ export default function ResidentDashboardPage() {
       <div className="md:pl-64">
         <main className="w-full pt-16 pb-24 md:pb-12 min-h-[calc(100vh-4rem)]">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 flex flex-col gap-6 md:gap-8">
+            {isUnauthorized && (
+              <div className="p-4 rounded-2xl bg-[#fee2e2] dark:bg-[#7f1d1d]/30 border border-[#ef4444]/40 text-[#991b1b] dark:text-[#fca5a5] text-xs flex items-center justify-between gap-3 animate-fadeIn">
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-[20px] shrink-0">lock</span>
+                  <span className="font-semibold">
+                    Access Restricted: Your account does not have administrator authorization. To access the Society Admin Portal, please sign in with an authorized admin account.
+                  </span>
+                </div>
+                <Link
+                  href="/admin/login"
+                  className="px-3 py-1 bg-[#b91c1c] text-white rounded-lg font-bold hover:bg-[#991b1b] transition-colors shrink-0"
+                >
+                  Admin Login
+                </Link>
+              </div>
+            )}
+
             {/* Top Greeting Section with Quick Action Mini-Pills */}
             <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
               <div className="flex flex-col gap-1">
