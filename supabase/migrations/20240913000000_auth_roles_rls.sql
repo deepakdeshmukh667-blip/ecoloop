@@ -2,24 +2,46 @@
 -- EcoLoop: Separate Resident and Admin Authentication & Strict RLS Migration
 -- ==============================================================================
 
--- 1. Ensure user_role enum or check constraint supports 'resident' and 'admin'
+-- 1. Ensure profiles table role column is flexible TEXT with CHECK constraint
+-- This prevents the PostgreSQL 55P04 error ("unsafe use of new value in enum")
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-        CREATE TYPE user_role AS ENUM ('resident', 'admin', 'society_admin', 'municipal_admin');
-    ELSE
-        -- Add 'admin' if not already present in existing enum
+    -- If profiles table exists and role is an enum, convert it to text
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role'
+    ) THEN
+        ALTER TABLE public.profiles ALTER COLUMN role DROP DEFAULT;
+        ALTER TABLE public.profiles ALTER COLUMN role TYPE TEXT USING role::text;
+        ALTER TABLE public.profiles ALTER COLUMN role SET DEFAULT 'resident';
+        
+        -- Drop any previous role check constraints
+        ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+        ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS user_role_check;
+        
+        -- Add check constraint for allowed roles
+        ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
+            CHECK (role IN ('resident', 'admin', 'society_admin', 'municipal_admin'));
+    END IF;
+END $$;
+
+-- Also add 'admin' to user_role enum if the enum type exists (for backward compatibility)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
         BEGIN
             ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'admin';
         EXCEPTION
             WHEN duplicate_object THEN NULL;
+            WHEN OTHERS THEN NULL;
         END;
     END IF;
 END $$;
 
--- 2. Ensure profiles table structure matches requirements
+-- 2. Ensure profiles table exists with all required columns
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    auth_user_id UUID,
     email TEXT UNIQUE NOT NULL,
     full_name TEXT DEFAULT 'Eco Resident',
     role TEXT DEFAULT 'resident' CHECK (role IN ('resident', 'admin', 'society_admin', 'municipal_admin')),
@@ -37,6 +59,17 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Ensure auth_user_id column exists if table was created previously
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'auth_user_id'
+    ) THEN
+        ALTER TABLE public.profiles ADD COLUMN auth_user_id UUID;
+    END IF;
+END $$;
+
 -- 3. Automatic Profile Creation Trigger on Supabase auth.users Signup
 -- When a user authenticates for the first time via OTP (shouldCreateUser: true),
 -- this trigger guarantees they are created as a standard 'resident'.
@@ -45,6 +78,7 @@ RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO public.profiles (
         id,
+        auth_user_id,
         email,
         full_name,
         role,
@@ -54,6 +88,7 @@ BEGIN
         created_at,
         updated_at
     ) VALUES (
+        NEW.id,
         NEW.id,
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
@@ -85,7 +120,7 @@ CREATE OR REPLACE FUNCTION public.prevent_role_escalation()
 RETURNS TRIGGER AS $$
 BEGIN
     -- If role is being changed, ensure it is NOT initiated by an unprivileged client
-    IF OLD.role IS DISTINCT FROM NEW.role THEN
+    IF OLD.role::text IS DISTINCT FROM NEW.role::text THEN
         -- Only service_role or database superusers can alter roles
         IF current_user NOT IN ('postgres', 'supabase_admin') AND auth.role() = 'authenticated' THEN
             RAISE EXCEPTION 'Unauthorized: Users cannot alter their own account role.';
@@ -115,9 +150,9 @@ CREATE POLICY "Users can read own profile"
     ON public.profiles
     FOR SELECT
     TO authenticated
-    USING (auth.uid() = id);
+    USING (auth.uid() = id OR auth.uid() = auth_user_id);
 
--- Public leaderboard read (restricted to non-sensitive columns through view or select)
+-- Public leaderboard read
 CREATE POLICY "Public read profiles for leaderboard"
     ON public.profiles
     FOR SELECT
@@ -129,10 +164,10 @@ CREATE POLICY "Users can update own profile non-sensitive fields"
     ON public.profiles
     FOR UPDATE
     TO authenticated
-    USING (auth.uid() = id)
-    WITH CHECK (auth.uid() = id);
+    USING (auth.uid() = id OR auth.uid() = auth_user_id)
+    WITH CHECK (auth.uid() = id OR auth.uid() = auth_user_id);
 
--- Admins have full read access to all society profiles
+-- Admins have full access to view all society profiles
 CREATE POLICY "Admins can view all profiles"
     ON public.profiles
     FOR ALL
@@ -140,20 +175,15 @@ CREATE POLICY "Admins can view all profiles"
     USING (
         EXISTS (
             SELECT 1 FROM public.profiles
-            WHERE id = auth.uid() AND role IN ('admin', 'society_admin', 'municipal_admin')
+            WHERE (id = auth.uid() OR auth_user_id = auth.uid())
+              AND role::text IN ('admin', 'society_admin', 'municipal_admin')
         )
     );
 
--- ==============================================================================
--- 6. SECURE ADMIN PROMOTION INSTRUCTIONS (Run in Supabase SQL Editor by Owner)
--- ==============================================================================
---
--- To authorize an administrator, run the following SQL command in the Supabase SQL Editor:
---
--- UPDATE public.profiles
--- SET role = 'admin'
--- WHERE email = 'your-admin-email@example.com';
---
--- To verify the role:
--- SELECT id, email, role FROM public.profiles WHERE email = 'your-admin-email@example.com';
--- ==============================================================================
+-- Also allow authenticated users to insert their own profile on signup/first login if needed
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+CREATE POLICY "Users can insert own profile"
+    ON public.profiles
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = id OR auth.uid() = auth_user_id);
