@@ -27,10 +27,39 @@ export const INITIAL_SOCIETY: Society = {
   spot_check_interval_days: 14,
 };
 
+export const DEFAULT_UNAUTHENTICATED_PROFILE: Profile = {
+  id: '',
+  full_name: '',
+  email: '',
+  role: 'resident',
+  society_id: 'gvr-tower-b',
+  building: 'Tower B (Orchid)',
+  flat_number: '',
+  avatar_url: '/deepak-avatar.png',
+  eco_points: 0,
+  current_streak: 0,
+  consistency_score: 0,
+  total_verifications: 0,
+  tier_level: 1,
+  is_active: false,
+  preferences: {
+    theme: 'light',
+    sound: true,
+    pushNotifications: true,
+  },
+  privacy_settings: {
+    photoVerification: true,
+    continuousSurveillance: false,
+    locationTracking: false,
+    dataSharing: 'Governed by Society Bylaws',
+    photoRetentionDays: 30,
+  },
+};
+
 export const INITIAL_PROFILE: Profile = {
-  id: 'user-deepak',
-  full_name: 'Deepak S.',
-  email: 'deepak.s@greenvalley.res',
+  id: 'user-resident',
+  full_name: 'Resident Member',
+  email: 'resident@greenvalley.res',
   role: 'resident',
   society_id: 'gvr-tower-b',
   building: 'Tower B (Orchid)',

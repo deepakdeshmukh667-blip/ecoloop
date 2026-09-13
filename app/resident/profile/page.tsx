@@ -10,10 +10,10 @@ import { useApp } from '@/lib/state/store';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { profile, theme, setTheme } = useApp();
+  const { profile, theme, setTheme, signOut } = useApp();
 
   const handleLogout = () => {
-    router.push('/login');
+    signOut('resident');
   };
 
   return (

@@ -109,12 +109,12 @@ export default function TopNavBar() {
           >
             <img
               src={profile.avatar_url || '/deepak-avatar.png'}
-              alt={profile.full_name}
+              alt={profile.full_name || 'Resident User'}
               className="w-8 h-8 rounded-full object-cover ring-2 ring-[#6ffbbe] dark:ring-[#10b981] group-hover:scale-105 transition-transform"
             />
             <div className="hidden sm:flex flex-col text-left">
               <span className="text-xs font-bold text-[#0b1c30] dark:text-white leading-tight">
-                {profile.full_name}
+                {profile.full_name || 'Resident User'}
               </span>
               <span className="text-[10px] text-[#3c4a42] dark:text-[#94a3b8]">
                 {isAdmin ? 'Society Admin' : profile.flat_number || 'Apt 402B'}

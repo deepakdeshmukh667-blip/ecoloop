@@ -20,6 +20,7 @@ import {
 } from '@/types';
 import {
   INITIAL_PROFILE,
+  DEFAULT_UNAUTHENTICATED_PROFILE,
   INITIAL_SOCIETY,
   INITIAL_CATEGORIES,
   INITIAL_REWARDS,
@@ -33,16 +34,32 @@ import {
   INITIAL_SPOT_CHECKS,
 } from '@/lib/data/seedData';
 
+export function formatNameFromEmail(email: string): string {
+  if (!email) return 'Resident Member';
+  const namePart = email.split('@')[0];
+  const clean = namePart.replace(/[0-9_.]+/g, ' ').trim();
+  if (!clean) return 'Resident Member';
+  return clean
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
 interface AppContextType {
   // Theme
   theme: ThemeMode;
   setTheme: (theme: ThemeMode) => void;
 
-  // Active User / Profile
+  // Auth & Active User / Profile
+  isAuthenticated: boolean;
+  setIsAuthenticated: (auth: boolean) => void;
   profile: Profile;
   setProfile: React.Dispatch<React.SetStateAction<Profile>>;
   activeRole: UserRole;
   setActiveRole: (role: UserRole) => void;
+  loginUser: (email: string, role?: UserRole, customName?: string) => void;
+  signOut: (portal?: 'resident' | 'admin') => Promise<void>;
 
   // Society
   society: Society;
@@ -106,9 +123,6 @@ interface AppContextType {
   setIsSpotCheckModalOpen: (open: boolean) => void;
   isRewardModalOpen: boolean;
   setIsRewardModalOpen: (open: boolean) => void;
-
-  // Supabase Auth
-  signOut: (portal?: 'resident' | 'admin') => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -117,8 +131,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Theme State with System listener
   const [theme, setThemeState] = useState<ThemeMode>('light');
 
-  // Core Data States
-  const [profile, setProfile] = useState<Profile>(INITIAL_PROFILE);
+  // Core Auth & Profile States
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [profile, setProfile] = useState<Profile>(DEFAULT_UNAUTHENTICATED_PROFILE);
   const [activeRole, setActiveRole] = useState<UserRole>('resident');
   const [society] = useState<Society>(INITIAL_SOCIETY);
   const [categories] = useState<WasteCategory[]>(INITIAL_CATEGORIES);
@@ -153,11 +168,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isSpotCheckModalOpen, setIsSpotCheckModalOpen] = useState<boolean>(false);
   const [isRewardModalOpen, setIsRewardModalOpen] = useState<boolean>(false);
 
-  // Apply Theme on load
+  // Apply Theme and restore session on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('ecoloop-theme') as ThemeMode | null;
     const initialTheme = savedTheme || 'light';
     setTheme(initialTheme);
+
+    // Restore user session if stored
+    try {
+      const savedAuth = localStorage.getItem('ecoloop_auth_authenticated');
+      const savedProfile = localStorage.getItem('ecoloop_auth_profile');
+      if (savedAuth === 'true' && savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        setProfile(parsed);
+        setIsAuthenticated(true);
+        if (parsed.role) {
+          setActiveRole(parsed.role);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not restore auth profile:', e);
+    }
   }, []);
 
   const setTheme = (mode: ThemeMode) => {
@@ -179,12 +210,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Synchronize authenticated user profile with Supabase
+  // Synchronize authenticated user profile with Supabase if connected
   useEffect(() => {
     try {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!url || !key || url.includes('mock') || key.includes('dummy')) {
+        return;
+      }
+
       const supabase = createClient();
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
+          setIsAuthenticated(true);
           supabase
             .from('profiles')
             .select('*')
@@ -192,20 +230,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             .single()
             .then(({ data: profileData }) => {
               if (profileData) {
-                setProfile((prev) => ({
-                  ...prev,
+                const updated: Profile = {
+                  ...INITIAL_PROFILE,
                   id: profileData.id,
-                  email: profileData.email || prev.email,
-                  full_name: profileData.full_name || prev.full_name,
-                  role: profileData.role || prev.role,
-                  eco_points: profileData.eco_points ?? prev.eco_points,
-                  current_streak: profileData.current_streak ?? prev.current_streak,
-                  consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : prev.consistency_score,
-                  total_verifications: profileData.total_verifications ?? prev.total_verifications,
-                }));
+                  email: profileData.email || session.user.email || 'resident@greenvalley.res',
+                  full_name: profileData.full_name || formatNameFromEmail(session.user.email || ''),
+                  role: profileData.role || 'resident',
+                  eco_points: profileData.eco_points ?? 420,
+                  current_streak: profileData.current_streak ?? 7,
+                  consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : 92.0,
+                  total_verifications: profileData.total_verifications ?? 18,
+                  is_active: true,
+                };
+                setProfile(updated);
                 if (profileData.role) {
                   setActiveRole(profileData.role);
                 }
+                localStorage.setItem('ecoloop_auth_profile', JSON.stringify(updated));
+                localStorage.setItem('ecoloop_auth_authenticated', 'true');
               }
             });
         }
@@ -215,6 +257,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         data: { subscription },
       } = supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) {
+          setIsAuthenticated(true);
           const { data: profileData } = await supabase
             .from('profiles')
             .select('*')
@@ -222,20 +265,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             .single();
 
           if (profileData) {
-            setProfile((prev) => ({
-              ...prev,
+            const updated: Profile = {
+              ...INITIAL_PROFILE,
               id: profileData.id,
-              email: profileData.email || prev.email,
-              full_name: profileData.full_name || prev.full_name,
-              role: profileData.role || prev.role,
-              eco_points: profileData.eco_points ?? prev.eco_points,
-              current_streak: profileData.current_streak ?? prev.current_streak,
-              consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : prev.consistency_score,
-              total_verifications: profileData.total_verifications ?? prev.total_verifications,
-            }));
+              email: profileData.email || session.user.email || 'resident@greenvalley.res',
+              full_name: profileData.full_name || formatNameFromEmail(session.user.email || ''),
+              role: profileData.role || 'resident',
+              eco_points: profileData.eco_points ?? 420,
+              current_streak: profileData.current_streak ?? 7,
+              consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : 92.0,
+              total_verifications: profileData.total_verifications ?? 18,
+              is_active: true,
+            };
+            setProfile(updated);
             if (profileData.role) {
               setActiveRole(profileData.role);
             }
+            localStorage.setItem('ecoloop_auth_profile', JSON.stringify(updated));
+            localStorage.setItem('ecoloop_auth_authenticated', 'true');
           }
         }
       });
@@ -244,18 +291,62 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         subscription.unsubscribe();
       };
     } catch (err) {
-      console.error('Supabase auth initialization error:', err);
+      console.warn('Supabase auth initialization bypassed:', err);
     }
   }, []);
 
+  const loginUser = (userEmail: string, role: UserRole = 'resident', customName?: string) => {
+    const formattedName = customName || formatNameFromEmail(userEmail);
+    const updatedProfile: Profile = {
+      ...INITIAL_PROFILE,
+      id: `user-${userEmail.replace(/[^a-zA-Z0-9]/g, '_')}`,
+      email: userEmail.trim().toLowerCase(),
+      full_name: formattedName,
+      role: role,
+      society_id: 'gvr-tower-b',
+      building: 'Tower B (Orchid)',
+      flat_number: 'Apt 402B',
+      avatar_url: '/deepak-avatar.png',
+      is_active: true,
+    };
+
+    setProfile(updatedProfile);
+    setActiveRole(role);
+    setIsAuthenticated(true);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ecoloop_auth_profile', JSON.stringify(updatedProfile));
+      localStorage.setItem('ecoloop_auth_authenticated', 'true');
+      const cookieName = (role === 'admin' || role === 'society_admin' || role === 'municipal_admin')
+        ? 'ecoloop_admin_session'
+        : 'ecoloop_resident_session';
+      document.cookie = `${cookieName}=true; path=/; max-age=604800; SameSite=Lax`;
+    }
+  };
+
   const signOut = async (portal: 'resident' | 'admin' = 'resident') => {
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (url && key && !url.includes('mock') && !key.includes('dummy')) {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+      }
     } catch (err) {
-      console.error('Error signing out:', err);
+      console.warn('Error during Supabase signout:', err);
     }
+
+    setIsAuthenticated(false);
+    setProfile(DEFAULT_UNAUTHENTICATED_PROFILE);
+
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('ecoloop_auth_profile');
+      localStorage.removeItem('ecoloop_auth_authenticated');
+      localStorage.removeItem('ecoloop_resident_session');
+      localStorage.removeItem('ecoloop_admin_session');
+      document.cookie = 'ecoloop_resident_session=; path=/; max-age=0; SameSite=Lax';
+      document.cookie = 'ecoloop_admin_session=; path=/; max-age=0; SameSite=Lax';
+
       if (portal === 'admin') {
         window.location.href = '/admin/login';
       } else {
@@ -475,10 +566,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         theme,
         setTheme,
+        isAuthenticated,
+        setIsAuthenticated,
         profile,
         setProfile,
         activeRole,
         setActiveRole,
+        loginUser,
         society,
         categories,
         selectedCategory,
