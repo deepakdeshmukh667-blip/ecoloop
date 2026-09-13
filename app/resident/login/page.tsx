@@ -54,8 +54,8 @@ export default function ResidentLoginPage() {
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) {
-      setErrorMessage('Email verification is currently unavailable. Please try again later.');
+    if (!url || !key || url.includes('YOUR_PROJECT') || key.includes('YOUR_SUPABASE')) {
+      setErrorMessage('Authentication service not configured. Please contact the EcoLoop administrator.');
       setStatus('error');
       return;
     }
@@ -93,11 +93,13 @@ export default function ResidentLoginPage() {
         otpInputRefs.current[0]?.focus();
       }, 100);
     } catch (err) {
-      if (err instanceof TypeError || (err instanceof Error && err.message.toLowerCase().includes('fetch'))) {
+      const msg = err instanceof Error ? err.message.toLowerCase() : '';
+      if (msg.includes('supabase configuration') || msg.includes('environment variable')) {
+        setErrorMessage('Authentication service not configured. Please contact the EcoLoop administrator.');
+      } else if (err instanceof TypeError || msg.includes('fetch')) {
         setErrorMessage("We couldn't connect to EcoLoop authentication. Please check your internet connection and try again.");
       } else {
-        const msg = err instanceof Error ? err.message : 'Unknown error';
-        setErrorMessage(`Authentication error: ${msg}`);
+        setErrorMessage(`Authentication error: ${err instanceof Error ? err.message : 'Unknown error'}`);
       }
       setStatus('error');
     }
