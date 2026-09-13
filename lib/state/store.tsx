@@ -250,22 +250,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               is_active: true,
             };
 
-            await supabase.from('profiles').insert({
+            await supabase.from('profiles').upsert({
               id: userId,
               email: userEmail || '',
               full_name: newProfileData.full_name,
               role: 'resident',
-              society_id: 'gvr-tower-b',
-              building: 'Tower B (Orchid)',
-              flat_number: 'Apt 402B',
-              avatar_url: '/deepak-avatar.png',
+              // Note: society_id is a UUID FK, do not pass string IDs
               eco_points: 50,
               current_streak: 0,
               consistency_score: 80.0,
               total_verifications: 0,
               tier_level: 1,
               is_active: true,
-            });
+            }, { onConflict: 'id' });
 
             setProfile(newProfileData);
             setIsAuthenticated(true);

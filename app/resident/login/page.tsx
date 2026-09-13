@@ -191,11 +191,13 @@ export default function ResidentLoginPage() {
       }
 
       // Ensure profile exists in Supabase database
+      // (The DB trigger handle_new_user auto-creates on first signup;
+      //  this is a safety net for edge cases)
       const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (!existingProfile) {
         const namePart = normalizedEmail.split('@')[0].replace(/[0-9_.]+/g, ' ').trim();
@@ -203,22 +205,20 @@ export default function ResidentLoginPage() {
           ? namePart.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
           : 'Resident Member';
 
-        await supabase.from('profiles').insert({
+        // Note: society_id is a UUID FK — do not pass string IDs
+        // The DB trigger already handles this on user creation
+        await supabase.from('profiles').upsert({
           id: authUser.id,
           email: authUser.email || normalizedEmail,
           full_name: authUser.user_metadata?.full_name || formattedName,
           role: 'resident',
-          society_id: 'gvr-tower-b',
-          building: 'Tower B (Orchid)',
-          flat_number: 'Apt 402B',
-          avatar_url: '/deepak-avatar.png',
           eco_points: 50,
           current_streak: 0,
           consistency_score: 80.0,
           total_verifications: 0,
           tier_level: 1,
           is_active: true,
-        });
+        }, { onConflict: 'id' });
       }
 
       setStatus('verified');
