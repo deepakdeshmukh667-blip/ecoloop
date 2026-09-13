@@ -15,105 +15,127 @@ export async function middleware(request: NextRequest) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const hasMockOrInvalidUrl = !supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('mock') || supabaseAnonKey.includes('dummy');
 
-  // Check local/session cookies
-  const hasResidentCookie = request.cookies.get('ecoloop_resident_session')?.value === 'true';
-  const hasAdminCookie = request.cookies.get('ecoloop_admin_session')?.value === 'true';
-
-  let hasSupabaseUser = false;
-  let isSupabaseAdmin = false;
-
-  if (!hasMockOrInvalidUrl) {
-    try {
-      const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet: Array<{ name: string; value: string; options?: unknown }>) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-            supabaseResponse = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              // @ts-expect-error - Next.js cookies options
-              supabaseResponse.cookies.set(name, value, options)
-            );
-          },
-        },
-      });
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        hasSupabaseUser = true;
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        isSupabaseAdmin =
-          profile?.role === 'admin' ||
-          profile?.role === 'society_admin' ||
-          profile?.role === 'municipal_admin';
-      }
-    } catch {
-      // Supabase unavailable, rely on session cookies
-    }
-  }
-
-  const isResidentLoggedIn = hasResidentCookie || hasSupabaseUser;
-  const isAdminLoggedIn = hasAdminCookie || isSupabaseAdmin;
-
-  // 2. Root Route (/) Handling
-  if (pathname === '/') {
-    if (isAdminLoggedIn) {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-    }
-    if (isResidentLoggedIn) {
-      return NextResponse.redirect(new URL('/resident/dashboard', request.url));
-    }
-    return NextResponse.redirect(new URL('/resident/login', request.url));
-  }
-
-  // 3. If authenticated user visits /resident/login, send them to resident dashboard
-  if (pathname === '/resident/login') {
-    if (isResidentLoggedIn) {
-      return NextResponse.redirect(new URL('/resident/dashboard', request.url));
-    }
-    return supabaseResponse;
-  }
-
-  // 4. If user visits /admin/login
-  if (pathname === '/admin/login') {
-    if (isAdminLoggedIn) {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-    }
-    return supabaseResponse;
-  }
-
-  // 5. Resident Route Protection (/resident/*)
-  if (pathname.startsWith('/resident/')) {
-    if (!isResidentLoggedIn) {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // If Supabase credentials are missing, strictly block protected routes
+    if (pathname.startsWith('/resident/') && pathname !== '/resident/login') {
       const loginUrl = new URL('/resident/login', request.url);
       loginUrl.searchParams.set('redirectedFrom', pathname);
       return NextResponse.redirect(loginUrl);
     }
-    return supabaseResponse;
-  }
-
-  // 6. Admin Route Protection (/admin/*)
-  if (pathname.startsWith('/admin/')) {
-    if (!isAdminLoggedIn) {
+    if (pathname.startsWith('/admin/') && pathname !== '/admin/login') {
       const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('redirectedFrom', pathname);
       return NextResponse.redirect(loginUrl);
     }
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/resident/login', request.url));
+    }
     return supabaseResponse;
+  }
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: unknown }>) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            // @ts-expect-error - Next.js cookies options
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    });
+
+    // Verify authenticated user with Supabase Auth (Secure Server-Side Check)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    let isAdmin = false;
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      isAdmin =
+        profile?.role === 'admin' ||
+        profile?.role === 'society_admin' ||
+        profile?.role === 'municipal_admin';
+    }
+
+    // 2. Root route (/) handling
+    if (pathname === '/') {
+      if (user) {
+        return NextResponse.redirect(new URL(isAdmin ? '/admin/dashboard' : '/resident/dashboard', request.url));
+      }
+      return NextResponse.redirect(new URL('/resident/login', request.url));
+    }
+
+    // 3. /resident/login handling
+    if (pathname === '/resident/login') {
+      if (user) {
+        return NextResponse.redirect(new URL('/resident/dashboard', request.url));
+      }
+      return supabaseResponse;
+    }
+
+    // 4. /admin/login handling
+    if (pathname === '/admin/login') {
+      if (user && isAdmin) {
+        return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+      }
+      return supabaseResponse;
+    }
+
+    // 5. Resident Route Protection (/resident/*)
+    if (pathname.startsWith('/resident/')) {
+      if (!user) {
+        const loginUrl = new URL('/resident/login', request.url);
+        loginUrl.searchParams.set('redirectedFrom', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+      return supabaseResponse;
+    }
+
+    // 6. Admin Route Protection (/admin/*)
+    if (pathname.startsWith('/admin/')) {
+      if (!user) {
+        const loginUrl = new URL('/admin/login', request.url);
+        loginUrl.searchParams.set('redirectedFrom', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+
+      if (!isAdmin) {
+        // Authenticated non-admin resident attempting to access admin portal: DENY
+        const accessDeniedUrl = new URL('/resident/dashboard', request.url);
+        accessDeniedUrl.searchParams.set('error', 'unauthorized_admin');
+        return NextResponse.redirect(accessDeniedUrl);
+      }
+
+      return supabaseResponse;
+    }
+  } catch {
+    // If Supabase client fails, enforce login on protected routes
+    if (pathname.startsWith('/resident/') && pathname !== '/resident/login') {
+      const loginUrl = new URL('/resident/login', request.url);
+      loginUrl.searchParams.set('redirectedFrom', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (pathname.startsWith('/admin/') && pathname !== '/admin/login') {
+      const loginUrl = new URL('/admin/login', request.url);
+      loginUrl.searchParams.set('redirectedFrom', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   return supabaseResponse;

@@ -168,27 +168,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isSpotCheckModalOpen, setIsSpotCheckModalOpen] = useState<boolean>(false);
   const [isRewardModalOpen, setIsRewardModalOpen] = useState<boolean>(false);
 
-  // Apply Theme and restore session on mount
+  // Apply Theme on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('ecoloop-theme') as ThemeMode | null;
     const initialTheme = savedTheme || 'light';
     setTheme(initialTheme);
-
-    // Restore user session if stored
-    try {
-      const savedAuth = localStorage.getItem('ecoloop_auth_authenticated');
-      const savedProfile = localStorage.getItem('ecoloop_auth_profile');
-      if (savedAuth === 'true' && savedProfile) {
-        const parsed = JSON.parse(savedProfile);
-        setProfile(parsed);
-        setIsAuthenticated(true);
-        if (parsed.role) {
-          setActiveRole(parsed.role);
-        }
-      }
-    } catch (e) {
-      console.warn('Could not restore auth profile:', e);
-    }
   }, []);
 
   const setTheme = (mode: ThemeMode) => {
@@ -210,80 +194,108 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Synchronize authenticated user profile with Supabase if connected
+  // Synchronize authenticated user profile with Supabase Auth
   useEffect(() => {
     try {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!url || !key || url.includes('mock') || key.includes('dummy')) {
-        return;
-      }
-
       const supabase = createClient();
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          setIsAuthenticated(true);
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-            .then(({ data: profileData }) => {
-              if (profileData) {
-                const updated: Profile = {
-                  ...INITIAL_PROFILE,
-                  id: profileData.id,
-                  email: profileData.email || session.user.email || 'resident@greenvalley.res',
-                  full_name: profileData.full_name || formatNameFromEmail(session.user.email || ''),
-                  role: profileData.role || 'resident',
-                  eco_points: profileData.eco_points ?? 420,
-                  current_streak: profileData.current_streak ?? 7,
-                  consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : 92.0,
-                  total_verifications: profileData.total_verifications ?? 18,
-                  is_active: true,
-                };
-                setProfile(updated);
-                if (profileData.role) {
-                  setActiveRole(profileData.role);
-                }
-                localStorage.setItem('ecoloop_auth_profile', JSON.stringify(updated));
-                localStorage.setItem('ecoloop_auth_authenticated', 'true');
-              }
-            });
-        }
-      });
 
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        if (session?.user) {
-          setIsAuthenticated(true);
-          const { data: profileData } = await supabase
+      const loadUserProfile = async (userId: string, userEmail?: string) => {
+        try {
+          const { data: profileData, error } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id)
+            .eq('id', userId)
             .single();
 
           if (profileData) {
             const updated: Profile = {
               ...INITIAL_PROFILE,
               id: profileData.id,
-              email: profileData.email || session.user.email || 'resident@greenvalley.res',
-              full_name: profileData.full_name || formatNameFromEmail(session.user.email || ''),
+              email: profileData.email || userEmail || '',
+              full_name: profileData.full_name || formatNameFromEmail(userEmail || ''),
               role: profileData.role || 'resident',
-              eco_points: profileData.eco_points ?? 420,
-              current_streak: profileData.current_streak ?? 7,
-              consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : 92.0,
-              total_verifications: profileData.total_verifications ?? 18,
-              is_active: true,
+              society_id: profileData.society_id || 'gvr-tower-b',
+              building: profileData.building || 'Tower B (Orchid)',
+              flat_number: profileData.flat_number || 'Apt 402B',
+              avatar_url: profileData.avatar_url || '/deepak-avatar.png',
+              eco_points: profileData.eco_points ?? 50,
+              current_streak: profileData.current_streak ?? 0,
+              consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : 80.0,
+              total_verifications: profileData.total_verifications ?? 0,
+              tier_level: profileData.tier_level ?? 1,
+              is_active: profileData.is_active ?? true,
             };
             setProfile(updated);
+            setIsAuthenticated(true);
             if (profileData.role) {
               setActiveRole(profileData.role);
             }
-            localStorage.setItem('ecoloop_auth_profile', JSON.stringify(updated));
-            localStorage.setItem('ecoloop_auth_authenticated', 'true');
+          } else if (error && error.code === 'PGRST116') {
+            // Profile doesn't exist yet: create default resident profile in Supabase
+            const newProfileData: Profile = {
+              ...INITIAL_PROFILE,
+              id: userId,
+              email: userEmail || '',
+              full_name: formatNameFromEmail(userEmail || ''),
+              role: 'resident',
+              society_id: 'gvr-tower-b',
+              building: 'Tower B (Orchid)',
+              flat_number: 'Apt 402B',
+              avatar_url: '/deepak-avatar.png',
+              eco_points: 50,
+              current_streak: 0,
+              consistency_score: 80.0,
+              total_verifications: 0,
+              tier_level: 1,
+              is_active: true,
+            };
+
+            await supabase.from('profiles').insert({
+              id: userId,
+              email: userEmail || '',
+              full_name: newProfileData.full_name,
+              role: 'resident',
+              society_id: 'gvr-tower-b',
+              building: 'Tower B (Orchid)',
+              flat_number: 'Apt 402B',
+              avatar_url: '/deepak-avatar.png',
+              eco_points: 50,
+              current_streak: 0,
+              consistency_score: 80.0,
+              total_verifications: 0,
+              tier_level: 1,
+              is_active: true,
+            });
+
+            setProfile(newProfileData);
+            setIsAuthenticated(true);
+            setActiveRole('resident');
           }
+        } catch (err) {
+          console.error('Error fetching Supabase profile:', err);
+        }
+      };
+
+      // 1. Check initial Supabase session
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          loadUserProfile(user.id, user.email);
+        } else {
+          setIsAuthenticated(false);
+          setProfile(DEFAULT_UNAUTHENTICATED_PROFILE);
+        }
+      });
+
+      // 2. Listen to real-time Supabase Auth state changes
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
+          loadUserProfile(session.user.id, session.user.email);
+        } else if (event === 'SIGNED_OUT' || !session?.user) {
+          setIsAuthenticated(false);
+          setProfile(DEFAULT_UNAUTHENTICATED_PROFILE);
+          setActiveRole('resident');
         }
       });
 
@@ -291,7 +303,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         subscription.unsubscribe();
       };
     } catch (err) {
-      console.warn('Supabase auth initialization bypassed:', err);
+      console.warn('Supabase auth listener initialization error:', err);
     }
   }, []);
 
@@ -313,25 +325,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProfile(updatedProfile);
     setActiveRole(role);
     setIsAuthenticated(true);
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ecoloop_auth_profile', JSON.stringify(updatedProfile));
-      localStorage.setItem('ecoloop_auth_authenticated', 'true');
-      const cookieName = (role === 'admin' || role === 'society_admin' || role === 'municipal_admin')
-        ? 'ecoloop_admin_session'
-        : 'ecoloop_resident_session';
-      document.cookie = `${cookieName}=true; path=/; max-age=604800; SameSite=Lax`;
-    }
   };
 
   const signOut = async (portal: 'resident' | 'admin' = 'resident') => {
     try {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (url && key && !url.includes('mock') && !key.includes('dummy')) {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-      }
+      const supabase = createClient();
+      await supabase.auth.signOut();
     } catch (err) {
       console.warn('Error during Supabase signout:', err);
     }
@@ -340,13 +339,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProfile(DEFAULT_UNAUTHENTICATED_PROFILE);
 
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('ecoloop_auth_profile');
-      localStorage.removeItem('ecoloop_auth_authenticated');
-      localStorage.removeItem('ecoloop_resident_session');
-      localStorage.removeItem('ecoloop_admin_session');
-      document.cookie = 'ecoloop_resident_session=; path=/; max-age=0; SameSite=Lax';
-      document.cookie = 'ecoloop_admin_session=; path=/; max-age=0; SameSite=Lax';
-
       if (portal === 'admin') {
         window.location.href = '/admin/login';
       } else {

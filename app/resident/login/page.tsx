@@ -4,12 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
 import { createClient } from '@/lib/supabase/client';
-import { useApp } from '@/lib/state/store';
 
 export default function ResidentLoginPage() {
   const router = useRouter();
   const [redirectedFrom, setRedirectedFrom] = useState('/resident/dashboard');
-  const { loginUser } = useApp();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -23,7 +21,6 @@ export default function ResidentLoginPage() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [step, setStep] = useState<'email' | 'otp'>('email');
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Status & error states
   const [status, setStatus] = useState<
@@ -46,7 +43,8 @@ export default function ResidentLoginPage() {
   // Handle Send OTP
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes('@') || !normalizedEmail.includes('.')) {
       setErrorMessage('Please enter a valid email address.');
       return;
     }
@@ -56,49 +54,53 @@ export default function ResidentLoginPage() {
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const isMockOrUnconfigured = !url || !key || url.includes('mock') || key.includes('dummy');
-
-    if (!isMockOrUnconfigured) {
-      try {
-        const supabase = createClient();
-        const { error } = await supabase.auth.signInWithOtp({
-          email: email.trim().toLowerCase(),
-          options: {
-            shouldCreateUser: true,
-          },
-        });
-
-        if (error) {
-          console.warn('Supabase signInWithOtp notice, falling back to simulated OTP:', error.message);
-          setIsDemoMode(true);
-        } else {
-          setIsDemoMode(false);
-        }
-      } catch (err) {
-        console.warn('Network unreachable for Supabase Auth, switching to simulated OTP:', err);
-        setIsDemoMode(true);
-      }
-    } else {
-      setIsDemoMode(true);
+    if (!url || !key) {
+      setErrorMessage('Email verification is currently unavailable. Please try again later.');
+      setStatus('error');
+      return;
     }
 
-    setStatus('sent');
-    setStep('otp');
-    setCountdown(60);
-    // Focus first OTP field after state updates
-    setTimeout(() => {
-      otpInputRefs.current[0]?.focus();
-    }, 100);
-  };
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
 
-  // Instant Quick Demo Login
-  const handleInstantDemoLogin = (customEmail?: string) => {
-    const targetEmail = customEmail || email.trim() || 'resident@greenvalley.res';
-    setStatus('verified');
-    loginUser(targetEmail, 'resident');
-    setTimeout(() => {
-      router.push(redirectedFrom);
-    }, 400);
+      if (error) {
+        const msg = error.message.toLowerCase();
+        const statusNum = error.status;
+        if (statusNum === 429 || msg.includes('rate limit') || msg.includes('too many requests')) {
+          setErrorMessage('Too many verification requests. Please wait a moment and try again.');
+        } else if (msg.includes('invalid') && msg.includes('email')) {
+          setErrorMessage('Please enter a valid email address.');
+        } else if ((statusNum && statusNum >= 500) || msg.includes('smtp') || msg.includes('provider') || msg.includes('disabled')) {
+          setErrorMessage('Email verification is currently unavailable. Please try again later.');
+        } else {
+          setErrorMessage(error.message || 'Unable to send verification code.');
+        }
+        setStatus('error');
+        return;
+      }
+
+      setStatus('sent');
+      setStep('otp');
+      setCountdown(60);
+      // Focus first OTP field after state updates
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 100);
+    } catch (err) {
+      if (err instanceof TypeError || (err instanceof Error && err.message.toLowerCase().includes('fetch'))) {
+        setErrorMessage("We couldn't connect to EcoLoop authentication. Please check your internet connection and try again.");
+      } else {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        setErrorMessage(`Authentication error: ${msg}`);
+      }
+      setStatus('error');
+    }
   };
 
   // Handle single digit input
@@ -148,13 +150,6 @@ export default function ResidentLoginPage() {
     }
   };
 
-  // Quick Autofill Demo Code
-  const handleAutofillDemoCode = () => {
-    const demoDigits = ['1', '2', '3', '4', '5', '6'];
-    setOtp(demoDigits);
-    handleVerifyOtp('123456');
-  };
-
   // Handle OTP Verification
   const handleVerifyOtp = async (tokenToVerify?: string) => {
     const token = tokenToVerify || otp.join('');
@@ -163,38 +158,84 @@ export default function ResidentLoginPage() {
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     setStatus('verifying');
     setErrorMessage(null);
 
-    let authEmail = email.trim().toLowerCase();
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: normalizedEmail,
+        token: token.trim(),
+        type: 'email',
+      });
 
-    if (!isDemoMode) {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase.auth.verifyOtp({
-          email: authEmail,
-          token: token.trim(),
-          type: 'email',
-        });
-
-        if (error) {
-          // If Supabase rejected, try verifying gracefully
-          console.warn('Supabase verify error, falling back:', error.message);
-        } else if (data?.user?.email) {
-          authEmail = data.user.email;
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes('expired')) {
+          setErrorMessage('This verification code has expired. Please request a new one.');
+        } else if (msg.includes('invalid') || msg.includes('token') || msg.includes('incorrect') || msg.includes('code')) {
+          setErrorMessage('The verification code is incorrect. Please check your email and try again.');
+        } else {
+          setErrorMessage(error.message || 'Verification failed. Please try again.');
         }
-      } catch (err) {
-        console.warn('Network error during Supabase verify, logging in directly:', err);
+        setStatus('error');
+        return;
       }
+
+      const authUser = data.user;
+      if (!authUser) {
+        setErrorMessage('Authentication session could not be established.');
+        setStatus('error');
+        return;
+      }
+
+      // Ensure profile exists in Supabase database
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (!existingProfile) {
+        const namePart = normalizedEmail.split('@')[0].replace(/[0-9_.]+/g, ' ').trim();
+        const formattedName = namePart
+          ? namePart.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+          : 'Resident Member';
+
+        await supabase.from('profiles').insert({
+          id: authUser.id,
+          email: authUser.email || normalizedEmail,
+          full_name: authUser.user_metadata?.full_name || formattedName,
+          role: 'resident',
+          society_id: 'gvr-tower-b',
+          building: 'Tower B (Orchid)',
+          flat_number: 'Apt 402B',
+          avatar_url: '/deepak-avatar.png',
+          eco_points: 50,
+          current_streak: 0,
+          consistency_score: 80.0,
+          total_verifications: 0,
+          tier_level: 1,
+          is_active: true,
+        });
+      }
+
+      setStatus('verified');
+
+      // Refresh server session and navigate to resident dashboard
+      router.refresh();
+      setTimeout(() => {
+        router.push(redirectedFrom);
+      }, 400);
+    } catch (err) {
+      if (err instanceof TypeError || (err instanceof Error && err.message.toLowerCase().includes('fetch'))) {
+        setErrorMessage("We couldn't connect to EcoLoop authentication. Please check your internet connection and try again.");
+      } else {
+        setErrorMessage('Verification failed. Please try again.');
+      }
+      setStatus('error');
     }
-
-    setStatus('verified');
-    loginUser(authEmail, 'resident');
-
-    // Navigate to resident dashboard
-    setTimeout(() => {
-      router.push(redirectedFrom);
-    }, 500);
   };
 
   // Handle Resend OTP
@@ -203,24 +244,36 @@ export default function ResidentLoginPage() {
     setStatus('sending');
     setErrorMessage(null);
 
-    if (!isDemoMode) {
-      try {
-        const supabase = createClient();
-        await supabase.auth.signInWithOtp({
-          email: email.trim().toLowerCase(),
-          options: {
-            shouldCreateUser: true,
-          },
-        });
-      } catch {
-        setIsDemoMode(true);
-      }
-    }
+    const normalizedEmail = email.trim().toLowerCase();
 
-    setStatus('sent');
-    setCountdown(60);
-    setOtp(['', '', '', '', '', '']);
-    otpInputRefs.current[0]?.focus();
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (error.status === 429 || msg.includes('rate limit')) {
+          setErrorMessage('Too many verification requests. Please wait a moment and try again.');
+        } else {
+          setErrorMessage(error.message || 'Failed to resend verification code.');
+        }
+        setStatus('error');
+        return;
+      }
+
+      setStatus('sent');
+      setCountdown(60);
+      setOtp(['', '', '', '', '', '']);
+      otpInputRefs.current[0]?.focus();
+    } catch {
+      setErrorMessage("We couldn't connect to EcoLoop authentication. Please check your internet connection and try again.");
+      setStatus('error');
+    }
   };
 
   // Change Email Action
@@ -264,75 +317,55 @@ export default function ResidentLoginPage() {
 
         {/* STEP 1: Enter Email */}
         {step === 'email' && (
-          <div className="flex flex-col gap-4">
-            <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
-              <div>
-                <label
-                  htmlFor="resident-email"
-                  className="text-xs font-semibold text-[#0b1c30] dark:text-white block mb-1.5"
-                >
-                  Apartment Household Email
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[#3c4a42] dark:text-[#94a3b8]">
-                    mail
-                  </span>
-                  <input
-                    id="resident-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="resident@society.org"
-                    required
-                    autoFocus
-                    disabled={status === 'sending'}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f8f9ff] dark:bg-[#1a263e] border border-[#e2e8f0] dark:border-[#27354f] rounded-xl text-sm text-[#0b1c30] dark:text-white placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent transition-all disabled:opacity-50"
-                  />
-                </div>
-                <p className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1.5">
-                  We will send a secure 6-digit one-time code to verify your identity.
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={status === 'sending'}
-                className="w-full py-3 px-4 bg-[#10b981] hover:bg-[#006c49] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#10b981]/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+          <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
+            <div>
+              <label
+                htmlFor="resident-email"
+                className="text-xs font-semibold text-[#0b1c30] dark:text-white block mb-1.5"
               >
-                {status === 'sending' ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin text-[18px]">
-                      progress_activity
-                    </span>
-                    <span>Sending Code...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Send Verification Code</span>
-                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-[#e2e8f0] dark:border-[#1e293b]"></div>
-              <span className="flex-shrink mx-3 text-[11px] text-[#64748b] dark:text-[#94a3b8] uppercase font-semibold">
-                Or Quick Test
-              </span>
-              <div className="flex-grow border-t border-[#e2e8f0] dark:border-[#1e293b]"></div>
+                Apartment Household Email
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[#3c4a42] dark:text-[#94a3b8]">
+                  mail
+                </span>
+                <input
+                  id="resident-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="resident@society.org"
+                  required
+                  autoFocus
+                  disabled={status === 'sending'}
+                  className="w-full pl-10 pr-4 py-3 bg-[#f8f9ff] dark:bg-[#1a263e] border border-[#e2e8f0] dark:border-[#27354f] rounded-xl text-sm text-[#0b1c30] dark:text-white placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent transition-all disabled:opacity-50"
+                />
+              </div>
+              <p className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1.5">
+                We will send a secure 6-digit one-time code to verify your identity.
+              </p>
             </div>
 
-            {/* Instant Demo Resident Login Button */}
             <button
-              type="button"
-              onClick={() => handleInstantDemoLogin()}
-              className="w-full py-2.5 px-4 bg-[#eff4ff] dark:bg-[#1a263e] hover:bg-[#e0ecff] dark:hover:bg-[#223354] text-[#006c49] dark:text-[#10b981] border border-[#d2e3fc] dark:border-[#27354f] font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+              type="submit"
+              disabled={status === 'sending'}
+              className="w-full py-3 px-4 bg-[#10b981] hover:bg-[#006c49] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#10b981]/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">bolt</span>
-              <span>Instant Resident Demo Login</span>
+              {status === 'sending' ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-[18px]">
+                    progress_activity
+                  </span>
+                  <span>Sending Code...</span>
+                </>
+              ) : (
+                <>
+                  <span>Send Verification Code</span>
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </>
+              )}
             </button>
-          </div>
+          </form>
         )}
 
         {/* STEP 2: Enter 6-Digit OTP */}
@@ -350,26 +383,6 @@ export default function ResidentLoginPage() {
                 Change email address
               </button>
             </div>
-
-            {/* Demo Mode Notice */}
-            {isDemoMode && (
-              <div className="p-3 rounded-xl bg-[#eff4ff] dark:bg-[#1a263e] border border-[#bfdbfe] dark:border-[#27354f] text-xs text-[#1e40af] dark:text-[#93c5fd] flex flex-col gap-1.5">
-                <div className="flex items-center gap-1.5 font-bold">
-                  <span className="material-symbols-outlined text-[16px]">info</span>
-                  <span>Demo Mode Verification</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span>Use verification code: <strong>123456</strong></span>
-                  <button
-                    type="button"
-                    onClick={handleAutofillDemoCode}
-                    className="underline font-bold text-[#10b981] hover:text-[#006c49]"
-                  >
-                    Autofill Code
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* 6 OTP Inputs */}
             <div>
@@ -454,4 +467,3 @@ export default function ResidentLoginPage() {
     </div>
   );
 }
-

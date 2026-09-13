@@ -4,12 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
 import { createClient } from '@/lib/supabase/client';
-import { useApp } from '@/lib/state/store';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [redirectedFrom, setRedirectedFrom] = useState('/admin/dashboard');
-  const { loginUser } = useApp();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -23,7 +21,6 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [step, setStep] = useState<'email' | 'otp'>('email');
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Status & error states
   const [status, setStatus] = useState<
@@ -46,7 +43,8 @@ export default function AdminLoginPage() {
   // Send Admin OTP
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes('@') || !normalizedEmail.includes('.')) {
       setErrorMessage('Please enter a valid administrator email address.');
       return;
     }
@@ -56,48 +54,52 @@ export default function AdminLoginPage() {
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const isMockOrUnconfigured = !url || !key || url.includes('mock') || key.includes('dummy');
-
-    if (!isMockOrUnconfigured) {
-      try {
-        const supabase = createClient();
-        const { error } = await supabase.auth.signInWithOtp({
-          email: email.trim().toLowerCase(),
-          options: {
-            shouldCreateUser: true,
-          },
-        });
-
-        if (error) {
-          console.warn('Supabase admin signInWithOtp notice:', error.message);
-          setIsDemoMode(true);
-        } else {
-          setIsDemoMode(false);
-        }
-      } catch (err) {
-        console.warn('Supabase offline, using demo admin mode:', err);
-        setIsDemoMode(true);
-      }
-    } else {
-      setIsDemoMode(true);
+    if (!url || !key) {
+      setErrorMessage('Admin verification service is currently unavailable. Please check system configuration.');
+      setStatus('error');
+      return;
     }
 
-    setStatus('sent');
-    setStep('otp');
-    setCountdown(60);
-    setTimeout(() => {
-      otpInputRefs.current[0]?.focus();
-    }, 100);
-  };
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
 
-  // Instant Demo Admin Login
-  const handleInstantDemoAdminLogin = () => {
-    const adminEmail = email.trim() || 'admin@greenvalley.res';
-    setStatus('verified');
-    loginUser(adminEmail, 'society_admin', 'Society Admin');
-    setTimeout(() => {
-      router.push(redirectedFrom);
-    }, 400);
+      if (error) {
+        const msg = error.message.toLowerCase();
+        const statusNum = error.status;
+        if (statusNum === 429 || msg.includes('rate limit') || msg.includes('too many requests')) {
+          setErrorMessage('Too many verification requests. Please wait a moment and try again.');
+        } else if (msg.includes('invalid') && msg.includes('email')) {
+          setErrorMessage('Please enter a valid administrator email address.');
+        } else if ((statusNum && statusNum >= 500) || msg.includes('smtp') || msg.includes('provider') || msg.includes('disabled')) {
+          setErrorMessage('Email verification is currently unavailable. Please try again later.');
+        } else {
+          setErrorMessage(error.message || 'Unable to send admin verification code.');
+        }
+        setStatus('error');
+        return;
+      }
+
+      setStatus('sent');
+      setStep('otp');
+      setCountdown(60);
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 100);
+    } catch (err) {
+      if (err instanceof TypeError || (err instanceof Error && err.message.toLowerCase().includes('fetch'))) {
+        setErrorMessage("We couldn't connect to EcoLoop authentication. Please check your internet connection and try again.");
+      } else {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        setErrorMessage(`Authentication error: ${msg}`);
+      }
+      setStatus('error');
+    }
   };
 
   // Handle single digit input
@@ -144,14 +146,7 @@ export default function AdminLoginPage() {
     }
   };
 
-  // Autofill Demo Code
-  const handleAutofillDemoCode = () => {
-    const demoDigits = ['1', '2', '3', '4', '5', '6'];
-    setOtp(demoDigits);
-    handleVerifyOtp('123456');
-  };
-
-  // Handle OTP Verification & Admin Authorization
+  // Handle OTP Verification & Strict Admin Authorization
   const handleVerifyOtp = async (tokenToVerify?: string) => {
     const token = tokenToVerify || otp.join('');
     if (token.length !== 6) {
@@ -159,36 +154,78 @@ export default function AdminLoginPage() {
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     setStatus('verifying');
     setErrorMessage(null);
 
-    let authEmail = email.trim().toLowerCase();
+    try {
+      const supabase = createClient();
 
-    if (!isDemoMode) {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase.auth.verifyOtp({
-          email: authEmail,
-          token: token.trim(),
-          type: 'email',
-        });
+      // Step 1: Verify OTP with Supabase Auth
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: normalizedEmail,
+        token: token.trim(),
+        type: 'email',
+      });
 
-        if (error) {
-          console.warn('Supabase admin verify warning, fallback:', error.message);
-        } else if (data?.user?.email) {
-          authEmail = data.user.email;
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes('expired')) {
+          setErrorMessage('This verification code has expired. Please request a new one.');
+        } else if (msg.includes('invalid') || msg.includes('token') || msg.includes('incorrect') || msg.includes('code')) {
+          setErrorMessage('The verification code is incorrect. Please check your email and try again.');
+        } else {
+          setErrorMessage(error.message || 'Verification failed. Please try again.');
         }
-      } catch (err) {
-        console.warn('Network error in Supabase admin verify:', err);
+        setStatus('error');
+        return;
       }
+
+      const authUser = data.user;
+      if (!authUser) {
+        setErrorMessage('Authentication failed: user session not found.');
+        setStatus('error');
+        return;
+      }
+
+      // Step 2: Query profile securely from Supabase database to verify role
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email, role, full_name')
+        .eq('id', authUser.id)
+        .single();
+
+      const userRole = profileData?.role;
+      const isAuthorizedAdmin =
+        userRole === 'admin' ||
+        userRole === 'society_admin' ||
+        userRole === 'municipal_admin';
+
+      // Step 3: Check authorization - strictly deny non-admin users
+      if (profileError || !isAuthorizedAdmin) {
+        // Sign out unauthorized session immediately
+        await supabase.auth.signOut();
+        setStatus('unauthorized');
+        setErrorMessage('This account is not authorized for admin access.');
+        return;
+      }
+
+      // Step 4: User is authorized admin
+      setStatus('verified');
+
+      // Refresh server session and redirect to admin dashboard
+      router.refresh();
+      setTimeout(() => {
+        router.push(redirectedFrom);
+      }, 400);
+    } catch (err) {
+      if (err instanceof TypeError || (err instanceof Error && err.message.toLowerCase().includes('fetch'))) {
+        setErrorMessage("We couldn't connect to EcoLoop authentication. Please check your internet connection and try again.");
+      } else {
+        setErrorMessage('Network error during admin verification. Please try again.');
+      }
+      setStatus('error');
     }
-
-    setStatus('verified');
-    loginUser(authEmail, 'society_admin', 'Society Admin');
-
-    setTimeout(() => {
-      router.push(redirectedFrom);
-    }, 500);
   };
 
   // Handle Resend OTP
@@ -197,24 +234,36 @@ export default function AdminLoginPage() {
     setStatus('sending');
     setErrorMessage(null);
 
-    if (!isDemoMode) {
-      try {
-        const supabase = createClient();
-        await supabase.auth.signInWithOtp({
-          email: email.trim().toLowerCase(),
-          options: {
-            shouldCreateUser: true,
-          },
-        });
-      } catch {
-        setIsDemoMode(true);
-      }
-    }
+    const normalizedEmail = email.trim().toLowerCase();
 
-    setStatus('sent');
-    setCountdown(60);
-    setOtp(['', '', '', '', '', '']);
-    otpInputRefs.current[0]?.focus();
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (error.status === 429 || msg.includes('rate limit')) {
+          setErrorMessage('Too many verification requests. Please wait a moment and try again.');
+        } else {
+          setErrorMessage(error.message || 'Failed to resend admin verification code.');
+        }
+        setStatus('error');
+        return;
+      }
+
+      setStatus('sent');
+      setCountdown(60);
+      setOtp(['', '', '', '', '', '']);
+      otpInputRefs.current[0]?.focus();
+    } catch {
+      setErrorMessage("We couldn't connect to EcoLoop authentication. Please check your internet connection and try again.");
+      setStatus('error');
+    }
   };
 
   // Change Email Action
@@ -264,75 +313,55 @@ export default function AdminLoginPage() {
 
         {/* STEP 1: Enter Admin Email */}
         {step === 'email' && (
-          <div className="flex flex-col gap-4">
-            <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
-              <div>
-                <label
-                  htmlFor="admin-email"
-                  className="text-xs font-semibold text-[#0b1c30] dark:text-white block mb-1.5"
-                >
-                  Authorized Administrator Email
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[#64748b]">
-                    admin_panel_settings
-                  </span>
-                  <input
-                    id="admin-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@society.org"
-                    required
-                    autoFocus
-                    disabled={status === 'sending'}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f8fafc] dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-sm text-[#0b1c30] dark:text-white placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#006c49] focus:border-transparent transition-all disabled:opacity-50"
-                  />
-                </div>
-                <p className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1.5">
-                  Admin accounts are pre-authorized by the municipal or society administrator.
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={status === 'sending'}
-                className="w-full py-3 px-4 bg-[#006c49] hover:bg-[#005137] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#006c49]/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+          <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
+            <div>
+              <label
+                htmlFor="admin-email"
+                className="text-xs font-semibold text-[#0b1c30] dark:text-white block mb-1.5"
               >
-                {status === 'sending' ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin text-[18px]">
-                      progress_activity
-                    </span>
-                    <span>Sending Admin Code...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Send Admin Code</span>
-                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-[#cbd5e1] dark:border-[#1f2937]"></div>
-              <span className="flex-shrink mx-3 text-[11px] text-[#64748b] dark:text-[#94a3b8] uppercase font-semibold">
-                Or Quick Test
-              </span>
-              <div className="flex-grow border-t border-[#cbd5e1] dark:border-[#1f2937]"></div>
+                Authorized Administrator Email
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[#64748b]">
+                  admin_panel_settings
+                </span>
+                <input
+                  id="admin-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@society.org"
+                  required
+                  autoFocus
+                  disabled={status === 'sending'}
+                  className="w-full pl-10 pr-4 py-3 bg-[#f8fafc] dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-sm text-[#0b1c30] dark:text-white placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#006c49] focus:border-transparent transition-all disabled:opacity-50"
+                />
+              </div>
+              <p className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1.5">
+                Admin accounts are pre-authorized by the municipal or society administrator.
+              </p>
             </div>
 
-            {/* Instant Demo Admin Login Button */}
             <button
-              type="button"
-              onClick={() => handleInstantDemoAdminLogin()}
-              className="w-full py-2.5 px-4 bg-[#eff4ff] dark:bg-[#1e293b] hover:bg-[#e0ecff] dark:hover:bg-[#25334c] text-[#006c49] dark:text-[#34d399] border border-[#cbd5e1] dark:border-[#334155] font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+              type="submit"
+              disabled={status === 'sending'}
+              className="w-full py-3 px-4 bg-[#006c49] hover:bg-[#005137] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#006c49]/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">bolt</span>
-              <span>Instant Admin Demo Login</span>
+              {status === 'sending' ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-[18px]">
+                    progress_activity
+                  </span>
+                  <span>Sending Admin Code...</span>
+                </>
+              ) : (
+                <>
+                  <span>Send Admin Code</span>
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </>
+              )}
             </button>
-          </div>
+          </form>
         )}
 
         {/* STEP 2: Enter 6-Digit Admin OTP */}
@@ -350,26 +379,6 @@ export default function AdminLoginPage() {
                 Change admin email
               </button>
             </div>
-
-            {/* Demo Mode Notice */}
-            {isDemoMode && (
-              <div className="p-3 rounded-xl bg-[#eff4ff] dark:bg-[#1e293b] border border-[#bfdbfe] dark:border-[#334155] text-xs text-[#1e40af] dark:text-[#93c5fd] flex flex-col gap-1.5">
-                <div className="flex items-center gap-1.5 font-bold">
-                  <span className="material-symbols-outlined text-[16px]">info</span>
-                  <span>Demo Admin Verification</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span>Use code: <strong>123456</strong></span>
-                  <button
-                    type="button"
-                    onClick={handleAutofillDemoCode}
-                    className="underline font-bold text-[#006c49] dark:text-[#34d399]"
-                  >
-                    Autofill Code
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* 6 OTP Inputs */}
             <div>
