@@ -62,10 +62,14 @@ export default function ResidentLoginPage() {
 
     try {
       const supabase = createClient();
+      // emailRedirectTo ensures the magic link goes to /auth/callback
+      // so the token is exchanged server-side and the user is logged in
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
       const { error } = await supabase.auth.signInWithOtp({
         email: normalizedEmail,
         options: {
           shouldCreateUser: true,
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       });
 
