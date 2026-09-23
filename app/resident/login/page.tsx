@@ -240,6 +240,10 @@ export default function ResidentLoginPage() {
         }, { onConflict: 'id' });
       }
 
+      if (typeof document !== 'undefined') {
+        document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
+      }
+
       setStatus('verified');
 
       // Refresh server session and navigate to dashboard
@@ -247,7 +251,7 @@ export default function ResidentLoginPage() {
       const targetDestination = isSuperAdmin ? '/admin/dashboard' : redirectedFrom;
       setTimeout(() => {
         router.push(targetDestination);
-      }, 400);
+      }, 300);
     } catch (err) {
       if (err instanceof TypeError || (err instanceof Error && err.message.toLowerCase().includes('fetch'))) {
         setErrorMessage("We couldn't connect to EcoLoop authentication. Please check your internet connection and try again.");
@@ -405,6 +409,10 @@ export default function ResidentLoginPage() {
             <button
               type="button"
               onClick={() => {
+                if (typeof document !== 'undefined') {
+                  document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
+                  document.cookie = 'ecoloop_demo=true; path=/; max-age=604800; SameSite=Lax';
+                }
                 setStatus('verified');
                 router.push('/resident/dashboard');
               }}

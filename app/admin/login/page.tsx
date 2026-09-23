@@ -228,14 +228,17 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Step 4: User is authorized admin
+      if (typeof document !== 'undefined') {
+        document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
+      }
+
       setStatus('verified');
 
       // Refresh server session and redirect to admin dashboard
       router.refresh();
       setTimeout(() => {
         router.push(redirectedFrom);
-      }, 400);
+      }, 300);
     } catch (err) {
       if (err instanceof TypeError || (err instanceof Error && err.message.toLowerCase().includes('fetch'))) {
         setErrorMessage("We couldn't connect to EcoLoop authentication. Please check your internet connection and try again.");
@@ -396,6 +399,10 @@ export default function AdminLoginPage() {
             <button
               type="button"
               onClick={() => {
+                if (typeof document !== 'undefined') {
+                  document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
+                  document.cookie = 'ecoloop_demo=true; path=/; max-age=604800; SameSite=Lax';
+                }
                 setStatus('verified');
                 router.push('/admin/dashboard');
               }}
