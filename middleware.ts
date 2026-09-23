@@ -14,19 +14,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Check for local dev bypass OR demo session cookie
-  const isDevBypass = process.env.DEV_BYPASS_AUTH === 'true';
-  const hasDemoCookie = request.cookies.get('ecoloop_demo')?.value === 'true';
-  const hasSessionCookie = !!request.cookies.get('ecoloop_session')?.value;
-
-  if (isDevBypass || hasDemoCookie || hasSessionCookie) {
-    if (pathname === '/' || pathname === '/login' || pathname === '/signup') {
-      return NextResponse.redirect(new URL('/resident/dashboard', request.url));
-    }
-    return NextResponse.next();
-  }
-
-  // 3. Login pages must ALWAYS be accessible (no loop)
+  // 2. Login pages must ALWAYS be accessible (no automatic redirect loop)
   if (
     pathname === '/resident/login' ||
     pathname === '/admin/login' ||
@@ -35,6 +23,18 @@ export async function middleware(request: NextRequest) {
   ) {
     if (pathname === '/login' || pathname === '/signup') {
       return NextResponse.redirect(new URL('/resident/login', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 3. Check for local dev bypass OR demo session cookie
+  const isDevBypass = process.env.DEV_BYPASS_AUTH === 'true';
+  const hasDemoCookie = request.cookies.get('ecoloop_demo')?.value === 'true';
+  const hasSessionCookie = !!request.cookies.get('ecoloop_session')?.value;
+
+  if (isDevBypass || hasDemoCookie || hasSessionCookie) {
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/resident/dashboard', request.url));
     }
     return NextResponse.next();
   }

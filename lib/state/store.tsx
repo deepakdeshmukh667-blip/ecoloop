@@ -461,6 +461,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(false);
     setProfile(DEFAULT_UNAUTHENTICATED_PROFILE);
 
+    if (typeof document !== 'undefined') {
+      document.cookie = 'ecoloop_session=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      document.cookie = 'ecoloop_demo=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    }
+
     if (typeof window !== 'undefined') {
       if (portal === 'admin') {
         window.location.href = '/admin/login';
