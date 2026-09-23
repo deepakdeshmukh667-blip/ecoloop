@@ -39,7 +39,15 @@ import {
 export function formatNameFromEmail(email: string): string {
   if (!email) return 'Resident Member';
   const namePart = email.split('@')[0];
-  const clean = namePart.replace(/[0-9_.]+/g, ' ').trim();
+  let clean = namePart.replace(/[0-9_.-]+/g, ' ').trim();
+  if (!clean.includes(' ')) {
+    if (clean.toLowerCase().startsWith('prachi')) {
+      const rest = clean.slice(6);
+      if (rest) {
+        clean = `Prachi ${rest.charAt(0).toUpperCase() + rest.slice(1)}`;
+      }
+    }
+  }
   if (!clean) return 'Resident Member';
   return clean
     .split(' ')
@@ -230,11 +238,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             .single();
 
           if (profileData) {
+            const emailStr = (profileData.email || userEmail || '').toLowerCase();
+            const isDeepak = emailStr.includes('deepak');
+            let resolvedName = profileData.full_name;
+            if (!resolvedName || resolvedName === 'Resident Member' || (!isDeepak && resolvedName.toLowerCase().includes('deepak'))) {
+              resolvedName = formatNameFromEmail(emailStr);
+            }
+
             const updated: Profile = {
               ...INITIAL_PROFILE,
               id: profileData.id,
               email: profileData.email || userEmail || '',
-              full_name: profileData.full_name || formatNameFromEmail(userEmail || ''),
+              full_name: resolvedName,
               role: profileData.role || 'resident',
               society_id: profileData.society_id || 'gvr-tower-b',
               building: profileData.building || 'Tower B (Orchid)',

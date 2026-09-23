@@ -125,7 +125,11 @@ export default function TopNavBar() {
             </div>
             <div className="hidden sm:flex flex-col text-left leading-tight">
               <span className="text-[12px] font-semibold text-slate-800 dark:text-white">
-                {profile.full_name?.split(' ')[0] || 'Resident'}
+                {profile.full_name && !profile.full_name.includes('Resident Member') && !(profile.full_name.toLowerCase().includes('deepak') && profile.email && !profile.email.toLowerCase().includes('deepak'))
+                  ? profile.full_name.split(' ')[0]
+                  : profile.email
+                  ? (profile.email.split('@')[0].split(/[._-]/)[0].charAt(0).toUpperCase() + profile.email.split('@')[0].split(/[._-]/)[0].slice(1))
+                  : (isAdmin ? 'Admin' : 'Resident')}
               </span>
               <span className="text-[10px] text-slate-500 dark:text-slate-400">
                 {isAdmin ? 'Admin' : profile.flat_number || 'Apt 402B'}

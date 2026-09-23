@@ -201,7 +201,11 @@ export default function ResidentDashboardPage() {
                   </span>
                 </div>
                 <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-headline">
-                  {greeting}, {profile.full_name?.split(' ')[0] || 'Deepak'} 👋
+                  {greeting}, {profile.full_name && !profile.full_name.includes('Resident Member') && !(profile.full_name.toLowerCase().includes('deepak') && profile.email && !profile.email.toLowerCase().includes('deepak'))
+                    ? profile.full_name.split(' ')[0]
+                    : profile.email
+                    ? (profile.email.split('@')[0].split(/[._-]/)[0].charAt(0).toUpperCase() + profile.email.split('@')[0].split(/[._-]/)[0].slice(1))
+                    : 'there'} 👋
                 </h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400 max-w-lg">
                   {completedToday === 3
@@ -303,7 +307,7 @@ export default function ResidentDashboardPage() {
                     type="Wet Waste"
                     icon="compost"
                     done={wetDone}
-                    time="08:15 AM • AI Verified"
+                    time="08:15 AM"
                     pts="+10 pts"
                     sub="Organic"
                     iconBg="bg-emerald-100 dark:bg-emerald-900/30"
@@ -313,7 +317,7 @@ export default function ResidentDashboardPage() {
                     type="Dry Waste"
                     icon="recycling"
                     done={dryDone}
-                    time="12:30 PM • AI Verified"
+                    time="12:30 PM"
                     pts="+10 pts"
                     sub="Paper/Plastic"
                     iconBg="bg-blue-100 dark:bg-blue-900/30"
@@ -323,7 +327,7 @@ export default function ResidentDashboardPage() {
                     type="Special Waste"
                     icon="battery_alert"
                     done={specialDone}
-                    time="Verified"
+                    time="Completed"
                     pts="+15 pts"
                     sub="E-waste/Med"
                     iconBg="bg-amber-100 dark:bg-amber-900/30"

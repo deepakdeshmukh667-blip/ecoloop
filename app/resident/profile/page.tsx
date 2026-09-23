@@ -1,163 +1,231 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import TopNavBar from '@/components/TopNavBar';
 import DesktopSidebar from '@/components/DesktopSidebar';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { useApp } from '@/lib/state/store';
+import { createClient } from '@/lib/supabase/client';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { profile, theme, setTheme, signOut } = useApp();
+  const { profile, setProfile, theme, setTheme, signOut } = useApp();
 
-  const handleLogout = () => {
-    signOut('resident');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState(profile.full_name || '');
+  const [editFlat, setEditFlat] = useState(profile.flat_number || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState('');
+
+  React.useEffect(() => {
+    if (profile.full_name && !editName) setEditName(profile.full_name);
+    if (profile.flat_number && !editFlat) setEditFlat(profile.flat_number);
+  }, [profile.full_name, profile.flat_number]);
+
+  const handleLogout = () => signOut('resident');
+
+  const handleSaveProfile = async () => {
+    if (!editName.trim()) return;
+    setIsSaving(true);
+    setSaveMsg('');
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('profiles').update({
+          full_name: editName.trim(),
+          flat_number: editFlat.trim(),
+        }).eq('id', user.id);
+      }
+      setProfile((prev) => ({
+        ...prev,
+        full_name: editName.trim(),
+        flat_number: editFlat.trim(),
+      }));
+      setSaveMsg('Profile updated!');
+      setIsEditingName(false);
+      setTimeout(() => setSaveMsg(''), 3000);
+    } catch {
+      setSaveMsg('Failed to save. Try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background dark:bg-[#0b1120]">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#080f1a]">
       <TopNavBar />
       <DesktopSidebar />
 
       <div className="md:pl-60">
         <main className="w-full pt-16 pb-28 md:pb-12 min-h-[calc(100vh-4rem)]">
-          <div className="w-full max-w-xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
-            {/* Profile Summary Card */}
-            <section className="bg-white dark:bg-[#131d31] p-6 rounded-2xl shadow-sm border border-[#e2e8f0] dark:border-[#1e293b] flex flex-col gap-4">
+          <div className="w-full max-w-xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-5">
+
+            {/* Save message */}
+            {saveMsg && (
+              <div className={`p-3 rounded-xl text-xs font-semibold text-center
+                ${saveMsg.includes('Failed')
+                  ? 'bg-red-50 text-red-600 border border-red-200'
+                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                }`}>
+                {saveMsg}
+              </div>
+            )}
+
+            {/* ── PROFILE CARD ──────────────────────────── */}
+            <section className="card p-6 flex flex-col gap-5 animate-fadeInUp">
               <div className="flex items-center gap-4">
-                <div className="relative">
+                <div className="relative shrink-0">
                   <img
                     src={profile.avatar_url || '/deepak-avatar.png'}
                     alt={profile.full_name}
-                    className="w-16 h-16 rounded-full object-cover ring-4 ring-[#10b981]"
+                    className="w-16 h-16 rounded-full object-cover ring-2 ring-emerald-400"
                   />
-                  <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#10b981] text-white flex items-center justify-center shadow">
-                    <span className="material-symbols-outlined text-[14px]">check</span>
+                  <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500
+                    text-white flex items-center justify-center shadow text-[12px]">
+                    <span className="material-symbols-outlined text-[12px]">check</span>
                   </span>
                 </div>
 
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold text-[#0b1c30] dark:text-white font-headline">
-                      {profile.full_name}
-                    </h1>
-                    <span className="px-2 py-0.2 rounded-full bg-[#6ffbbe] dark:bg-[#006c49] text-[#002113] dark:text-[#6ffbbe] text-[10px] font-bold">
-                      LVL {profile.tier_level}
-                    </span>
-                  </div>
-                  <span className="text-xs text-[#3c4a42] dark:text-[#94a3b8] mt-0.5">
-                    {profile.flat_number} • Green Valley Residency
-                  </span>
-                  <span className="text-[11px] text-[#006c49] dark:text-[#10b981] font-semibold flex items-center gap-1 mt-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></span>
-                    Resident Steward Charter Active
-                  </span>
-                  <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8] mt-0.5">
-                    Ward 88B • Zone 4 West
-                  </span>
+                <div className="flex flex-col flex-1 min-w-0">
+                  {isEditingName ? (
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Your full name"
+                        className="text-sm font-bold bg-slate-50 dark:bg-[#111f35] border border-slate-200
+                          dark:border-[#1e2d45] rounded-lg px-3 py-1.5 text-slate-900 dark:text-white
+                          outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      <input
+                        type="text"
+                        value={editFlat}
+                        onChange={(e) => setEditFlat(e.target.value)}
+                        placeholder="Flat / Apt number"
+                        className="text-xs bg-slate-50 dark:bg-[#111f35] border border-slate-200
+                          dark:border-[#1e2d45] rounded-lg px-3 py-1.5 text-slate-600 dark:text-slate-300
+                          outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleSaveProfile}
+                          disabled={isSaving}
+                          className="btn-primary text-xs py-1.5 px-3 disabled:opacity-60"
+                          type="button"
+                        >
+                          {isSaving ? 'Saving…' : 'Save Changes'}
+                        </button>
+                        <button
+                          onClick={() => { setIsEditingName(false); setEditName(profile.full_name || ''); setEditFlat(profile.flat_number || ''); }}
+                          className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                          type="button"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-lg font-bold text-slate-900 dark:text-white font-headline truncate">
+                          {profile.full_name || 'Resident Member'}
+                        </h1>
+                        <span className="badge-green text-[9px] shrink-0">LVL {profile.tier_level}</span>
+                      </div>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {profile.flat_number} · Green Valley Residency
+                      </span>
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                        {profile.email}
+                      </span>
+                    </>
+                  )}
                 </div>
+
+                {!isEditingName && (
+                  <button
+                    onClick={() => { setIsEditingName(true); setEditName(profile.full_name || ''); setEditFlat(profile.flat_number || ''); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40
+                      text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40
+                      hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors text-xs font-semibold shrink-0"
+                    title="Edit Name & Flat"
+                    type="button"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">edit</span>
+                    <span>Edit Name</span>
+                  </button>
+                )}
               </div>
 
-              {/* 3 Metric Pills */}
-              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-[#e2e8f0]/60 dark:border-[#1e293b]/60 text-center">
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 dark:border-[#1e2d45] text-center">
                 <div className="flex flex-col">
-                  <div className="flex items-center justify-center gap-1 text-sm font-extrabold text-[#0b1c30] dark:text-white font-headline">
-                    <span className="material-symbols-outlined text-[16px] text-[#e29100]">
-                      bolt
-                    </span>
-                    <span>{profile.eco_points}</span>
+                  <div className="flex items-center justify-center gap-1 text-lg font-black text-slate-900 dark:text-white font-headline">
+                    <span className="material-symbols-outlined text-[16px] text-amber-500">bolt</span>
+                    {profile.eco_points}
                   </div>
-                  <span className="text-[10px] text-[#3c4a42] dark:text-[#94a3b8]">Eco Points</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">Eco Points</span>
                 </div>
-
-                <div className="flex flex-col border-x border-[#e2e8f0]/60 dark:border-[#1e293b]/60">
-                  <div className="flex items-center justify-center gap-1 text-sm font-extrabold text-[#0b1c30] dark:text-white font-headline">
-                    <span className="material-symbols-outlined text-[16px] text-[#10b981]">
-                      eco
-                    </span>
-                    <span>{Math.round(profile.consistency_score)}/100</span>
+                <div className="flex flex-col border-x border-slate-100 dark:border-[#1e2d45]">
+                  <div className="flex items-center justify-center gap-1 text-lg font-black text-slate-900 dark:text-white font-headline">
+                    <span className="material-symbols-outlined text-[16px] text-emerald-500">eco</span>
+                    {Math.round(profile.consistency_score)}/100
                   </div>
-                  <span className="text-[10px] text-[#3c4a42] dark:text-[#94a3b8]">Habit Score</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">Habit Score</span>
                 </div>
-
                 <div className="flex flex-col">
-                  <div className="flex items-center justify-center gap-1 text-sm font-extrabold text-[#0b1c30] dark:text-white font-headline">
-                    <span className="material-symbols-outlined text-[16px] text-[#e29100]">
-                      local_fire_department
-                    </span>
-                    <span>{profile.current_streak}d</span>
+                  <div className="flex items-center justify-center gap-1 text-lg font-black text-slate-900 dark:text-white font-headline">
+                    <span className="material-symbols-outlined text-[16px] text-amber-500">local_fire_department</span>
+                    {profile.current_streak}d
                   </div>
-                  <span className="text-[10px] text-[#3c4a42] dark:text-[#94a3b8]">Active Streak</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">Streak</span>
                 </div>
               </div>
             </section>
 
-            {/* Municipal Ward Certification Status */}
-            <section className="bg-white dark:bg-[#131d31] rounded-2xl shadow-sm border border-[#e2e8f0] dark:border-[#1e293b] overflow-hidden">
-              {/* Header banner */}
-              <div className="bg-gradient-to-r from-[#006c49] to-[#10b981] px-5 py-3 flex items-center justify-between">
+            {/* ── WARD CERTIFICATION ─────────────────────── */}
+            <section className="card overflow-hidden animate-fadeInUp stagger-1">
+              <div className="bg-gradient-to-r from-emerald-700 to-emerald-500 px-5 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-white text-[20px]">verified</span>
-                  <span className="text-white font-bold text-xs font-headline uppercase tracking-wider">
+                  <span className="text-white font-bold text-xs uppercase tracking-wider">
                     Municipal Ward Certification
                   </span>
                 </div>
                 <span className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full text-white text-[11px] font-bold">
-                  <span className="w-2 h-2 rounded-full bg-[#6ffbbe] animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
                   APPROVED
                 </span>
               </div>
-
-              {/* Body */}
               <div className="px-5 py-4 flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-[#3c4a42] dark:text-[#94a3b8] font-bold">
-                    Certification Grade
+                  <span className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
+                    Grade
                   </span>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-4xl font-black text-[#006c49] dark:text-[#10b981] font-headline leading-none">
-                      AA
-                    </span>
-                    <span className="text-xs font-bold text-[#10b981] bg-[#6ffbbe]/20 dark:bg-[#006c49]/30 px-2 py-0.5 rounded-full">
-                      Grade AA
-                    </span>
+                    <span className="text-4xl font-black text-emerald-600 dark:text-emerald-400 font-headline">AA</span>
+                    <span className="badge-green text-[10px]">Grade AA</span>
                   </div>
-                  <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8] mt-0.5">
-                    Ward 88B • Zone 4 West • MCGM
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    Ward 88B · Zone 4 West · MCGM
                   </span>
                 </div>
-
-                <div className="flex flex-col items-end gap-2">
-                  <div className="w-14 h-14 rounded-full bg-[#6ffbbe]/20 dark:bg-[#006c49]/30 border-2 border-[#10b981] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[28px] text-[#006c49] dark:text-[#10b981]">workspace_premium</span>
-                  </div>
-                  <span className="text-[10px] text-[#3c4a42] dark:text-[#94a3b8]">Lic: GVR-2024-MCGM</span>
+                <div className="icon-box bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 w-14 h-14">
+                  <span className="material-symbols-outlined text-[28px]">workspace_premium</span>
                 </div>
-              </div>
-
-              {/* Footer strip */}
-              <div className="border-t border-[#e2e8f0] dark:border-[#1e293b] px-5 py-2.5 bg-[#eff4ff] dark:bg-[#1a263e] flex items-center justify-between">
-                <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8] flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px] text-[#10b981]">calendar_month</span>
-                  Valid through FY 2024–25
-                </span>
-                <span className="text-[11px] font-bold text-[#006c49] dark:text-[#10b981]">
-                  Municipal Ward Certification Status: APPROVED • GRADE AA
-                </span>
               </div>
             </section>
 
-            {/* Appearance Switcher */}
-            <section className="bg-white dark:bg-[#131d31] p-5 rounded-2xl shadow-sm border border-[#e2e8f0] dark:border-[#1e293b] flex flex-col gap-3">
+            {/* ── APPEARANCE ─────────────────────────────── */}
+            <section className="card p-5 flex flex-col gap-3 animate-fadeInUp stagger-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#0b1c30] dark:text-white font-headline">
-                  Appearance
-                </span>
-                <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8]">Auto-synced</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white font-headline">Appearance</span>
+                <span className="text-[11px] text-slate-400">Auto-synced</span>
               </div>
-
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { key: 'light', label: 'Light', icon: 'light_mode' },
@@ -169,8 +237,8 @@ export default function ProfilePage() {
                     onClick={() => setTheme(item.key as any)}
                     className={`py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 border ${
                       theme === item.key
-                        ? 'bg-[#10b981] text-white border-[#10b981] shadow-sm'
-                        : 'bg-[#eff4ff] dark:bg-[#1a263e] border-[#dce9ff] dark:border-[#27354f] text-[#0b1c30] dark:text-white'
+                        ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                        : 'bg-slate-50 dark:bg-[#111f35] border-slate-200 dark:border-[#1e2d45] text-slate-700 dark:text-slate-300'
                     }`}
                     type="button"
                   >
@@ -181,91 +249,50 @@ export default function ProfilePage() {
               </div>
             </section>
 
-            {/* Quick Links & Settings */}
-            <section className="bg-white dark:bg-[#131d31] p-5 rounded-2xl shadow-sm border border-[#e2e8f0] dark:border-[#1e293b] flex flex-col gap-2">
-              <span className="text-xs font-bold text-[#0b1c30] dark:text-white font-headline mb-1">
+            {/* ── QUICK LINKS ─────────────────────────────── */}
+            <section className="card p-5 flex flex-col gap-1 animate-fadeInUp stagger-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white font-headline mb-2">
                 Settings & Support
               </span>
-
-              <Link
-                href="/resident/privacy"
-                className="flex items-center justify-between p-3 rounded-xl hover:bg-[#eff4ff] dark:hover:bg-[#1a263e] transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#6ffbbe]/25 dark:bg-[#006c49]/30 text-[#006c49] dark:text-[#6ffbbe] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">shield</span>
+              {[
+                { href: '/resident/privacy', icon: 'shield', label: 'Privacy Policy', sub: 'Zero-surveillance charter & data retention', iconClass: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' },
+                { href: '/resident/consistency', icon: 'analytics', label: 'Habit Score Formula', sub: 'View scientific 4-part calculation', iconClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' },
+                { href: '/resident/settings', icon: 'settings', label: 'Account Settings', sub: 'Alerts, spot checks, derby digests', iconClass: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-[#111f35] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`icon-box-sm ${item.iconClass}`}>
+                      <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-slate-800 dark:text-white">{item.label}</span>
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500">{item.sub}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-[#0b1c30] dark:text-white">
-                      Zero-Surveillance Civic Privacy
-                    </span>
-                    <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8]">
-                      Democratic charter guarantees & data retention
-                    </span>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-[18px] text-[#3c4a42] dark:text-[#94a3b8]">
-                  chevron_right
-                </span>
-              </Link>
-
-              <Link
-                href="/resident/consistency"
-                className="flex items-center justify-between p-3 rounded-xl hover:bg-[#eff4ff] dark:hover:bg-[#1a263e] transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#eff4ff] dark:bg-[#1a263e] text-[#0284C7] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">analytics</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-[#0b1c30] dark:text-white">
-                      Habit Consistency Formula
-                    </span>
-                    <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8]">
-                      View scientific 4-part habit score calculation
-                    </span>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-[18px] text-[#3c4a42] dark:text-[#94a3b8]">
-                  chevron_right
-                </span>
-              </Link>
-
-              <Link
-                href="/resident/settings"
-                className="flex items-center justify-between p-3 rounded-xl hover:bg-[#eff4ff] dark:hover:bg-[#1a263e] transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#ffddb8] dark:bg-[#523200] text-[#855300] dark:text-[#ffddb8] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">settings</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-[#0b1c30] dark:text-white">
-                      Account & Notification Rules
-                    </span>
-                    <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8]">
-                      Streak alerts, spot checks, derby digests
-                    </span>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-[18px] text-[#3c4a42] dark:text-[#94a3b8]">
-                  chevron_right
-                </span>
-              </Link>
+                  <span className="material-symbols-outlined text-[18px] text-slate-400">chevron_right</span>
+                </Link>
+              ))}
             </section>
 
-            {/* Logout Button */}
+            {/* ── LOGOUT ──────────────────────────────────── */}
             <button
               onClick={handleLogout}
-              className="w-full py-3 rounded-2xl bg-[#ffdad6]/50 dark:bg-[#93000a]/20 text-[#ba1a1a] dark:text-[#ffdad6] border border-[#ffdad6] dark:border-[#93000a] text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#ffdad6] transition-colors"
+              className="w-full py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400
+                border border-red-200 dark:border-red-800/40 text-xs font-bold
+                flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors
+                animate-fadeInUp stagger-3"
               type="button"
             >
               <span className="material-symbols-outlined text-[18px]">logout</span>
-              <span>Log Out of Green Valley Residency</span>
+              Log Out of Green Valley Residency
             </button>
 
-            <span className="text-center text-[11px] text-[#3c4a42] dark:text-[#94a3b8]">
-              EcoLoop v2.10.4 • Crafted for high-trust sustainable communities
+            <span className="text-center text-[11px] text-slate-400 dark:text-slate-500 animate-fadeInUp stagger-4">
+              EcoLoop v2.10.4 · Crafted for high-trust sustainable communities
             </span>
           </div>
         </main>
