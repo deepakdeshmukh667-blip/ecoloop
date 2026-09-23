@@ -67,7 +67,7 @@ function AnalyzingContent() {
       <TopNavBar />
       <DesktopSidebar />
 
-      <div className="md:pl-64">
+      <div className="md:pl-60">
         <main className="w-full pt-24 pb-28 md:pb-12 flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="w-full max-w-md mx-auto px-6 flex flex-col items-center text-center gap-6">
             {/* Animated Radar Pulse Circle */}

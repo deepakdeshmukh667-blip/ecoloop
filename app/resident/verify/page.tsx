@@ -22,7 +22,7 @@ export default function VerifySelectPage() {
       <TopNavBar />
       <DesktopSidebar />
 
-      <div className="md:pl-64">
+      <div className="md:pl-60">
         <main className="w-full pt-16 pb-28 md:pb-12 min-h-[calc(100vh-4rem)]">
           <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
             {/* Header Stepper & Zoom Accessibility Switch */}

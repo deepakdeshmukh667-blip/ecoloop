@@ -17,7 +17,7 @@ export default function AdminReportsPage() {
       <TopNavBar />
       <DesktopSidebar />
 
-      <div className="md:pl-64">
+      <div className="md:pl-60">
         <main className="w-full pt-16 min-h-[calc(100vh-4rem)] pb-24">
           <div className="w-full px-4 sm:px-6 lg:px-12 py-8 flex flex-col gap-6">
             {/* Header */}

@@ -9,15 +9,10 @@ import { useApp } from '@/lib/state/store';
 export default function TopNavBar() {
   const pathname = usePathname();
   const { theme, setTheme, profile, unreadNotificationCount, signOut } = useApp();
-
   const isAdmin = pathname.startsWith('/admin');
 
   const toggleTheme = () => {
-    if (theme === 'dark') {
-      setTheme('light');
-    } else {
-      setTheme('dark');
-    }
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   const handleSignOut = () => {
@@ -25,111 +20,129 @@ export default function TopNavBar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 z-50 bg-white/90 dark:bg-[#131d31]/90 backdrop-blur-xl border-b border-[#e2e8f0] dark:border-[#1e293b] shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div className="w-full h-16 px-4 md:px-6 flex items-center justify-between gap-4">
-        {/* Left Section: Logo & Contextual Branding */}
-        <div className="flex items-center gap-3 lg:gap-5">
+    <header className="fixed top-0 left-0 right-0 h-16 z-50 glass-header">
+      <div className="w-full h-full px-4 md:px-5 flex items-center justify-between gap-4">
+
+        {/* Left: Logo + Context */}
+        <div className="flex items-center gap-3">
           <Logo />
 
-          {/* Contextual Portal Branding Label */}
+          {/* Context badge */}
           {isAdmin ? (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#006c49]/10 text-[#006c49] dark:text-[#34d399] border border-[#006c49]/20">
-              <span className="material-symbols-outlined text-[16px]">shield_person</span>
-              <span className="text-xs font-bold font-headline tracking-tight">
-                EcoLoop Admin Portal
-              </span>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg
+              bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400
+              border border-emerald-200/60 dark:border-emerald-700/40 text-[11px] font-bold tracking-tight">
+              <span className="material-symbols-outlined text-[14px]">shield_person</span>
+              Admin Portal
             </div>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#10b981]/10 text-[#006c49] dark:text-[#10b981] border border-[#10b981]/20">
-              <span className="material-symbols-outlined text-[16px]">eco</span>
-              <span className="text-xs font-bold font-headline tracking-tight">
-                EcoLoop Resident
-              </span>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg
+              bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400
+              border border-emerald-200/60 dark:border-emerald-700/40 text-[11px] font-bold tracking-tight">
+              <span className="material-symbols-outlined text-[14px]">eco</span>
+              Resident
             </div>
           )}
 
-          {/* Society Badge (Desktop) */}
-          <div className="hidden xl:flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#eff4ff] dark:bg-[#1a263e] text-[#3c4a42] dark:text-[#94a3b8] transition-colors">
-            <span className="material-symbols-outlined text-[#10b981] text-[18px]">apartment</span>
-            <span className="text-xs font-semibold text-[#0b1c30] dark:text-white">
-              Green Valley Residency • Ward 88B
+          {/* Society badge - desktop only */}
+          <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 rounded-lg
+            bg-slate-50 dark:bg-[#162236] border border-slate-200 dark:border-[#1e2d45]">
+            <span className="material-symbols-outlined text-emerald-500 text-[15px]">apartment</span>
+            <span className="text-[12px] font-medium text-slate-700 dark:text-slate-300">
+              Green Valley • Ward 88B
             </span>
           </div>
         </div>
 
-        {/* Right Section: Points (resident only), Theme, Notifications, Profile, Sign Out */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Eco Points Pill - Resident Only */}
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+
+          {/* Eco Points - Resident only */}
           {!isAdmin && (
             <Link
               href="/resident/rewards"
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#6ffbbe] dark:bg-[#006c49] text-[#002113] dark:text-[#6ffbbe] shadow-[0_2px_8px_-2px_rgba(16,185,129,0.3)] hover:scale-105 transition-transform"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl
+                bg-emerald-500 hover:bg-emerald-600 text-white
+                shadow-[0_2px_8px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_12px_rgba(16,185,129,0.4)]
+                transition-all active:scale-95 text-xs font-bold"
               title="View Eco Rewards"
             >
-              <span className="material-symbols-outlined text-[18px] text-[#006c49] dark:text-[#6ffbbe]">
-                eco
-              </span>
-              <span className="text-xs font-bold font-headline tracking-tight">
-                {profile.eco_points} pts
-              </span>
+              <span className="material-symbols-outlined text-[15px]">eco</span>
+              <span>{profile.eco_points} pts</span>
             </Link>
           )}
 
-          {/* Theme Toggle Button */}
+          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-[#eff4ff] dark:bg-[#1a263e] hover:bg-[#e5eeff] dark:hover:bg-[#27354f] text-[#3c4a42] dark:text-[#94a3b8] hover:text-[#0b1c30] dark:hover:text-white transition-colors"
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
             type="button"
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+            className="w-9 h-9 flex items-center justify-center rounded-xl
+              bg-slate-50 dark:bg-[#162236] hover:bg-slate-100 dark:hover:bg-[#1a2840]
+              text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white
+              border border-slate-200 dark:border-[#1e2d45] transition-all"
           >
-            <span className="material-symbols-outlined text-[20px]">
+            <span className="material-symbols-outlined text-[18px]">
               {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
           </button>
 
-          {/* Notifications Link - Resident Only */}
+          {/* Notifications - Resident only */}
           {!isAdmin && (
             <Link
               href="/resident/notifications"
-              className="relative w-9 h-9 flex items-center justify-center rounded-full bg-[#eff4ff] dark:bg-[#1a263e] hover:bg-[#e5eeff] dark:hover:bg-[#27354f] text-[#3c4a42] dark:text-[#94a3b8] hover:text-[#0b1c30] dark:hover:text-white transition-colors"
               title="Notifications"
+              className="relative w-9 h-9 flex items-center justify-center rounded-xl
+                bg-slate-50 dark:bg-[#162236] hover:bg-slate-100 dark:hover:bg-[#1a2840]
+                text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white
+                border border-slate-200 dark:border-[#1e2d45] transition-all"
             >
-              <span className="material-symbols-outlined text-[20px]">notifications</span>
+              <span className="material-symbols-outlined text-[18px]">notifications</span>
               {unreadNotificationCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ba1a1a] ring-2 ring-white dark:ring-[#131d31]"></span>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#0d1625]" />
               )}
             </Link>
           )}
 
-          {/* Profile Pill */}
+          {/* Divider */}
+          <div className="w-px h-6 bg-slate-200 dark:bg-[#1e2d45] mx-1" />
+
+          {/* Profile */}
           <Link
             href={isAdmin ? '/admin/settings' : '/resident/profile'}
-            className="flex items-center gap-2 pl-1 group cursor-pointer"
-            title="Profile"
+            title="View Profile"
+            className="flex items-center gap-2 group"
           >
-            <img
-              src={profile.avatar_url || '/deepak-avatar.png'}
-              alt={profile.full_name || 'Resident User'}
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-[#6ffbbe] dark:ring-[#10b981] group-hover:scale-105 transition-transform"
-            />
-            <div className="hidden sm:flex flex-col text-left">
-              <span className="text-xs font-bold text-[#0b1c30] dark:text-white leading-tight">
-                {profile.full_name || 'Resident User'}
+            <div className="relative">
+              <img
+                src={profile.avatar_url || '/deepak-avatar.png'}
+                alt={profile.full_name || 'User'}
+                className="w-8 h-8 rounded-full object-cover ring-2 ring-emerald-400/60 dark:ring-emerald-500/50
+                  group-hover:ring-emerald-500 transition-all"
+              />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500
+                border-2 border-white dark:border-[#0d1625]" />
+            </div>
+            <div className="hidden sm:flex flex-col text-left leading-tight">
+              <span className="text-[12px] font-semibold text-slate-800 dark:text-white">
+                {profile.full_name?.split(' ')[0] || 'Resident'}
               </span>
-              <span className="text-[10px] text-[#3c4a42] dark:text-[#94a3b8]">
-                {isAdmin ? 'Society Admin' : profile.flat_number || 'Apt 402B'}
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                {isAdmin ? 'Admin' : profile.flat_number || 'Apt 402B'}
               </span>
             </div>
           </Link>
 
-          {/* Real Supabase Sign Out Button */}
+          {/* Sign Out */}
           <button
             onClick={handleSignOut}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-[#eff4ff] dark:bg-[#1a263e] hover:bg-[#fee2e2] dark:hover:bg-[#991b1b]/30 text-[#64748b] hover:text-[#ba1a1a] dark:text-[#94a3b8] dark:hover:text-[#ff8585] transition-colors ml-1 cursor-pointer"
-            title={`Sign Out of ${isAdmin ? 'Admin Portal' : 'EcoLoop Resident'}`}
             type="button"
+            title="Sign Out"
+            className="w-8 h-8 flex items-center justify-center rounded-xl
+              text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/15
+              hover:text-red-500 dark:hover:text-red-400 transition-all cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[19px]">logout</span>
+            <span className="material-symbols-outlined text-[17px]">logout</span>
           </button>
         </div>
       </div>

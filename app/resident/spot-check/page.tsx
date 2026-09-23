@@ -14,7 +14,7 @@ export default function SpotCheckPage() {
       <TopNavBar />
       <DesktopSidebar />
 
-      <div className="md:pl-64">
+      <div className="md:pl-60">
         <main className="w-full pt-16 pb-28 md:pb-12 min-h-[calc(100vh-4rem)]">
           <div className="w-full max-w-xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
             <section className="bg-white dark:bg-[#131d31] p-6 rounded-2xl border border-[#e2e8f0] dark:border-[#1e293b] shadow-sm flex flex-col gap-4">
