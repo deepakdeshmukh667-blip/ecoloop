@@ -190,21 +190,37 @@ export default function AdminLoginPage() {
         return;
       }
 
+      const ADMIN_EMAILS = ['deepakdeshmukh667@gmail.com'];
+      const userEmail = (authUser.email || normalizedEmail).toLowerCase().trim();
+      const isSuperAdmin = ADMIN_EMAILS.includes(userEmail);
+
+      if (isSuperAdmin) {
+        // Auto-upgrade profile to admin role
+        await supabase.from('profiles').upsert({
+          id: authUser.id,
+          email: authUser.email || normalizedEmail,
+          role: 'admin',
+          full_name: 'Deepak Deshmukh (Admin)',
+          is_active: true,
+        }, { onConflict: 'id' });
+      }
+
       // Step 2: Query profile securely from Supabase database to verify role
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('id, email, role, full_name')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
       const userRole = profileData?.role;
       const isAuthorizedAdmin =
+        isSuperAdmin ||
         userRole === 'admin' ||
         userRole === 'society_admin' ||
         userRole === 'municipal_admin';
 
       // Step 3: Check authorization - strictly deny non-admin users
-      if (profileError || !isAuthorizedAdmin) {
+      if (!isAuthorizedAdmin) {
         // Sign out unauthorized session immediately
         await supabase.auth.signOut();
         setStatus('unauthorized');

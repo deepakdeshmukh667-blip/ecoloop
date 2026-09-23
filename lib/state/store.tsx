@@ -17,7 +17,9 @@ import {
   UserRole,
   AdminResident,
   SpotCheck,
+  AIVerificationResponse,
 } from '@/types';
+import { BALANCED_WASTE_DATASET } from '@/lib/ai/dataset';
 import {
   INITIAL_PROFILE,
   DEFAULT_UNAUTHENTICATED_PROFILE,
@@ -81,7 +83,8 @@ interface AppContextType {
     catSlug: 'wet' | 'dry' | 'special',
     isSpotCheck?: boolean,
     imageUrl?: string,
-    isContaminated?: boolean
+    isContaminated?: boolean,
+    aiResult?: AIVerificationResponse
   ) => Verification;
 
   // Rewards & Redemptions
@@ -177,20 +180,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = (mode: ThemeMode) => {
     setThemeState(mode);
-    localStorage.setItem('ecoloop-theme', mode);
+    try {
+      localStorage.setItem('ecoloop-theme', mode);
+    } catch {
+      // ignore in restrictive browser environments
+    }
 
-    const root = document.documentElement;
-    if (mode === 'dark') {
-      root.classList.add('dark');
-    } else if (mode === 'light') {
-      root.classList.remove('dark');
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
+    const applyThemeToDOM = () => {
+      const root = document.documentElement;
+      if (mode === 'dark') {
         root.classList.add('dark');
-      } else {
+        root.style.colorScheme = 'dark';
+      } else if (mode === 'light') {
         root.classList.remove('dark');
+        root.style.colorScheme = 'light';
+      } else {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          root.classList.add('dark');
+          root.style.colorScheme = 'dark';
+        } else {
+          root.classList.remove('dark');
+          root.style.colorScheme = 'light';
+        }
       }
+    };
+
+    // If browser supports View Transitions API, use it for ultra-smooth transition
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
+        applyThemeToDOM();
+      });
+    } else {
+      applyThemeToDOM();
     }
   };
 
@@ -218,9 +240,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               building: profileData.building || 'Tower B (Orchid)',
               flat_number: profileData.flat_number || 'Apt 402B',
               avatar_url: profileData.avatar_url || '/deepak-avatar.png',
-              eco_points: profileData.eco_points ?? 50,
+              eco_points: profileData.eco_points ?? 0,
               current_streak: profileData.current_streak ?? 0,
-              consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : 80.0,
+              consistency_score: profileData.consistency_score ? Number(profileData.consistency_score) : 0,
               total_verifications: profileData.total_verifications ?? 0,
               tier_level: profileData.tier_level ?? 1,
               is_active: profileData.is_active ?? true,
@@ -242,9 +264,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               building: 'Tower B (Orchid)',
               flat_number: 'Apt 402B',
               avatar_url: '/deepak-avatar.png',
-              eco_points: 50,
+              eco_points: 0,
               current_streak: 0,
-              consistency_score: 80.0,
+              consistency_score: 0,
               total_verifications: 0,
               tier_level: 1,
               is_active: true,
@@ -256,9 +278,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               full_name: newProfileData.full_name,
               role: 'resident',
               // Note: society_id is a UUID FK, do not pass string IDs
-              eco_points: 50,
+              eco_points: 0,
               current_streak: 0,
-              consistency_score: 80.0,
+              consistency_score: 0,
               total_verifications: 0,
               tier_level: 1,
               is_active: true,
@@ -303,6 +325,95 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.warn('Supabase auth listener initialization error:', err);
     }
   }, []);
+
+  // Dynamically compute live leaderboard rankings whenever profile changes
+  useEffect(() => {
+    const community = INITIAL_LEADERBOARD_RESIDENTS.filter(
+      (r) => r.id !== profile.id && (profile.email ? r.email !== profile.email : true)
+    );
+
+    const userEntry: Profile & { rank: number; badge_title?: string } = {
+      ...profile,
+      id: profile.id || 'user-resident',
+      full_name: profile.full_name || 'Resident Member',
+      rank: 1,
+      badge_title:
+        profile.eco_points >= 500
+          ? 'Super Segregator'
+          : profile.eco_points >= 300
+          ? 'Waste Warrior'
+          : profile.eco_points >= 100
+          ? 'Rising Star'
+          : 'Eco Starter',
+    };
+
+    const combined = [...community, userEntry].sort((a, b) => b.eco_points - a.eco_points);
+    const ranked = combined.map((item, index) => ({
+      ...item,
+      rank: index + 1,
+    }));
+
+    setLeaderboardResidents(ranked);
+  }, [profile]);
+
+  // Dynamically evaluate achievements based on live user progress
+  useEffect(() => {
+    const passedSpotChecks = spotChecks.filter(
+      (s) => s.status === 'completed' && s.result?.verified !== false
+    ).length;
+    setAchievements((prev) =>
+      prev.map((ach) => {
+        let is_unlocked: boolean = false;
+        let progress: number = 0;
+
+        switch (ach.code) {
+          case 'first_step':
+            is_unlocked = (profile.total_verifications || 0) >= 1;
+            progress = Math.min(ach.target_count, profile.total_verifications || 0);
+            break;
+          case '7_day_streak':
+            is_unlocked = (profile.current_streak || 0) >= 7;
+            progress = Math.min(ach.target_count, profile.current_streak || 0);
+            break;
+          case 'waste_warrior':
+            is_unlocked = (profile.total_verifications || 0) >= 50;
+            progress = Math.min(ach.target_count, profile.total_verifications || 0);
+            break;
+          case 'spot_check_champion':
+            is_unlocked = passedSpotChecks >= 3;
+            progress = Math.min(ach.target_count, passedSpotChecks);
+            break;
+          case 'zero_contamination':
+            is_unlocked = (profile.total_verifications || 0) >= 30 && (profile.consistency_score || 0) >= 95;
+            progress = Math.min(ach.target_count, profile.total_verifications || 0);
+            break;
+          case 'eco_leader':
+            is_unlocked = (profile.eco_points || 0) >= 500;
+            progress = Math.min(ach.target_count, profile.eco_points || 0);
+            break;
+          case 'community_champion':
+            is_unlocked = (profile.eco_points || 0) >= 400;
+            progress = (profile.eco_points || 0) >= 400 ? 2 : 0;
+            break;
+          case 'habit_ambassador':
+            is_unlocked = false;
+            progress = 0;
+            break;
+          default:
+            is_unlocked = !!ach.is_unlocked;
+            progress = ach.progress ?? 0;
+            break;
+        }
+
+        return {
+          ...ach,
+          is_unlocked,
+          progress,
+          unlocked_at: is_unlocked ? (ach.unlocked_at || 'Recently') : undefined,
+        };
+      })
+    );
+  }, [profile.eco_points, profile.current_streak, profile.total_verifications, profile.consistency_score, spotChecks]);
 
   const loginUser = (userEmail: string, role: UserRole = 'resident', customName?: string) => {
     const formattedName = customName || formatNameFromEmail(userEmail);
@@ -362,29 +473,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     catSlug: 'wet' | 'dry' | 'special',
     isSpotCheck = false,
     imageUrl?: string,
-    isContaminated = false
+    isContaminated = false,
+    aiResult?: AIVerificationResponse
   ): Verification => {
     const category = categories.find((c) => c.slug === catSlug) || categories[0];
-    const points = isContaminated ? 5 : isSpotCheck ? 20 : category.base_points;
-    const bonus = isContaminated ? 0 : 5;
+
+    // Determine strict acceptance or rejection based on independent AI validation
+    const isRejected = isContaminated || (aiResult && aiResult.status !== 'verified');
+
+    // Strict Rule:
+    // If rejected / needs_attention / mismatch / low confidence -> strictly 0 points!
+    // If verified -> award base points + clean bin bonus (or spot check bonus)
+    const points = isRejected
+      ? 0
+      : (aiResult?.pointsAwarded ?? (isSpotCheck ? 20 : category.base_points));
+    const bonus = isRejected
+      ? 0
+      : (aiResult?.cleanBinBonus ?? (isSpotCheck ? 10 : 5));
     const totalAwarded = points + bonus;
+
+    const detectedCategoryName = aiResult?.detectedCategory
+      ? (BALANCED_WASTE_DATASET[aiResult.detectedCategory]?.name || aiResult.detectedCategory)
+      : (isRejected ? 'Contaminant Flagged' : category.name);
+
+    const confidenceScore = aiResult?.confidence ?? (isRejected ? 89.2 : 95.8);
 
     const newVerification: Verification = {
       id: `v-${Date.now()}`,
       user_id: profile.id,
       category_id: category.id,
       category_slug: catSlug,
-      status: isContaminated ? 'needs_attention' : 'verified',
+      status: isRejected ? (aiResult?.status || 'needs_attention') : 'verified',
       points_awarded: points,
       clean_bin_bonus: bonus,
-      streak_multiplier: isSpotCheck ? 2.0 : 1.2,
-      ai_detected_category: isContaminated ? 'Contaminant Flagged' : category.name,
-      ai_confidence: isContaminated ? 89.2 : 95.8,
+      streak_multiplier: isRejected ? 1.0 : (isSpotCheck ? 2.0 : 1.2),
+      ai_detected_category: detectedCategoryName,
+      ai_confidence: confidenceScore,
       is_spot_check: isSpotCheck,
       image_url: imageUrl || (catSlug === 'wet' ? '/stitch_ecoloop_gamified_waste_segregation/ecoloop_ai_verification_results/screen.png' : undefined),
-      ai_feedback: isContaminated
-        ? 'Almost there! We spotted a dry recyclable material inside your organic bin. Removed and re-scanned.'
-        : `Clean ${category.name} validated by EcoLoop AI. +${totalAwarded} points credited!`,
+      contaminant_detected: aiResult?.contaminant || (isRejected ? 'Plastic item in organic bin' : undefined),
+      correction_prompt: aiResult?.correctionPrompt || (isRejected ? 'Remove non-biodegradable item and re-scan.' : undefined),
+      ai_feedback: aiResult?.feedback || (isRejected
+        ? 'Segregation mismatch detected. 0 points awarded until correctly sorted.'
+        : `Clean ${category.name} validated by EcoLoop AI. +${totalAwarded} points credited!`),
       verified_at: 'Just now',
       created_at: new Date().toISOString(),
     };
@@ -392,50 +523,52 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setVerifications((prev) => [newVerification, ...prev]);
     setLastVerification(newVerification);
 
-    // Update Profile points & streak
-    setProfile((prev) => {
-      const nextStreak = isContaminated ? prev.current_streak : prev.current_streak + 1;
-      const nextPoints = prev.eco_points + totalAwarded;
-      const nextCount = prev.total_verifications + 1;
-      const nextConsistency = calculateConsistencyScore(
-        nextCount,
-        nextStreak,
-        isSpotCheck ? 2 : 1
+    // Update Profile points & streak ONLY if accepted & verified (0 points if rejected)
+    if (!isRejected && totalAwarded > 0) {
+      setProfile((prev) => {
+        const nextStreak = prev.current_streak + 1;
+        const nextPoints = prev.eco_points + totalAwarded;
+        const nextCount = prev.total_verifications + 1;
+        const nextConsistency = calculateConsistencyScore(
+          nextCount,
+          nextStreak,
+          isSpotCheck ? 2 : 1
+        );
+
+        return {
+          ...prev,
+          eco_points: nextPoints,
+          current_streak: nextStreak,
+          total_verifications: nextCount,
+          consistency_score: nextConsistency,
+        };
+      });
+
+      // Update Leaderboard ONLY if points were awarded
+      setLeaderboardResidents((prev) =>
+        prev.map((r) =>
+          r.id === profile.id
+            ? {
+                ...r,
+                eco_points: r.eco_points + totalAwarded,
+                current_streak: r.current_streak + 1,
+              }
+            : r
+        )
       );
+    }
 
-      return {
-        ...prev,
-        eco_points: nextPoints,
-        current_streak: nextStreak,
-        total_verifications: nextCount,
-        consistency_score: nextConsistency,
-      };
-    });
-
-    // Update Leaderboard
-    setLeaderboardResidents((prev) =>
-      prev.map((r) =>
-        r.id === profile.id
-          ? {
-              ...r,
-              eco_points: r.eco_points + totalAwarded,
-              current_streak: isContaminated ? r.current_streak : r.current_streak + 1,
-            }
-          : r
-      )
-    );
-
-    // Create Notification
+    // Create Notification (always — for both verified and rejected verifications)
     const newNotif: NotificationItem = {
       id: `notif-${Date.now()}`,
       user_id: profile.id,
-      title: isContaminated ? 'Correction Verified (+5 pts)' : `Waste Verified (+${totalAwarded} pts)`,
-      message: isContaminated
-        ? 'Contaminant was removed and verified. Great habit recovery!'
-        : `${category.name} verified cleanly with 95.8% accuracy.`,
-      type: 'verification_success',
+      title: isRejected ? 'Segregation Mismatch (0 pts)' : `Waste Verified (+${totalAwarded} pts)`,
+      message: isRejected
+        ? (aiResult?.feedback || 'Waste segregation mismatch. Please re-scan with correctly sorted items.')
+        : `${category.name} verified cleanly with ${confidenceScore}% accuracy.`,
+      type: isRejected ? 'verification_attention' : 'verification_success',
       is_read: false,
-      action_url: '/resident/history',
+      action_url: isRejected ? '/resident/verify/correction' : '/resident/history',
       created_at: 'Just now',
     };
     setNotifications((prev) => [newNotif, ...prev]);

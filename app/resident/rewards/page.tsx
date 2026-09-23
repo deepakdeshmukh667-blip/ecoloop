@@ -30,33 +30,33 @@ export default function RewardsPage() {
       <DesktopSidebar />
 
       <div className="md:pl-64">
-        <main className="w-full pt-16 pb-28 md:pb-12 min-h-[calc(100vh-4rem)]">
-          <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
+        <main className="w-full pt-20 pb-28 md:pb-12 min-h-[calc(100vh-4rem)] overflow-x-hidden">
+          <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-6">
             {/* Header: Available Balance Banner */}
-            <div className="p-6 rounded-2xl bg-[#006c49] text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative overflow-hidden">
-              <div className="flex items-center gap-4 z-10">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                  <span className="material-symbols-outlined text-[32px]">redeem</span>
+            <div className="p-5 sm:p-6 rounded-2xl bg-[#006c49] text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative overflow-hidden">
+              <div className="flex items-center gap-4 z-10 min-w-0">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0">
+                  <span className="material-symbols-outlined text-[28px] sm:text-[32px]">redeem</span>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   <span className="text-xs uppercase tracking-wider text-white/80 font-bold">
                     Available Balance
                   </span>
                   <div className="flex items-baseline gap-1.5 mt-0.5">
-                    <span className="text-4xl font-black font-headline">{profile.eco_points}</span>
+                    <span className="text-3xl sm:text-4xl font-black font-headline">{profile.eco_points}</span>
                     <span className="text-sm font-semibold">Eco Points</span>
                   </div>
-                  <span className="text-xs text-white/80 mt-0.5">
+                  <span className="text-xs text-white/80 mt-0.5 truncate sm:text-clip">
                     Earn points on every clean kitchen bin verification & spot check
                   </span>
                 </div>
               </div>
 
               {/* Tab Selector */}
-              <div className="flex items-center bg-black/20 p-1 rounded-xl z-10">
+              <div className="flex items-center bg-black/20 p-1 rounded-xl z-10 w-full sm:w-auto">
                 <button
                   onClick={() => setActiveTab('catalog')}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-center ${
                     activeTab === 'catalog' ? 'bg-white text-[#006c49]' : 'text-white'
                   }`}
                   type="button"
@@ -65,7 +65,7 @@ export default function RewardsPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('redemptions')}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-center ${
                     activeTab === 'redemptions' ? 'bg-white text-[#006c49]' : 'text-white'
                   }`}
                   type="button"

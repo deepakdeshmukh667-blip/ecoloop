@@ -21,6 +21,7 @@ export default function ResidentDashboardPage() {
   const {
     profile,
     verifications,
+    leaderboardResidents,
     setIsSpotCheckModalOpen,
     setIsRewardModalOpen,
   } = useApp();
@@ -32,6 +33,23 @@ export default function ResidentDashboardPage() {
   const dryDone = verifications.some((v) => v.category_slug === 'dry');
   const specialDone = verifications.some((v) => v.category_slug === 'special');
   const completedToday = (wetDone ? 1 : 0) + (dryDone ? 1 : 0) + (specialDone ? 1 : 0);
+
+  // Compute live ranking and overtake competitor
+  const userRankIndex = leaderboardResidents.findIndex(
+    (r) => r.id === profile.id || (profile.email ? r.email === profile.email : false)
+  );
+  const userRank = userRankIndex !== -1 ? leaderboardResidents[userRankIndex].rank : leaderboardResidents.length;
+  const competitorAbove = userRankIndex > 0 ? leaderboardResidents[userRankIndex - 1] : null;
+  const ptsToOvertake = competitorAbove ? Math.max(1, competitorAbove.eco_points - profile.eco_points) : 0;
+
+  // Top 3 residents or Top 2 + current user if user is below rank 3
+  const displayResidents =
+    userRankIndex <= 2
+      ? leaderboardResidents.slice(0, 3)
+      : [
+          ...leaderboardResidents.slice(0, 2),
+          leaderboardResidents[userRankIndex],
+        ];
 
   return (
     <div className="min-h-screen bg-background dark:bg-[#0b1120]">
@@ -203,7 +221,11 @@ export default function ResidentDashboardPage() {
                     </div>
 
                     {/* Special Waste Item */}
-                    <div className="flex flex-col p-4 rounded-xl bg-[#e5eeff] dark:bg-[#27354f] border border-[#dce9ff] dark:border-[#334155] transition-transform hover:-translate-y-0.5 relative">
+                    <div className={`flex flex-col p-4 rounded-xl transition-transform hover:-translate-y-0.5 relative ${
+                      specialDone
+                        ? 'bg-[#e5eeff] dark:bg-[#27354f] border border-[#dce9ff] dark:border-[#334155]'
+                        : 'bg-[#fffbeb] dark:bg-[#271f11] border border-dashed border-[#e29100]/60 dark:border-[#e29100]/50'
+                    }`}>
                       <div className="flex items-center justify-between">
                         <span className="w-8 h-8 rounded-full bg-[#ffddb8] dark:bg-[#523200] text-[#855300] dark:text-[#ffddb8] flex items-center justify-center">
                           <span className="material-symbols-outlined text-[18px]">
@@ -215,8 +237,8 @@ export default function ResidentDashboardPage() {
                             check_circle
                           </span>
                         ) : (
-                          <span className="material-symbols-outlined text-[#e29100] text-[20px]">
-                            pending
+                          <span className="material-symbols-outlined text-[#e29100] text-[20px] animate-pulse">
+                            hourglass_empty
                           </span>
                         )}
                       </div>
@@ -364,7 +386,9 @@ export default function ResidentDashboardPage() {
                         </span>
                       </div>
                       <span className="text-[10px] text-[#006c49] dark:text-[#10b981] font-bold mt-1">
-                        Streak multiplier 1.2x
+                        {profile.current_streak > 0
+                          ? 'Streak multiplier 1.2x active'
+                          : 'Build a streak for 1.2x bonus'}
                       </span>
                     </div>
                   </div>
@@ -500,121 +524,118 @@ export default function ResidentDashboardPage() {
                   <div className="text-right">
                     <span className="text-xs text-[#3c4a42] dark:text-[#94a3b8]">Your Rank</span>
                     <div className="text-xl font-extrabold text-[#006c49] dark:text-[#10b981] font-headline">
-                      #3 of 48
+                      #{userRank} of {leaderboardResidents.length}
                     </div>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#eff4ff] dark:bg-[#1a263e] flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[#006c49] dark:text-[#10b981] text-[18px]">
-                      trending_up
-                    </span>
-                    <span className="text-xs font-semibold text-[#0b1c30] dark:text-white">
-                      You are only 18 pts behind #2 Rahul to take silver!
+                {competitorAbove ? (
+                  <div className="p-3 rounded-xl bg-[#eff4ff] dark:bg-[#1a263e] flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[#006c49] dark:text-[#10b981] text-[18px]">
+                        trending_up
+                      </span>
+                      <span className="text-xs font-semibold text-[#0b1c30] dark:text-white">
+                        You are only {ptsToOvertake} pts behind #{competitorAbove.rank} {competitorAbove.full_name} to advance!
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8] hidden sm:inline">
+                      Live Verified
                     </span>
                   </div>
-                  <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8] hidden sm:inline">
-                    Updated 10m ago
-                  </span>
-                </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-[#6ffbbe]/20 dark:bg-[#006c49]/30 border border-[#10b981] flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[#10b981] text-[18px]">
+                        emoji_events
+                      </span>
+                      <span className="text-xs font-semibold text-[#0b1c30] dark:text-white">
+                        You are currently leading Tower B with {profile.eco_points} pts! Keep it up!
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-[#006c49] dark:text-[#10b981] font-bold hidden sm:inline">
+                      #1 Rank
+                    </span>
+                  </div>
+                )}
 
                 {/* Leaderboard Rows */}
                 <div className="flex flex-col gap-2">
-                  {/* Rank 1: Priya M. */}
-                  <div className="flex items-center justify-between p-3 rounded-xl hover:bg-[#eff4ff] dark:hover:bg-[#1a263e] transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 text-center font-headline text-lg font-black text-[#e29100]">
-                        1
-                      </span>
-                      <img
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-wPJWmqD_SXTbNINCAeSeVk5yf5YQbJs2uUdDxEzZU4KXo7k2VVESYvOCO-rRyQ_41rssgkFUPL7gKTiu_lrnErBjhYC6Ykk5PSAdgggKh7ARfxbMEp4JGIOm2b4gxNsoSXncgl6BPL0kN9hKJDFripeunU4Bia60lPKIDdsEu59GAyHSEN4z5eMJ89NIt00yYCsD6Lb0Cw8RE9Q31OHiz3mvHd8PR365_TkDQYglFMEbGEX3Z5I9"
-                        alt="Priya M."
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-[#0b1c30] dark:text-white font-headline">
-                          Priya M.
-                        </span>
-                        <span className="text-xs text-[#3c4a42] dark:text-[#94a3b8]">
-                          Apt 704 • 14-day streak
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-extrabold text-[#0b1c30] dark:text-white">
-                        580 pts
-                      </span>
-                      <span className="material-symbols-outlined text-[#e29100] text-[20px]">
-                        military_tech
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Rank 2: Rahul K. */}
-                  <div className="flex items-center justify-between p-3 rounded-xl hover:bg-[#eff4ff] dark:hover:bg-[#1a263e] transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 text-center font-headline text-lg font-black text-[#565e74] dark:text-[#bec6e0]">
-                        2
-                      </span>
-                      <img
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4PweyZ6xvzdpPCAq6FajbcgJ2BJnTtuUEv9rXsqQSOUGP2-gJe76vywoGPnPV9NnsRfbsHmsBuZYPuBksPeyJqbOJvvWuiA-ivKaIEXhtTSPX6vbqxw_RF58_KHZJrQmi_AkqQ4XCPOkn_VJqRcLeu_USYbPX5CfPrTy7f5NJ15BprmI1bDDwELBMCBuMtAxBuXrSA8XCJ_ApaeEVyYGDH-bkrFiz6ZSHtB-f1H7hDg8Yns9I7bWA"
-                        alt="Rahul K."
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-[#0b1c30] dark:text-white font-headline">
-                          Rahul K.
-                        </span>
-                        <span className="text-xs text-[#3c4a42] dark:text-[#94a3b8]">
-                          Apt 201 • 9-day streak
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-extrabold text-[#0b1c30] dark:text-white">
-                        438 pts
-                      </span>
-                      <span className="material-symbols-outlined text-[#565e74] dark:text-[#bec6e0] text-[20px]">
-                        military_tech
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Rank 3: Deepak S. (YOU) */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#6ffbbe]/20 dark:bg-[#006c49]/30 border border-[#10b981]">
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 text-center font-headline text-lg font-black text-[#006c49] dark:text-[#10b981]">
-                        3
-                      </span>
-                      <img
-                        src={profile.avatar_url || '/deepak-avatar.png'}
-                        alt="Deepak S."
-                        className="w-10 h-10 rounded-full object-cover ring-2 ring-[#10b981]"
-                      />
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-bold text-[#0b1c30] dark:text-white font-headline">
-                            Deepak S.
+                  {displayResidents.map((res) => {
+                    const isMe = res.id === profile.id || (profile.email ? res.email === profile.email : false);
+                    return (
+                      <div
+                        key={res.id}
+                        className={`flex items-center justify-between p-3 rounded-xl transition-colors ${
+                          isMe
+                            ? 'bg-[#6ffbbe]/20 dark:bg-[#006c49]/30 border border-[#10b981]'
+                            : 'hover:bg-[#eff4ff] dark:hover:bg-[#1a263e]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`w-6 text-center font-headline text-lg font-black ${
+                              res.rank === 1
+                                ? 'text-[#e29100]'
+                                : res.rank === 2
+                                ? 'text-[#565e74] dark:text-[#bec6e0]'
+                                : res.rank === 3
+                                ? 'text-[#855300] dark:text-[#ffb95f]'
+                                : 'text-[#3c4a42] dark:text-[#94a3b8]'
+                            }`}
+                          >
+                            {res.rank}
                           </span>
-                          <span className="px-1.5 py-0.2 rounded bg-[#10b981] text-white text-[10px] font-bold">
-                            YOU
+                          <img
+                            src={res.avatar_url || '/deepak-avatar.png'}
+                            alt={res.full_name}
+                            className={`w-10 h-10 rounded-full object-cover ${
+                              isMe ? 'ring-2 ring-[#10b981]' : ''
+                            }`}
+                          />
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-bold text-[#0b1c30] dark:text-white font-headline">
+                                {res.full_name}
+                              </span>
+                              {isMe && (
+                                <span className="px-1.5 py-0.2 rounded bg-[#10b981] text-white text-[10px] font-bold">
+                                  YOU
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-[#3c4a42] dark:text-[#94a3b8]">
+                              {res.flat_number || 'Tower B'} • {res.current_streak}-day streak
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`text-sm font-extrabold ${
+                              isMe
+                                ? 'text-[#006c49] dark:text-[#10b981]'
+                                : 'text-[#0b1c30] dark:text-white'
+                            }`}
+                          >
+                            {res.eco_points} pts
+                          </span>
+                          <span
+                            className={`material-symbols-outlined text-[20px] ${
+                              res.rank === 1
+                                ? 'text-[#e29100]'
+                                : res.rank === 2
+                                ? 'text-[#565e74] dark:text-[#bec6e0]'
+                                : res.rank === 3
+                                ? 'text-[#855300] dark:text-[#ffb95f]'
+                                : 'text-[#3c4a42] dark:text-[#94a3b8]'
+                            }`}
+                          >
+                            military_tech
                           </span>
                         </div>
-                        <span className="text-xs text-[#3c4a42] dark:text-[#94a3b8]">
-                          {profile.flat_number || 'Apt 402B'} • {profile.current_streak}-day streak
-                        </span>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-extrabold text-[#006c49] dark:text-[#10b981]">
-                        {profile.eco_points} pts
-                      </span>
-                      <span className="material-symbols-outlined text-[#ffb95f] text-[20px]">
-                        military_tech
-                      </span>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
 
                 <Link

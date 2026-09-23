@@ -206,11 +206,15 @@ export interface EducationalItem {
 }
 
 export interface AIVerificationResponse {
-  detectedCategory: 'wet' | 'dry' | 'special' | 'unrecognized';
+  detectedCategory: 'wet' | 'dry' | 'special' | 'plastic' | 'paper' | 'glass' | 'metal' | 'e-waste' | 'unrecognized';
   confidence: number;
-  status: 'verified' | 'needs_attention';
+  status: 'verified' | 'needs_attention' | 'rejected';
   feedback: string;
   contaminant?: string;
   correctionPrompt?: string;
   suggestedAction?: string;
+  pointsAwarded?: number;
+  cleanBinBonus?: number;
+  isLowConfidence?: boolean;
+  rawPrediction?: string;
 }

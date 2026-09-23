@@ -2,18 +2,29 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
-
   const { pathname } = request.nextUrl;
 
-  // 1. Redirect legacy auth routes directly to dedicated resident login
+  // ──────────────────────────────────────────────────────────────
+  // LOCAL DEV BYPASS — skip all auth when DEV_BYPASS_AUTH=true
+  // Remove or set to "false" in .env.local before deploying to production.
+  // ──────────────────────────────────────────────────────────────
+  if (process.env.DEV_BYPASS_AUTH === 'true') {
+    // Redirect root / login / signup straight to resident dashboard
+    if (pathname === '/' || pathname === '/login' || pathname === '/signup') {
+      return NextResponse.redirect(new URL('/resident/dashboard', request.url));
+    }
+    // Let all other routes (resident/*, admin/*) pass through freely
+    return NextResponse.next({ request });
+  }
+
+  let supabaseResponse = NextResponse.next({ request });
+
+  // 1. Redirect legacy auth routes to resident login
   if (pathname === '/login' || pathname === '/signup') {
     return NextResponse.redirect(new URL('/resident/login', request.url));
   }
 
-  // Allow Supabase auth callback to pass through freely (handles magic link & OTP exchange)
+  // Allow Supabase auth callback through (magic link & OTP exchange)
   if (pathname.startsWith('/auth/')) {
     return NextResponse.next({ request });
   }
@@ -22,7 +33,6 @@ export async function middleware(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    // If Supabase credentials are missing, strictly block protected routes
     if (pathname.startsWith('/resident/') && pathname !== '/resident/login') {
       const loginUrl = new URL('/resident/login', request.url);
       loginUrl.searchParams.set('redirectedFrom', pathname);
@@ -47,9 +57,7 @@ export async function middleware(request: NextRequest) {
         },
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: unknown }>) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             // @ts-expect-error - Next.js cookies options
             supabaseResponse.cookies.set(name, value, options)
@@ -58,43 +66,52 @@ export async function middleware(request: NextRequest) {
       },
     });
 
-    // Verify authenticated user with Supabase Auth (Secure Server-Side Check)
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
+    const ADMIN_EMAILS = ['deepakdeshmukh667@gmail.com'];
     let isAdmin = false;
 
     if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+      const userEmail = user.email?.toLowerCase().trim() || '';
+      if (ADMIN_EMAILS.includes(userEmail)) {
+        isAdmin = true;
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
 
-      isAdmin =
-        profile?.role === 'admin' ||
-        profile?.role === 'society_admin' ||
-        profile?.role === 'municipal_admin';
+        isAdmin =
+          profile?.role === 'admin' ||
+          profile?.role === 'society_admin' ||
+          profile?.role === 'municipal_admin';
+      }
     }
 
-    // 2. Root route (/) handling
+    // Root route
     if (pathname === '/') {
       if (user) {
-        return NextResponse.redirect(new URL(isAdmin ? '/admin/dashboard' : '/resident/dashboard', request.url));
+        return NextResponse.redirect(
+          new URL(isAdmin ? '/admin/dashboard' : '/resident/dashboard', request.url)
+        );
       }
       return NextResponse.redirect(new URL('/resident/login', request.url));
     }
 
-    // 3. /resident/login handling
+    // /resident/login
     if (pathname === '/resident/login') {
       if (user) {
-        return NextResponse.redirect(new URL('/resident/dashboard', request.url));
+        return NextResponse.redirect(
+          new URL(isAdmin ? '/admin/dashboard' : '/resident/dashboard', request.url)
+        );
       }
       return supabaseResponse;
     }
 
-    // 4. /admin/login handling
+    // /admin/login
     if (pathname === '/admin/login') {
       if (user && isAdmin) {
         return NextResponse.redirect(new URL('/admin/dashboard', request.url));
@@ -102,7 +119,7 @@ export async function middleware(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // 5. Resident Route Protection (/resident/*)
+    // Resident route protection
     if (pathname.startsWith('/resident/')) {
       if (!user) {
         const loginUrl = new URL('/resident/login', request.url);
@@ -112,25 +129,21 @@ export async function middleware(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // 6. Admin Route Protection (/admin/*)
+    // Admin route protection
     if (pathname.startsWith('/admin/')) {
       if (!user) {
         const loginUrl = new URL('/admin/login', request.url);
         loginUrl.searchParams.set('redirectedFrom', pathname);
         return NextResponse.redirect(loginUrl);
       }
-
       if (!isAdmin) {
-        // Authenticated non-admin resident attempting to access admin portal: DENY
         const accessDeniedUrl = new URL('/resident/dashboard', request.url);
         accessDeniedUrl.searchParams.set('error', 'unauthorized_admin');
         return NextResponse.redirect(accessDeniedUrl);
       }
-
       return supabaseResponse;
     }
   } catch {
-    // If Supabase client fails, enforce login on protected routes
     if (pathname.startsWith('/resident/') && pathname !== '/resident/login') {
       const loginUrl = new URL('/resident/login', request.url);
       loginUrl.searchParams.set('redirectedFrom', pathname);

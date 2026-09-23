@@ -77,7 +77,8 @@ export default function ResidentLoginPage() {
         const msg = error.message.toLowerCase();
         const statusNum = error.status;
         if (statusNum === 429 || msg.includes('rate limit') || msg.includes('too many requests')) {
-          setErrorMessage('Too many verification requests. Please wait a moment and try again.');
+          setCountdown(60);
+          setErrorMessage('Too many verification requests. Please wait 60 seconds before trying again.');
         } else if (msg.includes('invalid') && msg.includes('email')) {
           setErrorMessage('Please enter a valid email address.');
         } else if ((statusNum && statusNum >= 500) || msg.includes('smtp') || msg.includes('provider') || msg.includes('disabled')) {
@@ -205,7 +206,19 @@ export default function ResidentLoginPage() {
         .eq('id', authUser.id)
         .maybeSingle();
 
-      if (!existingProfile) {
+      const ADMIN_EMAILS = ['deepakdeshmukh667@gmail.com'];
+      const userEmail = (authUser.email || normalizedEmail).toLowerCase().trim();
+      const isSuperAdmin = ADMIN_EMAILS.includes(userEmail);
+
+      if (isSuperAdmin) {
+        await supabase.from('profiles').upsert({
+          id: authUser.id,
+          email: authUser.email || normalizedEmail,
+          full_name: 'Deepak Deshmukh (Admin)',
+          role: 'admin',
+          is_active: true,
+        }, { onConflict: 'id' });
+      } else if (!existingProfile) {
         const namePart = normalizedEmail.split('@')[0].replace(/[0-9_.]+/g, ' ').trim();
         const formattedName = namePart
           ? namePart.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
@@ -218,9 +231,9 @@ export default function ResidentLoginPage() {
           email: authUser.email || normalizedEmail,
           full_name: authUser.user_metadata?.full_name || formattedName,
           role: 'resident',
-          eco_points: 50,
+          eco_points: 0,
           current_streak: 0,
-          consistency_score: 80.0,
+          consistency_score: 0,
           total_verifications: 0,
           tier_level: 1,
           is_active: true,
@@ -229,10 +242,11 @@ export default function ResidentLoginPage() {
 
       setStatus('verified');
 
-      // Refresh server session and navigate to resident dashboard
+      // Refresh server session and navigate to dashboard
       router.refresh();
+      const targetDestination = isSuperAdmin ? '/admin/dashboard' : redirectedFrom;
       setTimeout(() => {
-        router.push(redirectedFrom);
+        router.push(targetDestination);
       }, 400);
     } catch (err) {
       if (err instanceof TypeError || (err instanceof Error && err.message.toLowerCase().includes('fetch'))) {
@@ -291,11 +305,11 @@ export default function ResidentLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] dark:bg-[#0b1120] flex flex-col justify-center items-center px-4 py-12 relative">
+    <div className="min-h-screen bg-[#f8f9ff] dark:bg-[#0b1120] flex flex-col justify-center items-center px-4 py-12 relative overflow-x-hidden">
       {/* Background ambient lighting */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#10b981]/15 dark:bg-[#10b981]/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-md bg-white dark:bg-[#131d31] border border-[#e2e8f0] dark:border-[#1e293b] rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col gap-6 relative z-10">
+      <div className="w-full max-w-md bg-white dark:bg-[#131d31] border border-[#e2e8f0] dark:border-[#1e293b] rounded-3xl p-5 sm:p-8 shadow-xl flex flex-col gap-6 relative z-10 min-w-0 overflow-hidden">
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-2">
           <Logo />
@@ -354,8 +368,8 @@ export default function ResidentLoginPage() {
 
             <button
               type="submit"
-              disabled={status === 'sending'}
-              className="w-full py-3 px-4 bg-[#10b981] hover:bg-[#006c49] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#10b981]/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+              disabled={status === 'sending' || countdown > 0}
+              className="w-full py-3 px-4 bg-[#10b981] hover:bg-[#006c49] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#10b981]/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
             >
               {status === 'sending' ? (
                 <>
@@ -363,6 +377,11 @@ export default function ResidentLoginPage() {
                     progress_activity
                   </span>
                   <span>Sending Code...</span>
+                </>
+              ) : countdown > 0 ? (
+                <>
+                  <span className="material-symbols-outlined text-[18px]">schedule</span>
+                  <span>Retry in {countdown}s</span>
                 </>
               ) : (
                 <>
@@ -391,8 +410,8 @@ export default function ResidentLoginPage() {
             </div>
 
             {/* 6 OTP Inputs */}
-            <div>
-              <div className="flex justify-between gap-2 sm:gap-2.5">
+            <div className="w-full overflow-x-hidden">
+              <div className="flex justify-between gap-1.5 sm:gap-2.5">
                 {otp.map((digit, idx) => (
                   <input
                     key={idx}
@@ -408,7 +427,7 @@ export default function ResidentLoginPage() {
                     onKeyDown={(e) => handleOtpKeyDown(idx, e)}
                     onPaste={handleOtpPaste}
                     disabled={status === 'verifying' || status === 'verified'}
-                    className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-bold bg-[#f8f9ff] dark:bg-[#1a263e] border border-[#e2e8f0] dark:border-[#27354f] rounded-xl text-[#0b1c30] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent transition-all disabled:opacity-50"
+                    className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-bold bg-[#f8f9ff] dark:bg-[#1a263e] border border-[#e2e8f0] dark:border-[#27354f] rounded-xl text-[#0b1c30] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent transition-all disabled:opacity-50"
                   />
                 ))}
               </div>

@@ -39,15 +39,16 @@ function AnalyzingContent() {
         isForceContaminationDemo: isFlagged,
       });
 
-      // Update central state
+      // Update central state with AI verification result (strictly 0 points on rejection/mismatch)
       addVerification(
         selectedCategory.slug,
         false,
         pendingImage || undefined,
-        result.status === 'needs_attention'
+        result.status !== 'verified',
+        result
       );
 
-      if (result.status === 'needs_attention') {
+      if (result.status === 'needs_attention' || result.status === 'rejected') {
         router.push('/resident/verify/correction');
       } else {
         router.push('/resident/verify/result');

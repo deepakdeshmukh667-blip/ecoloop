@@ -12,16 +12,24 @@ export default async function HomePage() {
       redirect('/resident/login');
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const ADMIN_EMAILS = ['deepakdeshmukh667@gmail.com'];
+    const userEmail = user.email?.toLowerCase().trim() || '';
+    const isSuperAdminEmail = ADMIN_EMAILS.includes(userEmail);
 
-    const isAdmin =
-      profile?.role === 'admin' ||
-      profile?.role === 'society_admin' ||
-      profile?.role === 'municipal_admin';
+    let isAdmin = isSuperAdminEmail;
+
+    if (!isAdmin) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      isAdmin =
+        profile?.role === 'admin' ||
+        profile?.role === 'society_admin' ||
+        profile?.role === 'municipal_admin';
+    }
 
     if (isAdmin) {
       redirect('/admin/dashboard');

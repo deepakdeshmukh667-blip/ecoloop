@@ -7,8 +7,21 @@ import TopNavBar from '@/components/TopNavBar';
 import DesktopSidebar from '@/components/DesktopSidebar';
 import MobileBottomNav from '@/components/MobileBottomNav';
 
+import { useApp } from '@/lib/state/store';
+
 export default function VerificationCorrectionPage() {
   const router = useRouter();
+  const { lastVerification, selectedCategory } = useApp();
+
+  const isLowConfidence =
+    lastVerification?.status === 'rejected' ||
+    lastVerification?.contaminant_detected?.toLowerCase().includes('unclear') ||
+    lastVerification?.contaminant_detected?.toLowerCase().includes('blur');
+
+  const detectedLabel = lastVerification?.ai_detected_category || 'Segregation Flagged';
+  const feedbackText =
+    lastVerification?.ai_feedback ||
+    'We spotted a mismatch between the uploaded photo and your selected category. 0 points awarded until correctly segregated.';
 
   return (
     <div className="min-h-screen bg-background dark:bg-[#0b1120]">
@@ -50,7 +63,10 @@ export default function VerificationCorrectionPage() {
             {/* Camera Viewfinder with Visual Contamination Callout */}
             <div className="relative rounded-2xl overflow-hidden shadow-md bg-[#213145] aspect-[16/10]">
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUJGZqucC2b4b2qLS5aZLFcf1OhM53sPXZm0j0GOKztOBRNN6QB9aeTGhO_aqrlv3_RzH2FOvKTJpZV_qqcaRb1JcxJE_lxLyAErWNP0kqYGf1LCA9NSKQVvbSo-lqO94t9XKZXw_wbaHtNwcZLVNaBuYVyTj3j84O30Jh8meZ7MlZVErQA3en4Qt5C57uV9Zu4xUwViDplR4K9AdWzhwV6oQEkSA3W5I3LN23CDSlfO-5PdBSg17r"
+                src={
+                  lastVerification?.image_url ||
+                  'https://lh3.googleusercontent.com/aida-public/AB6AXuDUJGZqucC2b4b2qLS5aZLFcf1OhM53sPXZm0j0GOKztOBRNN6QB9aeTGhO_aqrlv3_RzH2FOvKTJpZV_qqcaRb1JcxJE_lxLyAErWNP0kqYGf1LCA9NSKQVvbSo-lqO94t9XKZXw_wbaHtNwcZLVNaBuYVyTj3j84O30Jh8meZ7MlZVErQA3en4Qt5C57uV9Zu4xUwViDplR4K9AdWzhwV6oQEkSA3W5I3LN23CDSlfO-5PdBSg17r'
+                }
                 alt="Contamination detection preview"
                 className="w-full h-full object-cover"
               />
@@ -59,7 +75,7 @@ export default function VerificationCorrectionPage() {
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="w-32 h-32 border-2 border-dashed border-[#e29100] rounded-xl relative animate-pulse flex items-start justify-end p-1.5 shadow-[0_0_20px_rgba(226,145,0,0.4)]">
                   <span className="bg-[#e29100] text-white text-[11px] font-bold px-2 py-0.5 rounded shadow">
-                    Dry Material
+                    {detectedLabel}
                   </span>
                 </div>
               </div>
@@ -67,7 +83,7 @@ export default function VerificationCorrectionPage() {
               <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 dark:bg-[#131d31]/90 backdrop-blur-md flex items-center gap-1.5 shadow">
                 <span className="w-2 h-2 rounded-full bg-[#e29100] animate-ping"></span>
                 <span className="text-xs font-semibold text-[#0b1c30] dark:text-white">
-                  Flagged Item Detected
+                  {isLowConfidence ? 'Unclear Image' : 'Mismatch Flagged'}
                 </span>
               </div>
             </div>
@@ -81,14 +97,16 @@ export default function VerificationCorrectionPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl font-bold text-[#0b1c30] dark:text-white font-headline">
-                      Almost there!
+                      {isLowConfidence ? 'Please Re-Scan' : 'Almost there!'}
                     </h2>
-                    <span className="px-2 py-0.5 bg-[#eff4ff] dark:bg-[#1a263e] text-[#565e74] dark:text-[#bec6e0] text-xs font-semibold rounded-full">
-                      Safe Check
+                    <span className="px-2 py-0.5 bg-[#fee2e2] dark:bg-[#7f1d1d]/40 text-[#ba1a1a] dark:text-[#fca5a5] text-xs font-bold rounded-full">
+                      0 Points Awarded
                     </span>
                   </div>
                   <p className="text-xs text-[#3c4a42] dark:text-[#94a3b8] mt-1">
-                    We spotted a tiny mismatch before collection. No penalty or lost points!
+                    {isLowConfidence
+                      ? 'The AI could not identify this image with sufficient clarity. Re-scan to earn points.'
+                      : 'We spotted a waste segregation mismatch. No penalty, but 0 points awarded until correctly sorted!'}
                   </p>
                 </div>
               </div>
@@ -99,8 +117,7 @@ export default function VerificationCorrectionPage() {
                   warning
                 </span>
                 <p className="text-xs text-[#0b1c30] dark:text-white leading-relaxed">
-                  <strong className="font-semibold">Plastic snack wrapper</strong> detected in the
-                  Wet Waste container. Plastic stalls society bio-digester grinding blades.
+                  {feedbackText}
                 </p>
               </div>
 
@@ -110,25 +127,25 @@ export default function VerificationCorrectionPage() {
                   Suggested Quick Fix
                 </span>
                 <div className="grid grid-cols-2 gap-2 mt-1">
-                  {/* From Wet Bin */}
+                  {/* From Selected Bin */}
                   <div className="bg-[#eff4ff] dark:bg-[#1a263e] p-3 rounded-xl flex flex-col gap-1 border border-[#dce9ff] dark:border-[#27354f]">
                     <div className="flex items-center gap-1 text-[#ba1a1a]">
                       <span className="material-symbols-outlined text-[16px]">remove_circle</span>
                       <span className="text-xs font-semibold">Remove from</span>
                     </div>
                     <span className="text-xs font-bold text-[#0b1c30] dark:text-white">
-                      Wet Compost Bin
+                      {selectedCategory.bin_name}
                     </span>
                   </div>
 
-                  {/* To Dry Bin */}
+                  {/* To Correct Bin */}
                   <div className="bg-[#eff4ff] dark:bg-[#1a263e] p-3 rounded-xl flex flex-col gap-1 border border-[#dce9ff] dark:border-[#27354f]">
                     <div className="flex items-center gap-1 text-[#0284C7]">
                       <span className="material-symbols-outlined text-[16px]">add_circle</span>
                       <span className="text-xs font-semibold">Place in</span>
                     </div>
                     <span className="text-xs font-bold text-[#0b1c30] dark:text-white">
-                      Blue Dry Recyclables
+                      {selectedCategory.slug === 'wet' ? 'Blue Dry Recyclables' : 'Green Compost Bin'}
                     </span>
                   </div>
                 </div>
@@ -143,7 +160,7 @@ export default function VerificationCorrectionPage() {
                 type="button"
               >
                 <span className="material-symbols-outlined text-[20px]">refresh</span>
-                <span>Quick Re-Scan (+5 recovery points)</span>
+                <span>Quick Re-Scan (Earn points upon correct sorting)</span>
               </button>
 
               <Link

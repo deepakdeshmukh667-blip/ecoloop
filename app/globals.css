@@ -17,6 +17,7 @@
     --primary-container: #10b981;
     --on-primary: #ffffff;
     --border: #e2e8f0;
+    color-scheme: light;
   }
 
   .dark {
@@ -33,6 +34,7 @@
     --primary-container: #006c49;
     --on-primary: #ffffff;
     --border: #334155;
+    color-scheme: dark;
   }
 
   body {
@@ -42,6 +44,54 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * Smooth Dark/Light Mode Transition
+ * Interpolates background, text color, borders, SVG fill & stroke,
+ * and box-shadow seamlessly across the entire website without layout shifts.
+ * ────────────────────────────────────────────────────────────── */
+html,
+body,
+header,
+main,
+aside,
+nav,
+section,
+article,
+div,
+button,
+a,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+input,
+textarea,
+select,
+svg {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 250ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Exempt keyframe animations from transition lag */
+.animate-spin,
+.animate-ping,
+.animate-pulse,
+.no-theme-transition {
+  transition-property: none !important;
+}
+
+/* Modern View Transitions API cross-fade support */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 250ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Material Symbols Outlined Icon utilities */

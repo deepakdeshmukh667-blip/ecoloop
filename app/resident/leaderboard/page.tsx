@@ -12,6 +12,17 @@ export default function LeaderboardPage() {
   const [tab, setTab] = useState<'residents' | 'societies'>('residents');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('week');
 
+  const userRankIndex = leaderboardResidents.findIndex(
+    (r) => r.id === profile.id || (profile.email ? r.email === profile.email : false)
+  );
+  const userRank = userRankIndex !== -1 ? leaderboardResidents[userRankIndex].rank : leaderboardResidents.length;
+  const competitorAbove = userRankIndex > 0 ? leaderboardResidents[userRankIndex - 1] : null;
+  const ptsToOvertake = competitorAbove ? Math.max(1, competitorAbove.eco_points - profile.eco_points) : 0;
+
+  const top1 = leaderboardResidents[0];
+  const top2 = leaderboardResidents[1];
+  const top3 = leaderboardResidents[2];
+
   return (
     <div className="min-h-screen bg-background dark:bg-[#0b1120]">
       <TopNavBar />
@@ -84,7 +95,7 @@ export default function LeaderboardPage() {
                           className="w-12 h-12 rounded-full object-cover ring-2 ring-white"
                         />
                         <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#ffb95f] text-[#2a1700] text-[10px] font-black flex items-center justify-center shadow">
-                          #3
+                          #{userRank}
                         </span>
                       </div>
                       <div className="flex flex-col">
@@ -96,16 +107,25 @@ export default function LeaderboardPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-white/75">Top 5%</span>
-                      <div className="text-2xl font-black font-headline">#3</div>
+                      <span className="text-[10px] uppercase font-bold text-white/75">
+                        {userRank <= 3 ? 'Top Tier' : `Rank ${userRank}`}
+                      </span>
+                      <div className="text-2xl font-black font-headline">#{userRank}</div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-white/20 z-10 text-xs">
-                    <span className="flex items-center gap-1 font-semibold">
-                      <span className="material-symbols-outlined text-[16px] text-[#ffddb8]">bolt</span>
-                      18 pts to overtake Rahul K. for #2!
-                    </span>
+                    {competitorAbove ? (
+                      <span className="flex items-center gap-1 font-semibold">
+                        <span className="material-symbols-outlined text-[16px] text-[#ffddb8]">bolt</span>
+                        {ptsToOvertake} pts to overtake {competitorAbove.full_name} for #{competitorAbove.rank}!
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 font-semibold">
+                        <span className="material-symbols-outlined text-[16px] text-[#ffddb8]">emoji_events</span>
+                        You are #1 on the leaderboard!
+                      </span>
+                    )}
                     <Link
                       href="/resident/verify"
                       className="px-3 py-1 rounded-full bg-white text-[#006c49] font-bold text-xs shadow-sm hover:scale-105 transition-transform"
@@ -129,84 +149,90 @@ export default function LeaderboardPage() {
 
                   {/* 3 Pedestals */}
                   <div className="flex items-end justify-center gap-2 sm:gap-4 pt-4 pb-2">
-                    {/* Rank 2: Rahul Nair */}
-                    <div className="flex flex-col items-center gap-2 flex-1">
-                      <div className="relative">
-                        <img
-                          src={leaderboardResidents[1].avatar_url}
-                          alt="Rahul Nair"
-                          className="w-12 h-12 rounded-full object-cover ring-2 ring-[#bec6e0]"
-                        />
-                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#bec6e0] text-[#131b2e] text-[9px] font-bold flex items-center justify-center">
+                    {/* Rank 2 */}
+                    {top2 && (
+                      <div className="flex flex-col items-center gap-2 flex-1">
+                        <div className="relative">
+                          <img
+                            src={top2.avatar_url || '/deepak-avatar.png'}
+                            alt={top2.full_name}
+                            className="w-12 h-12 rounded-full object-cover ring-2 ring-[#bec6e0]"
+                          />
+                          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#bec6e0] text-[#131b2e] text-[9px] font-bold flex items-center justify-center">
+                            2
+                          </span>
+                        </div>
+                        <div className="text-center">
+                          <span className="text-xs font-bold text-[#0b1c30] dark:text-white block truncate">
+                            {top2.id === profile.id ? `${top2.full_name} (You)` : top2.full_name}
+                          </span>
+                          <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8]">
+                            {top2.eco_points} pts
+                          </span>
+                        </div>
+                        <div className="w-full h-20 bg-[#eff4ff] dark:bg-[#1a263e] rounded-t-xl flex items-center justify-center font-headline font-black text-xl text-[#565e74] dark:text-[#bec6e0]">
                           2
-                        </span>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <span className="text-xs font-bold text-[#0b1c30] dark:text-white block truncate">
-                          Rahul N.
-                        </span>
-                        <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8]">
-                          {leaderboardResidents[1].eco_points} pts
-                        </span>
-                      </div>
-                      <div className="w-full h-20 bg-[#eff4ff] dark:bg-[#1a263e] rounded-t-xl flex items-center justify-center font-headline font-black text-xl text-[#565e74] dark:text-[#bec6e0]">
-                        2
-                      </div>
-                    </div>
+                    )}
 
-                    {/* Rank 1: Priya Patel */}
-                    <div className="flex flex-col items-center gap-2 flex-1 -mt-4">
-                      <span className="text-xl">👑</span>
-                      <div className="relative -mt-2">
-                        <img
-                          src={leaderboardResidents[0].avatar_url}
-                          alt="Priya Patel"
-                          className="w-14 h-14 rounded-full object-cover ring-4 ring-[#ffb95f]"
-                        />
-                        <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#ffb95f] text-[#2a1700] text-[10px] font-black flex items-center justify-center shadow">
+                    {/* Rank 1 */}
+                    {top1 && (
+                      <div className="flex flex-col items-center gap-2 flex-1 -mt-4">
+                        <span className="text-xl">👑</span>
+                        <div className="relative -mt-2">
+                          <img
+                            src={top1.avatar_url || '/deepak-avatar.png'}
+                            alt={top1.full_name}
+                            className="w-14 h-14 rounded-full object-cover ring-4 ring-[#ffb95f]"
+                          />
+                          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#ffb95f] text-[#2a1700] text-[10px] font-black flex items-center justify-center shadow">
+                            1
+                          </span>
+                        </div>
+                        <div className="text-center">
+                          <span className="text-xs font-bold text-[#0b1c30] dark:text-white block truncate">
+                            {top1.id === profile.id ? `${top1.full_name} (You)` : top1.full_name}
+                          </span>
+                          <span className="text-[11px] text-[#006c49] dark:text-[#10b981] font-bold">
+                            {top1.eco_points} pts
+                          </span>
+                        </div>
+                        <div className="w-full h-28 bg-[#10b981] rounded-t-xl flex flex-col items-center justify-center text-white font-headline font-black text-2xl shadow-md">
+                          <span className="material-symbols-outlined text-[20px] mb-1">
+                            military_tech
+                          </span>
                           1
-                        </span>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <span className="text-xs font-bold text-[#0b1c30] dark:text-white block truncate">
-                          Priya Patel
-                        </span>
-                        <span className="text-[11px] text-[#006c49] dark:text-[#10b981] font-bold">
-                          {leaderboardResidents[0].eco_points} pts
-                        </span>
-                      </div>
-                      <div className="w-full h-28 bg-[#10b981] rounded-t-xl flex flex-col items-center justify-center text-white font-headline font-black text-2xl shadow-md">
-                        <span className="material-symbols-outlined text-[20px] mb-1">
-                          military_tech
-                        </span>
-                        1
-                      </div>
-                    </div>
+                    )}
 
-                    {/* Rank 3: Deepak S. */}
-                    <div className="flex flex-col items-center gap-2 flex-1">
-                      <div className="relative">
-                        <img
-                          src={profile.avatar_url || '/deepak-avatar.png'}
-                          alt="Deepak S."
-                          className="w-12 h-12 rounded-full object-cover ring-2 ring-[#ffddb8]"
-                        />
-                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ffddb8] text-[#855300] text-[9px] font-bold flex items-center justify-center">
+                    {/* Rank 3 */}
+                    {top3 && (
+                      <div className="flex flex-col items-center gap-2 flex-1">
+                        <div className="relative">
+                          <img
+                            src={top3.avatar_url || '/deepak-avatar.png'}
+                            alt={top3.full_name}
+                            className="w-12 h-12 rounded-full object-cover ring-2 ring-[#ffddb8]"
+                          />
+                          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ffddb8] text-[#855300] text-[9px] font-bold flex items-center justify-center">
+                            3
+                          </span>
+                        </div>
+                        <div className="text-center">
+                          <span className="text-xs font-bold text-[#0b1c30] dark:text-white block truncate">
+                            {top3.id === profile.id ? `${top3.full_name} (You)` : top3.full_name}
+                          </span>
+                          <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8]">
+                            {top3.eco_points} pts
+                          </span>
+                        </div>
+                        <div className="w-full h-16 bg-[#eff4ff] dark:bg-[#1a263e] rounded-t-xl flex items-center justify-center font-headline font-black text-xl text-[#855300] dark:text-[#ffb95f]">
                           3
-                        </span>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <span className="text-xs font-bold text-[#0b1c30] dark:text-white block truncate">
-                          Deepak (You)
-                        </span>
-                        <span className="text-[11px] text-[#3c4a42] dark:text-[#94a3b8]">
-                          {profile.eco_points} pts
-                        </span>
-                      </div>
-                      <div className="w-full h-16 bg-[#eff4ff] dark:bg-[#1a263e] rounded-t-xl flex items-center justify-center font-headline font-black text-xl text-[#855300] dark:text-[#ffb95f]">
-                        3
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </section>
 

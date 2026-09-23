@@ -65,11 +65,13 @@ export const INITIAL_PROFILE: Profile = {
   building: 'Tower B (Orchid)',
   flat_number: 'Apt 402B',
   avatar_url: '/deepak-avatar.png',
-  eco_points: 420,
-  current_streak: 7,
-  consistency_score: 92.0,
-  total_verifications: 18,
-  tier_level: 4,
+  // Start at zero so a fresh/unauthenticated local session never shows
+  // pre-unlocked rewards or badges. Real values load from Supabase on login.
+  eco_points: 0,
+  current_streak: 0,
+  consistency_score: 0,
+  total_verifications: 0,
+  tier_level: 1,
   is_active: true,
   preferences: {
     theme: 'light',
@@ -140,7 +142,7 @@ export const INITIAL_LEADERBOARD_RESIDENTS: (Profile & { rank: number; badge_tit
     ...INITIAL_PROFILE,
     id: 'user-rahul',
     full_name: 'Rahul Nair',
-    email: 'rahul.k@greenvalley.res',
+    email: 'rahul.n@greenvalley.res',
     building: 'Tower B (Orchid)',
     flat_number: 'Apt 201',
     avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4PweyZ6xvzdpPCAq6FajbcgJ2BJnTtuUEv9rXsqQSOUGP2-gJe76vywoGPnPV9NnsRfbsHmsBuZYPuBksPeyJqbOJvvWuiA-ivKaIEXhtTSPX6vbqxw_RF58_KHZJrQmi_AkqQ4XCPOkn_VJqRcLeu_USYbPX5CfPrTy7f5NJ15BprmI1bDDwELBMCBuMtAxBuXrSA8XCJ_ApaeEVyYGDH-bkrFiz6ZSHtB-f1H7hDg8Yns9I7bWA',
@@ -149,11 +151,6 @@ export const INITIAL_LEADERBOARD_RESIDENTS: (Profile & { rank: number; badge_tit
     consistency_score: 90.0,
     rank: 2,
     badge_title: 'Waste Warrior',
-  },
-  {
-    ...INITIAL_PROFILE,
-    rank: 3,
-    badge_title: 'Rising Star',
   },
   {
     ...INITIAL_PROFILE,
@@ -166,13 +163,13 @@ export const INITIAL_LEADERBOARD_RESIDENTS: (Profile & { rank: number; badge_tit
     eco_points: 395,
     current_streak: 11,
     consistency_score: 89.0,
-    rank: 4,
+    rank: 3,
     badge_title: 'Zero Rejects',
   },
   {
     ...INITIAL_PROFILE,
     id: 'user-vikram',
-    full_name: 'Vik Vikram Joshi',
+    full_name: 'Vikram Joshi',
     email: 'vikram.j@greenvalley.res',
     building: 'Tower B (Orchid)',
     flat_number: 'Apt 114',
@@ -180,7 +177,7 @@ export const INITIAL_LEADERBOARD_RESIDENTS: (Profile & { rank: number; badge_tit
     eco_points: 360,
     current_streak: 5,
     consistency_score: 84.0,
-    rank: 5,
+    rank: 4,
     badge_title: 'Compost Pioneer',
   },
   {
@@ -193,7 +190,7 @@ export const INITIAL_LEADERBOARD_RESIDENTS: (Profile & { rank: number; badge_tit
     eco_points: 340,
     current_streak: 6,
     consistency_score: 88.0,
-    rank: 6,
+    rank: 5,
   },
   {
     ...INITIAL_PROFILE,
@@ -205,7 +202,7 @@ export const INITIAL_LEADERBOARD_RESIDENTS: (Profile & { rank: number; badge_tit
     eco_points: 325,
     current_streak: 8,
     consistency_score: 87.0,
-    rank: 7,
+    rank: 6,
   },
   {
     ...INITIAL_PROFILE,
@@ -217,7 +214,7 @@ export const INITIAL_LEADERBOARD_RESIDENTS: (Profile & { rank: number; badge_tit
     eco_points: 310,
     current_streak: 4,
     consistency_score: 82.0,
-    rank: 8,
+    rank: 7,
   },
 ];
 
@@ -322,9 +319,9 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
     target_count: 7,
     category: 'consistency',
     points_reward: 50,
-    is_unlocked: true,
-    progress: 7,
-    unlocked_at: 'Yesterday',
+    // Unlocked dynamically in store based on profile.current_streak >= 7
+    is_unlocked: false,
+    progress: 0,
   },
   {
     id: 'ach-first',
@@ -335,9 +332,9 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
     target_count: 1,
     category: 'milestone',
     points_reward: 20,
-    is_unlocked: true,
-    progress: 1,
-    unlocked_at: 'Oct 12',
+    // Unlocked dynamically in store based on profile.total_verifications >= 1
+    is_unlocked: false,
+    progress: 0,
   },
   {
     id: 'ach-warrior',
@@ -348,9 +345,9 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
     target_count: 50,
     category: 'milestone',
     points_reward: 100,
-    is_unlocked: true,
-    progress: 50,
-    unlocked_at: 'Sep 28',
+    // Unlocked dynamically in store based on profile.total_verifications >= 50
+    is_unlocked: false,
+    progress: 0,
   },
   {
     id: 'ach-spot',
@@ -361,9 +358,9 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
     target_count: 3,
     category: 'audit',
     points_reward: 80,
-    is_unlocked: true,
-    progress: 3,
-    unlocked_at: 'Aug 14',
+    // Unlocked dynamically in store based on passed spotChecks count
+    is_unlocked: false,
+    progress: 0,
   },
   {
     id: 'ach-zero-contamination',
@@ -375,7 +372,7 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
     category: 'precision',
     points_reward: 150,
     is_unlocked: false,
-    progress: 22,
+    progress: 0,
   },
   {
     id: 'ach-leader',
@@ -386,8 +383,9 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
     target_count: 500,
     category: 'ranking',
     points_reward: 200,
+    // Unlocked dynamically in store based on profile.eco_points >= 500
     is_unlocked: false,
-    progress: 420,
+    progress: 0,
   },
   {
     id: 'ach-community',
@@ -399,7 +397,7 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
     category: 'derby',
     points_reward: 120,
     is_unlocked: false,
-    progress: 1,
+    progress: 0,
   },
   {
     id: 'ach-ambassador',
@@ -411,7 +409,7 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
     category: 'civic',
     points_reward: 100,
     is_unlocked: false,
-    progress: 1,
+    progress: 0,
   },
 ];
 
