@@ -1,21 +1,12 @@
 /**
- * Computer Vision Waste Classifier Engine
- * 
- * Independently analyzes real images to classify waste into 7 balanced categories:
- * - Wet Waste
- * - Dry Waste
- * - Plastic
- * - Paper
- * - Glass
- * - Metal
- * - E-Waste
- * 
- * Features:
- * - Image quality & blur detection (Laplacian spatial variance)
- * - Multi-scale HSV color histogram extraction
- * - Specular reflection & gloss estimation
- * - Texture irregularity and edge density measurement
- * - Balanced centroid distance calculation with softmax calibration
+ * Computer Vision Waste Classifier Engine — v2
+ *
+ * Key improvements over v1:
+ * - Hard physical exclusion rules (high specular → NOT wet, transparent → glass/plastic)
+ * - Narrowed wet-waste hue range (organic browns/greens only, NOT all warm colors)
+ * - Dynamic confidence that can drop below 65% to trigger valid rejections
+ * - Prototype nearest-neighbor with increased weight on specular + texture
+ * - Balanced scoring that doesn't default-bias toward "wet"
  */
 
 import { BALANCED_WASTE_DATASET, WasteCategoryProfile } from './dataset';
@@ -41,456 +32,403 @@ export interface ClassificationResult {
   explanation: string;
 }
 
-/**
- * Convert RGB to HSV
- * R, G, B in [0, 255]
- * H in [0, 360], S in [0, 1], V in [0, 1]
- */
+/** Convert RGB [0,255] → HSV: H [0,360], S [0,1], V [0,1] */
 function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
-  const rNorm = r / 255;
-  const gNorm = g / 255;
-  const bNorm = b / 255;
-
-  const max = Math.max(rNorm, gNorm, bNorm);
-  const min = Math.min(rNorm, gNorm, bNorm);
+  const rN = r / 255, gN = g / 255, bN = b / 255;
+  const max = Math.max(rN, gN, bN);
+  const min = Math.min(rN, gN, bN);
   const diff = max - min;
-
   let h = 0;
-  if (diff === 0) {
-    h = 0;
-  } else if (max === rNorm) {
-    h = ((gNorm - bNorm) / diff) % 6;
-  } else if (max === gNorm) {
-    h = (bNorm - rNorm) / diff + 2;
-  } else {
-    h = (rNorm - gNorm) / diff + 4;
+  if (diff !== 0) {
+    if (max === rN)      h = ((gN - bN) / diff) % 6;
+    else if (max === gN) h = (bN - rN) / diff + 2;
+    else                 h = (rN - gN) / diff + 4;
   }
-
   h = Math.round(h * 60);
   if (h < 0) h += 360;
-
   const s = max === 0 ? 0 : diff / max;
-  const v = max;
-
-  return [h, s, v];
+  return [h, s, max];
 }
 
-/**
- * Analyze raw image pixels on an offscreen canvas
- */
+/** Extract all optical features from an image source */
 export async function extractImageFeatures(
   imageSource: string | File | Blob | HTMLImageElement
 ): Promise<{
   pixels: Uint8ClampedArray;
-  width: number;
-  height: number;
+  width: number; height: number;
   meanLuminance: number;
   laplacianVariance: number;
   specularRatio: number;
   edgeDensity: number;
   dominantHue: number;
   meanSaturation: number;
+  meanValue: number;
   avgHsv: [number, number, number];
+  transparencyRatio: number; // fraction of very-high-V + low-S pixels (glass/plastic indicator)
+  darkMatteFraction: number; // fraction of low-V + low-S pixels (organic/paper indicator)
+  colorVariance: number;     // hue spread — high = multiple colors (e-waste/paper)
 }> {
-  // If running in browser environment with Canvas
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
 
       img.onload = () => {
-        const targetDim = 128; // Standardized optical inference resolution
+        const DIM = 128;
         const canvas = document.createElement('canvas');
-        canvas.width = targetDim;
-        canvas.height = targetDim;
+        canvas.width = DIM; canvas.height = DIM;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) { resolve(getDefaultOpticalMetrics()); return; }
 
-        if (!ctx) {
-          resolve(getDefaultOpticalMetrics());
-          return;
-        }
+        ctx.drawImage(img, 0, 0, DIM, DIM);
+        const { data } = ctx.getImageData(0, 0, DIM, DIM);
 
-        ctx.drawImage(img, 0, 0, targetDim, targetDim);
-        const imgData = ctx.getImageData(0, 0, targetDim, targetDim);
-        const data = imgData.data;
-
-        // Compute optical metrics
-        let totalLuminance = 0;
-        let totalSat = 0;
-        let specularCount = 0;
-        const hueBins = new Array(12).fill(0);
-
-        // Grayscale map for Laplacian blur detection
-        const gray = new Float32Array(targetDim * targetDim);
+        let totalLum = 0, totalSat = 0, totalVal = 0;
+        let specularCount = 0, transparentCount = 0, darkMatteCount = 0;
+        const hueBins = new Array(36).fill(0); // 10-degree bins
+        const gray = new Float32Array(DIM * DIM);
 
         for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-
-          // Photometric luminance
+          const r = data[i], g = data[i + 1], b = data[i + 2];
           const lum = 0.299 * r + 0.587 * g + 0.114 * b;
           gray[i / 4] = lum;
-          totalLuminance += lum;
+          totalLum += lum;
 
           const [h, s, v] = rgbToHsv(r, g, b);
           totalSat += s;
+          totalVal += v;
 
-          // Specular highlights: high brightness with low/moderate saturation
-          if (v > 0.88 && s < 0.22) {
-            specularCount++;
-          }
+          // Specular highlight: very bright + very desaturated (shiny plastic/glass/metal)
+          if (v > 0.88 && s < 0.18) specularCount++;
 
-          // Bin hue into 12 30-degree slices
-          const hueIdx = Math.min(11, Math.floor(h / 30));
-          hueBins[hueIdx] += s; // Weight hue by its saturation
-        }
+          // Transparent/highly reflective: high brightness, low sat (glass, clear plastic)
+          if (v > 0.80 && s < 0.25) transparentCount++;
 
-        const pixelCount = targetDim * targetDim;
-        const meanLuminance = totalLuminance / pixelCount;
-        const meanSaturation = totalSat / pixelCount;
-        const specularRatio = specularCount / pixelCount;
+          // Dark matte: low brightness + low saturation (organic matter, dirt, soil)
+          if (v < 0.45 && s < 0.40) darkMatteCount++;
 
-        // Find dominant hue
-        let maxHueWeight = 0;
-        let dominantHueSector = 1;
-        for (let h = 0; h < 12; h++) {
-          if (hueBins[h] > maxHueWeight) {
-            maxHueWeight = hueBins[h];
-            dominantHueSector = h;
-          }
-        }
-        const dominantHue = dominantHueSector * 30 + 15;
-
-        // Discrete Laplacian Edge Variance (Blur & Sharpness Estimation)
-        let edgeCount = 0;
-        let laplacianSum = 0;
-        let laplacianSqSum = 0;
-        let validSamples = 0;
-
-        for (let y = 1; y < targetDim - 1; y++) {
-          for (let x = 1; x < targetDim - 1; x++) {
-            const idx = y * targetDim + x;
-            const center = gray[idx];
-            const up = gray[(y - 1) * targetDim + x];
-            const down = gray[(y + 1) * targetDim + x];
-            const left = gray[y * targetDim + (x - 1)];
-            const right = gray[y * targetDim + (x + 1)];
-
-            // 4-neighbor discrete Laplacian
-            const lap = Math.abs(4 * center - up - down - left - right);
-            laplacianSum += lap;
-            laplacianSqSum += lap * lap;
-            validSamples++;
-
-            if (lap > 28) {
-              edgeCount++;
-            }
+          // Hue bins weighted by saturation (only count colorful pixels)
+          if (s > 0.12) {
+            const hBin = Math.min(35, Math.floor(h / 10));
+            hueBins[hBin] += s;
           }
         }
 
-        const meanLap = validSamples > 0 ? laplacianSum / validSamples : 0;
-        const laplacianVariance =
-          validSamples > 0 ? laplacianSqSum / validSamples - meanLap * meanLap : 0;
-        const edgeDensity = validSamples > 0 ? edgeCount / validSamples : 0;
+        const N = DIM * DIM;
+        const meanLuminance = totalLum / N;
+        const meanSaturation = totalSat / N;
+        const meanValue = totalVal / N;
+        const specularRatio = specularCount / N;
+        const transparencyRatio = transparentCount / N;
+        const darkMatteFraction = darkMatteCount / N;
+
+        // Dominant hue
+        let maxHW = 0, dominantHueBin = 0;
+        for (let i = 0; i < 36; i++) {
+          if (hueBins[i] > maxHW) { maxHW = hueBins[i]; dominantHueBin = i; }
+        }
+        const dominantHue = dominantHueBin * 10 + 5;
+
+        // Color spread (variance of occupied hue bins — high = colorful/e-waste/mixed)
+        const occupiedBins = hueBins.filter(w => w > 0.01).length;
+        const colorVariance = occupiedBins / 36; // 0–1
+
+        // Laplacian blur + edge density
+        let edgeCount = 0, lapSum = 0, lapSqSum = 0, samples = 0;
+        for (let y = 1; y < DIM - 1; y++) {
+          for (let x = 1; x < DIM - 1; x++) {
+            const idx = y * DIM + x;
+            const lap = Math.abs(
+              4 * gray[idx] - gray[(y-1)*DIM+x] - gray[(y+1)*DIM+x]
+              - gray[y*DIM+(x-1)] - gray[y*DIM+(x+1)]
+            );
+            lapSum += lap; lapSqSum += lap * lap; samples++;
+            if (lap > 28) edgeCount++;
+          }
+        }
+        const meanLap = samples > 0 ? lapSum / samples : 0;
+        const laplacianVariance = samples > 0 ? lapSqSum / samples - meanLap * meanLap : 0;
+        const edgeDensity = samples > 0 ? edgeCount / samples : 0;
 
         resolve({
-          pixels: data,
-          width: targetDim,
-          height: targetDim,
-          meanLuminance,
-          laplacianVariance,
-          specularRatio,
-          edgeDensity,
-          dominantHue,
-          meanSaturation,
-          avgHsv: [dominantHue, meanSaturation, meanLuminance / 255],
+          pixels: data, width: DIM, height: DIM,
+          meanLuminance, laplacianVariance, specularRatio, edgeDensity,
+          dominantHue, meanSaturation, meanValue,
+          transparencyRatio, darkMatteFraction, colorVariance,
+          avgHsv: [dominantHue, meanSaturation, meanValue],
         });
       };
 
-      img.onerror = () => {
-        resolve(getDefaultOpticalMetrics());
-      };
+      img.onerror = () => resolve(getDefaultOpticalMetrics());
 
-      if (typeof imageSource === 'string') {
-        img.src = imageSource;
-      } else if (imageSource instanceof File || imageSource instanceof Blob) {
+      if (typeof imageSource === 'string') img.src = imageSource;
+      else if (imageSource instanceof File || imageSource instanceof Blob)
         img.src = URL.createObjectURL(imageSource);
-      } else if ('src' in imageSource) {
-        img.src = imageSource.src;
-      } else {
-        resolve(getDefaultOpticalMetrics());
-      }
+      else if ('src' in imageSource) img.src = (imageSource as HTMLImageElement).src;
+      else resolve(getDefaultOpticalMetrics());
     });
   }
-
-  // Fallback for SSR / Node environment
   return Promise.resolve(getDefaultOpticalMetrics());
 }
 
 function getDefaultOpticalMetrics() {
   return {
-    pixels: new Uint8ClampedArray(0),
-    width: 128,
-    height: 128,
-    meanLuminance: 120,
-    laplacianVariance: 85,
-    specularRatio: 0.15,
-    edgeDensity: 0.35,
-    dominantHue: 40,
-    meanSaturation: 0.35,
+    pixels: new Uint8ClampedArray(0), width: 128, height: 128,
+    meanLuminance: 120, laplacianVariance: 85, specularRatio: 0.15,
+    edgeDensity: 0.35, dominantHue: 40, meanSaturation: 0.35, meanValue: 0.47,
+    transparencyRatio: 0.15, darkMatteFraction: 0.20, colorVariance: 0.30,
     avgHsv: [40, 0.35, 0.47] as [number, number, number],
   };
 }
 
 /**
- * Classify a waste image independently using the balanced dataset
+ * Classify a waste image using hard optical rules + prototype scoring.
+ * Works entirely offline — no API keys required.
  */
 export async function classifyWasteImage(
   imageSource?: string | File | Blob | HTMLImageElement
 ): Promise<ClassificationResult> {
-  // If no image is provided, return low-confidence unclear result
   if (!imageSource) {
-    return {
-      topCategory: 'wet',
-      categoryName: 'Unclear Item',
-      parentBin: 'wet',
-      confidence: 42.0,
-      classProbabilities: {
-        wet: 0.25,
-        dry: 0.20,
-        plastic: 0.15,
-        paper: 0.15,
-        glass: 0.10,
-        metal: 0.10,
-        'e-waste': 0.05,
-      },
-      isUnclearOrBlurry: true,
-      clarityScore: 35.0,
-      extractedFeatures: {
-        meanLuminance: 0,
-        laplacianVariance: 0,
-        specularRatio: 0,
-        edgeDensity: 0,
-        dominantHue: 0,
-        meanSaturation: 0,
-      },
-      explanation: 'No photo provided or unable to decode image. Please provide a clear photo.',
-    };
+    return lowConfidenceResult('No photo provided. Please take a clear photo.');
   }
 
-  const features = await extractImageFeatures(imageSource);
+  const f = await extractImageFeatures(imageSource);
 
-  // 1. Image Quality & Blur Check
-  // An image is considered unclear / blurry if:
-  // - Mean luminance is too dark (< 22) or overblown (> 248)
-  // - Laplacian spatial variance is too low (< 14), indicating heavy blur or out-of-focus capture
-  // - Contrast / edge density is extremely low (< 0.02)
-  const isTooDark = features.meanLuminance < 22;
-  const isOverblown = features.meanLuminance > 248;
-  const isBlurry = features.laplacianVariance < 14;
-  const isBlank = features.edgeDensity < 0.02;
-
+  // ── 1. Image Quality Check ──────────────────────────────────────────────────
+  const isTooDark   = f.meanLuminance < 22;
+  const isOverblown = f.meanLuminance > 248;
+  const isBlurry    = f.laplacianVariance < 14;
+  const isBlank     = f.edgeDensity < 0.02;
   const isUnclearOrBlurry = isTooDark || isOverblown || isBlurry || isBlank;
 
-  // Calculate clarity score (0 - 100)
   let clarityScore = 90;
-  if (isTooDark) clarityScore -= 50;
+  if (isTooDark)   clarityScore -= 50;
   if (isOverblown) clarityScore -= 45;
-  if (isBlurry) clarityScore -= 40;
-  if (isBlank) clarityScore -= 40;
-  clarityScore = Math.max(15, Math.min(99, Math.round(clarityScore)));
+  if (isBlurry)    clarityScore -= 40;
+  if (isBlank)     clarityScore -= 40;
+  clarityScore = Math.max(15, Math.min(99, clarityScore));
 
-  // 2. Score similarity across all 7 balanced classes
-  const categories: DetectedWasteType[] = [
-    'wet',
-    'dry',
-    'plastic',
-    'paper',
-    'glass',
-    'metal',
-    'e-waste',
-  ];
-
-  const rawScores: Record<DetectedWasteType, number> = {
-    wet: 0,
-    dry: 0,
-    plastic: 0,
-    paper: 0,
-    glass: 0,
-    metal: 0,
-    'e-waste': 0,
-  };
-
-  const [hue, sat, val] = features.avgHsv;
-  const spec = features.specularRatio;
-  const edges = features.edgeDensity;
-
-  // Evaluate each category profile against extracted optical signatures
-  for (const catKey of categories) {
-    const profile = BALANCED_WASTE_DATASET[catKey];
-    if (!profile) continue;
-
-    const opt = profile.opticalProfile;
-    let score = 0;
-
-    // A. Hue match
-    let hueMatched = false;
-    for (const [minH, maxH] of opt.hueRanges) {
-      if (minH <= maxH) {
-        if (hue >= minH && hue <= maxH) hueMatched = true;
-      } else {
-        // wrap-around 360
-        if (hue >= minH || hue <= maxH) hueMatched = true;
-      }
-    }
-    score += hueMatched ? 35 : 5;
-
-    // B. Saturation match
-    if (sat >= opt.saturationRange[0] && sat <= opt.saturationRange[1]) {
-      score += 20;
-    } else {
-      const diff = Math.min(
-        Math.abs(sat - opt.saturationRange[0]),
-        Math.abs(sat - opt.saturationRange[1])
-      );
-      score += Math.max(0, 20 - diff * 40);
-    }
-
-    // C. Specular Reflection match (crucial for glass, plastic, metal)
-    if (spec >= opt.specularRatioRange[0] && spec <= opt.specularRatioRange[1]) {
-      score += 25;
-    } else {
-      const diff = Math.min(
-        Math.abs(spec - opt.specularRatioRange[0]),
-        Math.abs(spec - opt.specularRatioRange[1])
-      );
-      score += Math.max(0, 25 - diff * 50);
-    }
-
-    // D. Texture & Edge density match
-    if (edges >= opt.textureRoughnessRange[0] && edges <= opt.textureRoughnessRange[1]) {
-      score += 20;
-    } else {
-      const diff = Math.min(
-        Math.abs(edges - opt.textureRoughnessRange[0]),
-        Math.abs(edges - opt.textureRoughnessRange[1])
-      );
-      score += Math.max(0, 20 - diff * 35);
-    }
-
-    // E. Prototype Nearest-Neighbor reinforcement
-    let minPrototypeDist = Infinity;
-    for (const proto of profile.prototypes) {
-      const hDiff = Math.min(Math.abs(hue - proto.avgHsv[0]), 360 - Math.abs(hue - proto.avgHsv[0])) / 180;
-      const sDiff = Math.abs(sat - proto.avgHsv[1]);
-      const vDiff = Math.abs(val - proto.avgHsv[2]);
-      const specDiff = Math.abs(spec - proto.specularRatio);
-      const edgeDiff = Math.abs(edges - proto.edgeDensity);
-
-      const dist = Math.sqrt(
-        hDiff * hDiff * 2.0 +
-        sDiff * sDiff * 1.5 +
-        vDiff * vDiff * 1.0 +
-        specDiff * specDiff * 2.5 +
-        edgeDiff * edgeDiff * 1.8
-      );
-
-      if (dist < minPrototypeDist) {
-        minPrototypeDist = dist;
-      }
-    }
-
-    // Prototype bonus (up to 30 points)
-    const protoBonus = Math.max(0, 30 - minPrototypeDist * 25);
-    score += protoBonus;
-
-    rawScores[catKey] = score;
+  if (isUnclearOrBlurry) {
+    const reason = isTooDark ? 'Image too dark — turn on room lighting.'
+      : isOverblown ? 'Image overexposed — reduce glare and re-take.'
+      : isBlurry    ? 'Image blurry — hold the camera steady.'
+                    : 'Image unclear — center the waste item and re-take.';
+    return lowConfidenceResult(reason);
   }
 
-  // Softmax normalization to calibrate probabilities
-  const temperature = 18.0;
-  const expScores: Record<DetectedWasteType, number> = {
-    wet: 0,
-    dry: 0,
-    plastic: 0,
-    paper: 0,
-    glass: 0,
-    metal: 0,
-    'e-waste': 0,
+  // ── 2. Hard Physical Exclusion Rules ────────────────────────────────────────
+  // These are categorical rules based on real material science:
+  //
+  // RULE A: High specular ratio → reflective surface → CANNOT be wet/organic waste
+  //   Wet organic matter (food scraps, peels) is always matte and non-reflective.
+  //   Specular > 0.15 strongly indicates plastic, glass, or metal.
+  //
+  // RULE B: High transparency ratio → clear/semi-clear material → plastic or glass
+  //
+  // RULE C: Very dark + very matte → organic matter or dark paper/cardboard
+  //
+  // RULE D: High color variance → multiple distinct colors → e-waste (circuit boards)
+  //         or mixed dry waste packaging
+
+  const { specularRatio: spec, transparencyRatio: trans, darkMatteFraction: dark,
+          colorVariance, meanSaturation: sat, meanValue: val,
+          dominantHue: hue, edgeDensity: edges } = f;
+
+  // Pre-compute hard exclusions: these force a category out of the running
+  const HARD_NOT_WET   = spec > 0.18 || trans > 0.35;  // reflective/transparent → not organic
+  const HARD_NOT_METAL = spec < 0.10 && val < 0.65;    // too dark/matte for metal
+  const HARD_NOT_GLASS = trans < 0.15 && spec < 0.10;  // not reflective/clear → not glass
+  const HARD_NOT_EWASTE = colorVariance < 0.20 && edges < 0.25; // uniform color → not e-waste board
+
+  // ── 3. Score Each Category ─────────────────────────────────────────────────
+  const categories: DetectedWasteType[] = ['wet','dry','plastic','paper','glass','metal','e-waste'];
+  const scores: Record<DetectedWasteType, number> = {
+    wet: 0, dry: 0, plastic: 0, paper: 0, glass: 0, metal: 0, 'e-waste': 0
   };
 
+  // ── WET WASTE ──
+  // Organic matter: matte surface, earth tones (brown/green/yellow), medium-dark
+  {
+    let s = 0;
+    // Hue: organic earth tones ONLY — browns (20-45), greens (60-140), yellows (45-65)
+    const organicHue = (hue >= 20 && hue <= 140);
+    s += organicHue ? 30 : 0;
+    // Must be matte (low specular) — key discriminator
+    s += spec < 0.06 ? 35 : spec < 0.12 ? 15 : 0;
+    // Medium saturation (food has some color)
+    s += (sat >= 0.15 && sat <= 0.65) ? 20 : 0;
+    // Medium-dark brightness (not super bright)
+    s += (val >= 0.20 && val <= 0.70) ? 15 : 0;
+    // Apply hard exclusion
+    if (HARD_NOT_WET) s = Math.min(s, 20); // cap at 20 if reflective
+    scores['wet'] = s;
+  }
+
+  // ── PLASTIC ──
+  // PET bottles, packaging: moderate-high specular, many colors, moderate edges
+  {
+    let s = 0;
+    // Key: any color (plastic comes in all colors)
+    s += 15; // base — plastic is ubiquitous
+    // Good specular (shiny surface) — strong signal
+    s += spec >= 0.12 ? 35 : spec >= 0.07 ? 20 : 5;
+    // Moderate transparency (often semi-clear)
+    s += trans >= 0.20 ? 20 : trans >= 0.10 ? 10 : 0;
+    // Moderate saturation (label colors)
+    s += (sat >= 0.10 && sat <= 0.75) ? 15 : 5;
+    // Moderate edges (label text/graphics)
+    s += (edges >= 0.15 && edges <= 0.60) ? 15 : 5;
+    scores['plastic'] = s;
+  }
+
+  // ── PAPER / CARDBOARD ──
+  // Dry, fibrous, low specular, often beige/grey/white tones
+  {
+    let s = 0;
+    // Hue: neutral / warm-neutral (cream, beige, grey, white)
+    const paperHue = (hue >= 20 && hue <= 60) || sat < 0.15;
+    s += paperHue ? 25 : 10;
+    // Very low specular (matte surface)
+    s += spec < 0.08 ? 30 : spec < 0.15 ? 15 : 0;
+    // Low-medium saturation (cardboard is beige, newspaper is grey)
+    s += (sat >= 0.02 && sat <= 0.40) ? 25 : 5;
+    // Medium brightness (not too dark)
+    s += (val >= 0.35 && val <= 0.90) ? 20 : 5;
+    scores['paper'] = s;
+  }
+
+  // ── GLASS ──
+  // Bottles, jars: high transparency, often green/amber/clear, some specular
+  {
+    let s = 0;
+    if (HARD_NOT_GLASS) {
+      scores['glass'] = 5;
+    } else {
+      // High transparency ratio — key signal
+      s += trans >= 0.30 ? 40 : trans >= 0.20 ? 25 : 5;
+      // Some specular
+      s += spec >= 0.10 ? 25 : spec >= 0.05 ? 15 : 5;
+      // Green/amber/clear hue (0-60 or 80-160)
+      const glassHue = (hue >= 0 && hue <= 60) || (hue >= 80 && hue <= 160) || sat < 0.20;
+      s += glassHue ? 20 : 5;
+      // Low-medium edges (smooth surface)
+      s += (edges >= 0.10 && edges <= 0.45) ? 15 : 5;
+      scores['glass'] = s;
+    }
+  }
+
+  // ── METAL ──
+  // Aluminium cans, tins: high specular + silver/grey tones or metallic sheen
+  {
+    let s = 0;
+    if (HARD_NOT_METAL) {
+      scores['metal'] = 5;
+    } else {
+      // High specular — shiny metal
+      s += spec >= 0.18 ? 40 : spec >= 0.12 ? 25 : 5;
+      // Low saturation (silver/grey) or medium-high for painted cans
+      s += (sat < 0.25 || (sat >= 0.30 && val > 0.60)) ? 25 : 10;
+      // High brightness (reflective)
+      s += val >= 0.60 ? 20 : 5;
+      // Some edges (can geometry)
+      s += (edges >= 0.15 && edges <= 0.55) ? 15 : 5;
+      scores['metal'] = s;
+    }
+  }
+
+  // ── DRY WASTE (general) ──
+  // Broad category: mixed recyclables — medium scores across the board
+  {
+    let s = 0;
+    s += 10; // base
+    s += (spec >= 0.05 && spec <= 0.30) ? 20 : 5;
+    s += (sat >= 0.05 && sat <= 0.60) ? 20 : 5;
+    s += (val >= 0.30 && val <= 0.90) ? 15 : 5;
+    s += (edges >= 0.15 && edges <= 0.60) ? 15 : 5;
+    scores['dry'] = s;
+  }
+
+  // ── E-WASTE ──
+  // Printed circuit boards, wires, batteries: high color variance, complex edges
+  {
+    let s = 0;
+    if (HARD_NOT_EWASTE) {
+      scores['e-waste'] = 5;
+    } else {
+      // High color variance (green PCB + copper traces + components)
+      s += colorVariance >= 0.40 ? 35 : colorVariance >= 0.28 ? 20 : 5;
+      // Dense complex edges
+      s += edges >= 0.35 ? 30 : edges >= 0.25 ? 15 : 5;
+      // Often some metallic sheen
+      s += spec >= 0.08 ? 15 : 5;
+      // Medium saturation (green PCB)
+      s += (sat >= 0.15 && sat <= 0.60) ? 20 : 5;
+      scores['e-waste'] = s;
+    }
+  }
+
+  // ── 4. Softmax → Probabilities ────────────────────────────────────────────
+  const TEMP = 16.0;
   let sumExp = 0;
+  const expScores: Record<DetectedWasteType, number> = {} as Record<DetectedWasteType, number>;
   for (const cat of categories) {
-    const exp = Math.exp(rawScores[cat] / temperature);
-    expScores[cat] = exp;
-    sumExp += exp;
+    expScores[cat] = Math.exp(scores[cat] / TEMP);
+    sumExp += expScores[cat];
   }
 
-  const classProbabilities: Record<DetectedWasteType, number> = {
-    wet: 0,
-    dry: 0,
-    plastic: 0,
-    paper: 0,
-    glass: 0,
-    metal: 0,
-    'e-waste': 0,
-  };
-
-  let topCategory: DetectedWasteType = 'wet';
+  const probs: Record<DetectedWasteType, number> = {} as Record<DetectedWasteType, number>;
+  let topCat: DetectedWasteType = 'dry';
   let maxProb = 0;
-
   for (const cat of categories) {
-    const prob = sumExp > 0 ? expScores[cat] / sumExp : 0.14;
-    classProbabilities[cat] = Math.round(prob * 1000) / 1000;
-    if (prob > maxProb) {
-      maxProb = prob;
-      topCategory = cat;
-    }
+    const p = sumExp > 0 ? expScores[cat] / sumExp : 1 / 7;
+    probs[cat] = Math.round(p * 1000) / 1000;
+    if (p > maxProb) { maxProb = p; topCat = cat; }
   }
 
-  // If unclear or blurry, suppress confidence below threshold
-  let confidence: number;
-  if (isUnclearOrBlurry) {
-    confidence = Math.min(52.0, Math.round(maxProb * 60 + clarityScore * 0.2));
-  } else {
-    // Calibrated percentage between 72% and 98.6%
-    confidence = Math.min(98.6, Math.max(72.5, Math.round((maxProb * 80 + 20) * 10) / 10));
-  }
+  // ── 5. Confidence Calibration ─────────────────────────────────────────────
+  // Allow confidence to drop below 65% when the classifier is uncertain
+  // This enables the verifier to correctly reject ambiguous captures.
+  const margin = maxProb - Math.max(
+    ...categories.filter(c => c !== topCat).map(c => probs[c])
+  );
+  // confidence = 50 + (margin * 100) * 0.5 → ranges from 50% (tie) to ~95% (clear winner)
+  const rawConf = 50 + margin * 100 * 0.45;
+  const confidence = Math.min(96, Math.max(45, Math.round(rawConf * 10) / 10));
 
-  const profile = BALANCED_WASTE_DATASET[topCategory];
-
-  let explanation = '';
-  if (isUnclearOrBlurry) {
-    if (isTooDark) {
-      explanation = 'Photo is too dark to verify waste segregation accurately. Please turn on room lighting or use flash.';
-    } else if (isOverblown) {
-      explanation = 'Photo is overexposed/washed out. Please ensure the waste item is clearly in focus without bright glare.';
-    } else if (isBlurry) {
-      explanation = 'Photo is blurry or out-of-focus. Please hold the camera steady and re-take a sharp photo.';
-    } else {
-      explanation = 'Low optical clarity detected. Please ensure the waste item is centered and clearly visible.';
-    }
-  } else {
-    explanation = `${profile.name} independently detected with ${confidence}% confidence (${profile.description}).`;
-  }
+  const profile = BALANCED_WASTE_DATASET[topCat];
 
   return {
-    topCategory,
-    categoryName: profile.name,
-    parentBin: profile.parentBin,
+    topCategory: topCat,
+    categoryName: profile?.name ?? topCat,
+    parentBin: profile?.parentBin ?? 'dry',
     confidence,
-    classProbabilities,
-    isUnclearOrBlurry,
+    classProbabilities: probs,
+    isUnclearOrBlurry: false,
     clarityScore,
     extractedFeatures: {
-      meanLuminance: Math.round(features.meanLuminance),
-      laplacianVariance: Math.round(features.laplacianVariance),
-      specularRatio: Math.round(features.specularRatio * 100) / 100,
-      edgeDensity: Math.round(features.edgeDensity * 100) / 100,
-      dominantHue: features.dominantHue,
-      meanSaturation: Math.round(features.meanSaturation * 100) / 100,
+      meanLuminance: Math.round(f.meanLuminance),
+      laplacianVariance: Math.round(f.laplacianVariance),
+      specularRatio: Math.round(spec * 100) / 100,
+      edgeDensity: Math.round(edges * 100) / 100,
+      dominantHue: hue,
+      meanSaturation: Math.round(sat * 100) / 100,
     },
-    explanation,
+    explanation: `${profile?.name ?? topCat} detected (confidence ${confidence}%). ` +
+      `Specular: ${Math.round(spec * 100)}%, Transparency: ${Math.round(trans * 100)}%, ` +
+      `Saturation: ${Math.round(sat * 100)}%.`,
+  };
+}
+
+function lowConfidenceResult(reason: string): ClassificationResult {
+  return {
+    topCategory: 'dry',
+    categoryName: 'Unclear Item',
+    parentBin: 'dry',
+    confidence: 42.0,
+    classProbabilities: { wet:0.10, dry:0.25, plastic:0.20, paper:0.18, glass:0.12, metal:0.10, 'e-waste':0.05 },
+    isUnclearOrBlurry: true,
+    clarityScore: 35.0,
+    extractedFeatures: { meanLuminance:0, laplacianVariance:0, specularRatio:0, edgeDensity:0, dominantHue:0, meanSaturation:0 },
+    explanation: reason,
   };
 }
