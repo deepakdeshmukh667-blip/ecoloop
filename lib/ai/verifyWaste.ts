@@ -42,7 +42,7 @@ async function imageToBase64(
       return blobToBase64(blob);
     }
 
-    if (image instanceof Blob || image instanceof File) {
+    if (image instanceof Blob) {
       return blobToBase64(image);
     }
 
@@ -148,7 +148,8 @@ export async function verifyWaste(
     const gemini = await callGeminiVerify(options.image, selected);
 
     if (gemini && gemini.detectedCategory && gemini.confidence !== undefined) {
-      const detectedCat = gemini.detectedCategory as string;
+      const validCategories = new Set(['wet', 'dry', 'special', 'plastic', 'paper', 'glass', 'metal', 'e-waste', 'unrecognized']);
+      const detectedCat = (validCategories.has(gemini.detectedCategory) ? gemini.detectedCategory : 'unrecognized') as AIVerificationResponse['detectedCategory'];
       const detectedParentBin = (gemini.parentBin ?? 'dry') as 'wet' | 'dry' | 'special';
       const conf = gemini.confidence;
       const profile = BALANCED_WASTE_DATASET[detectedCat];
