@@ -64,7 +64,7 @@ export default function ResidentLoginPage() {
       const supabase = createClient();
       // emailRedirectTo ensures the magic link goes to /auth/callback
       // so the token is exchanged server-side and the user is logged in
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const siteUrl = (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) || 'https://ecoloop-deepakdeshmukh667-7678.vercel.app';
       const { error } = await supabase.auth.signInWithOtp({
         email: normalizedEmail,
         options: {

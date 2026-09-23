@@ -62,7 +62,7 @@ export default function AdminLoginPage() {
 
     try {
       const supabase = createClient();
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const siteUrl = (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) || 'https://ecoloop-deepakdeshmukh667-7678.vercel.app';
       const { error } = await supabase.auth.signInWithOtp({
         email: normalizedEmail,
         options: {
@@ -256,7 +256,7 @@ export default function AdminLoginPage() {
 
     try {
       const supabase = createClient();
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const siteUrl = (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) || 'https://ecoloop-deepakdeshmukh667-7678.vercel.app';
       const { error } = await supabase.auth.signInWithOtp({
         email: normalizedEmail,
         options: {
