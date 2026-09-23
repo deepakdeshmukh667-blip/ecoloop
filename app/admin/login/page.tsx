@@ -381,6 +381,41 @@ export default function AdminLoginPage() {
                 </>
               )}
             </button>
+            <div className="relative my-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#cbd5e1] dark:border-[#334155]"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white dark:bg-[#0f172a] px-2 text-[#64748b] dark:text-[#94a3b8] font-medium">
+                  Or authorized testing
+                </span>
+              </div>
+            </div>
+
+            {/* Instant Demo Admin Access */}
+            <button
+              type="button"
+              onClick={() => {
+                setStatus('verified');
+                router.push('/admin/dashboard');
+              }}
+              className="w-full py-2.5 px-4 bg-[#f1f5f9] hover:bg-[#e2e8f0] dark:bg-[#1e293b] dark:hover:bg-[#27354f] text-[#0b1c30] dark:text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#cbd5e1] dark:border-[#334155]"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#006c49] dark:text-[#34d399]">
+                admin_panel_settings
+              </span>
+              <span>1-Click Admin Demo Login</span>
+            </button>
+
+            {/* Resident Switch Link */}
+            <div className="text-center pt-1">
+              <a
+                href="/resident/login"
+                className="text-xs text-[#64748b] dark:text-[#94a3b8] hover:text-[#006c49] dark:hover:text-[#34d399] font-medium transition-colors"
+              >
+                Not an administrator? <span className="underline font-bold">Resident Portal</span>
+              </a>
+            </div>
           </form>
         )}
 

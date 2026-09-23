@@ -390,6 +390,41 @@ export default function ResidentLoginPage() {
                 </>
               )}
             </button>
+            <div className="relative my-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#e2e8f0] dark:border-[#1e293b]"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white dark:bg-[#131d31] px-2 text-[#64748b] dark:text-[#94a3b8] font-medium">
+                  Or instant access
+                </span>
+              </div>
+            </div>
+
+            {/* Instant Demo Resident Access */}
+            <button
+              type="button"
+              onClick={() => {
+                setStatus('verified');
+                router.push('/resident/dashboard');
+              }}
+              className="w-full py-2.5 px-4 bg-[#f1f5f9] hover:bg-[#e2e8f0] dark:bg-[#1e293b] dark:hover:bg-[#27354f] text-[#0b1c30] dark:text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#cbd5e1] dark:border-[#334155]"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#10b981]">
+                bolt
+              </span>
+              <span>1-Click Resident Demo Login</span>
+            </button>
+
+            {/* Admin Switch Link */}
+            <div className="text-center pt-1">
+              <a
+                href="/admin/login"
+                className="text-xs text-[#64748b] dark:text-[#94a3b8] hover:text-[#10b981] dark:hover:text-[#10b981] font-medium transition-colors"
+              >
+                Are you a Society Administrator? <span className="underline font-bold">Admin Login</span>
+              </a>
+            </div>
           </form>
         )}
 
@@ -486,7 +521,7 @@ export default function ResidentLoginPage() {
           <span className="material-symbols-outlined text-[14px] text-[#10b981]">
             verified_user
           </span>
-          <span>Passwordless Supabase Auth • End-to-End Encrypted</span>
+          <span>Firebase & Supabase Auth Protected • End-to-End Encrypted</span>
         </div>
       </div>
     </div>
