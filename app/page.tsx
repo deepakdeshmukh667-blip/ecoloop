@@ -351,6 +351,16 @@ export default function HomePage() {
     checkAuth();
   }, [router]);
 
+  const [redirectedFrom, setRedirectedFrom] = useState('/resident/dashboard');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const from = params.get('redirectedFrom');
+      if (from) setRedirectedFrom(from);
+    }
+  }, []);
+
   const isDark = mounted && (theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches));
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -363,6 +373,9 @@ export default function HomePage() {
       const { error, data } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setAuthError(error.message); setSigningIn(false); return; }
       if (data.user) {
+        if (typeof document !== 'undefined') {
+          document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
+        }
         const ADMIN_EMAILS = ['deepakdeshmukh667@gmail.com'];
         const userEmail = data.user.email?.toLowerCase().trim() || '';
         const isAdmin = ADMIN_EMAILS.includes(userEmail);
@@ -371,9 +384,17 @@ export default function HomePage() {
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
           adminRole = profile?.role === 'admin' || profile?.role === 'society_admin' || profile?.role === 'municipal_admin';
         }
-        router.push(adminRole ? '/admin/dashboard' : '/resident/dashboard');
+        router.push(adminRole ? '/admin/dashboard' : redirectedFrom);
       }
     } catch { setAuthError('Something went wrong. Please try again.'); setSigningIn(false); }
+  };
+
+  const handleDemoLogin = () => {
+    if (typeof document !== 'undefined') {
+      document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
+      document.cookie = 'ecoloop_demo=true; path=/; max-age=604800; SameSite=Lax';
+    }
+    router.push('/resident/dashboard');
   };
 
   if (checking) {
@@ -627,13 +648,14 @@ export default function HomePage() {
 
               {/* Alt login links */}
               <div className="flex flex-col gap-2.5">
-                <Link
-                  href="/resident/login"
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white/60 dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                <button
+                  type="button"
+                  onClick={handleDemoLogin}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-emerald-500/40 dark:border-emerald-500/30 text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40 active:scale-[0.98] transition-all"
                 >
-                  <span className="material-symbols-outlined text-[18px] text-emerald-500">person</span>
-                  OTP Login (Resident Portal)
-                </Link>
+                  <span className="material-symbols-outlined text-[18px] text-emerald-600 dark:text-emerald-400">bolt</span>
+                  1-Click Resident Demo Login
+                </button>
                 <Link
                   href="/admin/login"
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white/60 dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"

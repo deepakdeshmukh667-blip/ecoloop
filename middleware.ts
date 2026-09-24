@@ -14,16 +14,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Login pages must ALWAYS be accessible (no automatic redirect loop)
+  // 2. Login pages: redirect /login, /signup, /resident/login to root landing page /
   if (
     pathname === '/resident/login' ||
-    pathname === '/admin/login' ||
     pathname === '/login' ||
     pathname === '/signup'
   ) {
-    if (pathname === '/login' || pathname === '/signup') {
-      return NextResponse.redirect(new URL('/resident/login', request.url));
+    const rootUrl = new URL('/', request.url);
+    if (request.nextUrl.search) {
+      rootUrl.search = request.nextUrl.search;
     }
+    return NextResponse.redirect(rootUrl);
+  }
+
+  if (pathname === '/admin/login') {
     return NextResponse.next();
   }
 
@@ -71,18 +75,18 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Root route redirect
+    // Root route: if authenticated redirect to dashboard, else show landing page
     if (pathname === '/') {
       if (user) {
         return NextResponse.redirect(new URL('/resident/dashboard', request.url));
       }
-      return NextResponse.redirect(new URL('/resident/login', request.url));
+      return supabaseResponse;
     }
 
     // Protect resident routes
-    if (pathname.startsWith('/resident/') && pathname !== '/resident/login') {
+    if (pathname.startsWith('/resident/')) {
       if (!user && !hasDemoCookie && !hasSessionCookie) {
-        const loginUrl = new URL('/resident/login', request.url);
+        const loginUrl = new URL('/', request.url);
         loginUrl.searchParams.set('redirectedFrom', pathname);
         return NextResponse.redirect(loginUrl);
       }
