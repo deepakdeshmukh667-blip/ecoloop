@@ -7,6 +7,116 @@ import { createClient } from '@/lib/supabase/client';
 import { useApp } from '@/lib/state/store';
 import Landing3DScene from '@/components/Landing3DScene';
 
+// ─── Inline SVG Icons (Zero-delay, 100% reliable rendering) ────
+const Icons = {
+  Leaf: ({ className = 'w-5 h-5' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+    </svg>
+  ),
+  EcoBadge: ({ className = 'w-6 h-6' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+    </svg>
+  ),
+  Sun: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  ),
+  Moon: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+    </svg>
+  ),
+  ArrowRight: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+    </svg>
+  ),
+  Cube3D: ({ className = 'w-5 h-5' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    </svg>
+  ),
+  Verified: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+    </svg>
+  ),
+  Bolt: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  ),
+  Sync: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
+  ),
+  TouchApp: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11m0-5.5a1.5 1.5 0 013 0v4.5" />
+    </svg>
+  ),
+  Hub: ({ className = 'w-5 h-5' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0-4H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
+    </svg>
+  ),
+  Sensors: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  ),
+  Speed: ({ className = 'w-6 h-6' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  ),
+  Location: ({ className = 'w-6 h-6' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  Token: ({ className = 'w-6 h-6' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  Building: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a2 2 0 012-2h2a2 2 0 012 2v5m-6 0h6" />
+    </svg>
+  ),
+  Calendar: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  ),
+  User: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  ),
+  Lock: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    </svg>
+  ),
+  Mail: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  ),
+  Close: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  ),
+};
+
 // ─── Real-time Greeting Hook ──────────────────────────────────
 function useGreeting() {
   const [greeting, setGreeting] = useState('');
@@ -201,13 +311,14 @@ export default function HomePage() {
         <div className="absolute top-[750px] right-0 w-[600px] h-[500px] bg-gradient-to-bl from-teal-400/10 via-emerald-500/15 to-transparent blur-[120px] rounded-full pointer-events-none -z-10"></div>
         <div className="absolute top-[1600px] left-0 w-[550px] h-[450px] bg-gradient-to-tr from-cyan-400/15 via-teal-400/10 to-transparent blur-[110px] rounded-full pointer-events-none -z-10"></div>
 
-        {/* ── TOP HEADER / NAVBAR ── */}
-        <header className="fixed top-0 left-0 w-full z-50 bg-white/80 dark:bg-[#0f131b]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-          <div className="h-20 max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-[0_0_24px_-4px_rgba(13,148,136,0.35)]">
-                <span className="material-symbols-outlined text-[24px]">eco</span>
+        {/* ── TOP HEADER / NAVBAR (PIXEL-PERFECT DESKTOP LAYOUT) ── */}
+        <header className="fixed top-0 left-0 w-full z-50 bg-white/85 dark:bg-[#0f131b]/85 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 shadow-xs">
+          <div className="h-20 max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+            
+            {/* Logo Section */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-[0_0_24px_-4px_rgba(13,148,136,0.35)] shrink-0">
+                <Icons.Leaf className="w-5 h-5 text-white" />
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight leading-tight">
@@ -220,68 +331,68 @@ export default function HomePage() {
             </div>
 
             {/* Navigation Links */}
-            <nav className="hidden md:flex items-center gap-8">
-              <a
-                href="#features"
-                className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-              >
+            <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600 dark:text-slate-300">
+              <a href="#features" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                 Features
               </a>
-              <a
-                href="#how-it-works"
-                className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-              >
+              <a href="#how-it-works" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                 How It Works
               </a>
-              <a
-                href="#impact"
-                className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-              >
+              <a href="#impact" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                 Impact
               </a>
             </nav>
 
-            {/* Right Tools & Auth */}
-            <div className="flex items-center gap-3">
-              {/* Real-time greeting badge */}
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+            {/* Right Tools & Auth Controls */}
+            <div className="flex items-center gap-3 shrink-0">
+              {/* Real-time greeting pill */}
+              <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-xs font-semibold text-emerald-800 dark:text-emerald-300 shrink-0">
                 <span>{emoji}</span>
                 <span>{greeting}</span>
-                <span className="text-slate-400 dark:text-slate-500">|</span>
+                <span className="text-slate-300 dark:text-slate-600">|</span>
                 <LiveClock />
               </div>
 
-              {/* Theme toggle */}
+              {/* Theme Toggle Button */}
               <button
                 type="button"
                 onClick={() => setTheme(isDark ? 'light' : 'dark')}
                 aria-label="Toggle theme"
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors"
+                className="w-9 h-9 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-colors"
               >
-                <span className="material-symbols-outlined text-[19px]">
-                  {mounted && isDark ? 'light_mode' : 'dark_mode'}
-                </span>
+                {mounted && isDark ? <Icons.Sun className="w-4 h-4 text-amber-400" /> : <Icons.Moon className="w-4 h-4 text-slate-700" />}
               </button>
 
-              {/* Sign In button */}
+              {/* Sign In Button */}
               <button
                 type="button"
                 onClick={() => setShowAuthModal(true)}
-                className="hidden sm:inline-flex text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="hidden sm:inline-flex text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
               >
                 Sign In
               </button>
 
-              {/* Get Started / Instant Demo */}
+              {/* Get Started Button */}
               <button
                 type="button"
                 onClick={() => setShowAuthModal(true)}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold shadow-[0_0_24px_-4px_rgba(16,185,129,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold shadow-[0_0_24px_-4px_rgba(16,185,129,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0"
               >
                 <span>Get Started</span>
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                <Icons.ArrowRight className="w-4 h-4" />
+              </button>
+
+              {/* Resident Profile Quick Access Avatar */}
+              <button
+                type="button"
+                onClick={handleDemoResidentLogin}
+                title="1-Click Resident Demo Login"
+                className="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs transition-colors"
+              >
+                <Icons.User className="w-4 h-4" />
               </button>
             </div>
+
           </div>
         </header>
 
@@ -323,13 +434,13 @@ export default function HomePage() {
                 className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#0D9488] to-[#10B981] text-white text-sm font-bold hover:shadow-[0_0_28px_-2px_rgba(16,185,129,0.45)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
               >
                 <span>Start Recycling</span>
-                <span className="material-symbols-outlined text-[19px]">arrow_forward</span>
+                <Icons.ArrowRight className="w-4 h-4" />
               </button>
               <a
                 href="#how-it-works"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-emerald-300 transition-all duration-200 shadow-xs"
               >
-                <span className="material-symbols-outlined text-[20px] text-teal-600 dark:text-teal-400">view_in_ar</span>
+                <Icons.Cube3D className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                 <span>Explore EcoLoop</span>
               </a>
             </div>
@@ -337,19 +448,17 @@ export default function HomePage() {
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-slate-500 dark:text-slate-400 text-xs sm:text-sm mb-12">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[#10b981]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  verified
-                </span>
+                <Icons.Verified className="w-4 h-4 text-[#10b981]" />
                 <span className="font-medium text-slate-700 dark:text-slate-300">99.4% Recognition Accuracy</span>
               </div>
               <span className="text-slate-300 dark:text-slate-700">•</span>
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[#0ea5e9]">bolt</span>
+                <Icons.Bolt className="w-4 h-4 text-[#0ea5e9]" />
                 <span className="font-medium text-slate-700 dark:text-slate-300">Real-time Sorting Guides</span>
               </div>
               <span className="text-slate-300 dark:text-slate-700">•</span>
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[#14b8a6]">sync_alt</span>
+                <Icons.Sync className="w-4 h-4 text-[#14b8a6]" />
                 <span className="font-medium text-slate-700 dark:text-slate-300">Verified Material Traceability</span>
               </div>
             </div>
@@ -370,7 +479,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="absolute top-4 right-4 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-700 shadow-xs">
-                  <span className="material-symbols-outlined text-[16px] text-slate-500 dark:text-slate-400">touch_app</span>
+                  <Icons.TouchApp className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                   <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                     Drag to Orbit • Mouse Parallax Active
                   </span>
@@ -390,7 +499,7 @@ export default function HomePage() {
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/10">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#0D9488] dark:text-teal-400 text-[20px]">hub</span>
+                      <Icons.Hub className="w-5 h-5 text-[#0D9488] dark:text-teal-400" />
                       <span className="text-base font-bold text-slate-900 dark:text-white">EcoLoop Intelligence Matrix</span>
                     </div>
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[#005236] dark:text-emerald-300 font-mono text-xs font-semibold">
@@ -448,7 +557,7 @@ export default function HomePage() {
 
                   {/* Live Feed Ticker */}
                   <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-800/40 text-left">
-                    <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">sensors</span>
+                    <Icons.Sensors className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div className="flex-1 font-mono text-xs text-slate-700 dark:text-slate-300 overflow-hidden text-ellipsis whitespace-nowrap">
                       <span className="font-bold text-emerald-800 dark:text-emerald-400">FEED:</span> PET Bottle Sorted •{' '}
                       <span className="text-teal-700 dark:text-teal-300 font-medium">+15 pts credited</span> • 2.4s classification • Hub #402 •{' '}
@@ -466,7 +575,7 @@ export default function HomePage() {
             {/* Section Header */}
             <div className="max-w-3xl mb-12 text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 text-xs font-semibold mb-3">
-                <span className="material-symbols-outlined text-[16px] text-teal-600 dark:text-teal-400">precision_manufacturing</span>
+                <Icons.Speed className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                 <span>High-Precision Infrastructure</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight mb-3 leading-tight">
@@ -482,7 +591,7 @@ export default function HomePage() {
               {/* Feature Card 1 */}
               <div className="group flex flex-col p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#151c28] border border-slate-200 dark:border-white/10 hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-[0_16px_32px_-6px_rgba(16,185,129,0.12)] transition-all duration-300">
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200">
-                  <span className="material-symbols-outlined text-[26px]">speed</span>
+                  <Icons.Speed className="w-6 h-6" />
                 </div>
                 <div className="inline-flex items-center gap-2 mb-2 font-mono text-xs text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50/80 dark:bg-emerald-950/40 px-2 py-0.5 rounded w-fit">
                   <span>&lt;85ms LATENCY</span>
@@ -495,16 +604,14 @@ export default function HomePage() {
                 </p>
                 <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
                   <span>Accuracy rate: 99.4%</span>
-                  <span className="material-symbols-outlined text-[18px] text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
-                    arrow_forward
-                  </span>
+                  <Icons.ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
 
               {/* Feature Card 2 */}
               <div className="group flex flex-col p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#151c28] border border-slate-200 dark:border-white/10 hover:border-teal-400 dark:hover:border-teal-500 hover:shadow-[0_16px_32px_-6px_rgba(20,184,166,0.12)] transition-all duration-300">
                 <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200">
-                  <span className="material-symbols-outlined text-[26px]">share_location</span>
+                  <Icons.Location className="w-6 h-6" />
                 </div>
                 <div className="inline-flex items-center gap-2 mb-2 font-mono text-xs text-teal-700 dark:text-teal-400 font-semibold bg-teal-50/80 dark:bg-teal-950/40 px-2 py-0.5 rounded w-fit">
                   <span>1,400+ ACTIVE HUBS</span>
@@ -517,16 +624,14 @@ export default function HomePage() {
                 </p>
                 <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
                   <span>Geo-mesh verified</span>
-                  <span className="material-symbols-outlined text-[18px] text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform">
-                    arrow_forward
-                  </span>
+                  <Icons.ArrowRight className="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
 
               {/* Feature Card 3 */}
               <div className="group flex flex-col p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#151c28] border border-slate-200 dark:border-white/10 hover:border-cyan-400 dark:hover:border-cyan-500 hover:shadow-[0_16px_32px_-6px_rgba(14,165,233,0.12)] transition-all duration-300">
                 <div className="w-12 h-12 rounded-xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200">
-                  <span className="material-symbols-outlined text-[26px]">token</span>
+                  <Icons.Token className="w-6 h-6" />
                 </div>
                 <div className="inline-flex items-center gap-2 mb-2 font-mono text-xs text-cyan-700 dark:text-cyan-400 font-semibold bg-cyan-50/80 dark:bg-cyan-950/40 px-2 py-0.5 rounded w-fit">
                   <span>100% ON-CHAIN</span>
@@ -539,9 +644,7 @@ export default function HomePage() {
                 </p>
                 <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
                   <span>Instant ledger settlement</span>
-                  <span className="material-symbols-outlined text-[18px] text-cyan-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform">
-                    arrow_forward
-                  </span>
+                  <Icons.ArrowRight className="w-4 h-4 text-cyan-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </div>
@@ -582,7 +685,7 @@ export default function HomePage() {
             <div className="w-full rounded-3xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-cyan-50 dark:from-[#0d1625] dark:via-[#111b2b] dark:to-[#0c1421] border border-emerald-200/80 dark:border-white/10 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 text-left shadow-sm">
               <div className="max-w-xl">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/70 dark:bg-emerald-950/60 text-[#005236] dark:text-emerald-300 text-xs font-semibold mb-3">
-                  <span className="material-symbols-outlined text-[16px]">domain</span>
+                  <Icons.Building className="w-4 h-4 text-[#005236] dark:text-emerald-300" />
                   Institutional Partnership Program
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2 leading-tight">
@@ -600,7 +703,7 @@ export default function HomePage() {
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-200 shadow-md active:scale-95"
                 >
                   <span>Book Live Demo</span>
-                  <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+                  <Icons.Calendar className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
@@ -620,7 +723,7 @@ export default function HomePage() {
           <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
-                <span className="material-symbols-outlined text-[20px]">eco</span>
+                <Icons.Leaf className="w-4 h-4 text-white" />
               </div>
               <span className="text-xs text-slate-500 dark:text-slate-400">
                 © {new Date().getFullYear()} EcoLoop Circular Tech Systems. All rights reserved.
@@ -657,13 +760,13 @@ export default function HomePage() {
                 className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors"
                 aria-label="Close"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <Icons.Close className="w-4 h-4" />
               </button>
 
               {/* Header */}
               <div className="flex flex-col items-center text-center mb-6">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-600/25 mb-3">
-                  <span className="material-symbols-outlined text-[26px]">eco</span>
+                  <Icons.Leaf className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                   Sign in to EcoLoop
@@ -679,7 +782,7 @@ export default function HomePage() {
                 onClick={handleDemoResidentLogin}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-emerald-500/40 dark:border-emerald-500/30 text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40 active:scale-[0.98] transition-all mb-4"
               >
-                <span className="material-symbols-outlined text-[18px] text-emerald-600 dark:text-emerald-400">bolt</span>
+                <Icons.Bolt className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 1-Click Resident Demo Login
               </button>
 
@@ -696,8 +799,8 @@ export default function HomePage() {
                     Email Address
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[18px]">
-                      mail
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                      <Icons.Mail className="w-4 h-4" />
                     </span>
                     <input
                       type="email"
@@ -715,8 +818,8 @@ export default function HomePage() {
                     Password
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[18px]">
-                      lock
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                      <Icons.Lock className="w-4 h-4" />
                     </span>
                     <input
                       type={showPass ? 'text' : 'password'}
@@ -731,16 +834,22 @@ export default function HomePage() {
                       onClick={() => setShowPass(!showPass)}
                       className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                     >
-                      <span className="material-symbols-outlined text-[18px]">
-                        {showPass ? 'visibility_off' : 'visibility'}
-                      </span>
+                      {showPass ? (
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
                     </button>
                   </div>
                 </div>
 
                 {authError && (
                   <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs">
-                    <span className="material-symbols-outlined text-[16px]">error</span>
                     {authError}
                   </div>
                 )}
@@ -758,7 +867,7 @@ export default function HomePage() {
                   ) : (
                     <>
                       Sign In to Dashboard
-                      <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                      <Icons.ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
