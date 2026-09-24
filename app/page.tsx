@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { formatNameFromEmail, useApp } from '@/lib/state/store';
-import * as THREE from 'three';
+import { useApp } from '@/lib/state/store';
+import Landing3DScene from '@/components/Landing3DScene';
 
-// ─── Real-time Greeting ──────────────────────────────────────
+// ─── Real-time Greeting Hook ──────────────────────────────────
 function useGreeting() {
   const [greeting, setGreeting] = useState('');
   const [emoji, setEmoji] = useState('');
@@ -37,274 +37,19 @@ function useGreeting() {
   return { greeting, emoji };
 }
 
-// ─── Three.js 3D Scene Component ─────────────────────────────
-function EcoLoop3DScene() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return;
-
-    let width = container.clientWidth || 480;
-    let height = container.clientHeight || 480;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 1.2, 5.5);
-
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      alpha: true,
-      antialias: true,
-      powerPreference: 'high-performance',
-    });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 1.1));
-    const d1 = new THREE.DirectionalLight(0x10b981, 1.5);
-    d1.position.set(4, 5, 4);
-    scene.add(d1);
-    const d2 = new THREE.DirectionalLight(0x06b6d4, 1.3);
-    d2.position.set(-4, -2, -3);
-    scene.add(d2);
-    const pt = new THREE.PointLight(0x34d399, 2.5, 10);
-    pt.position.set(0, 0, 0);
-    scene.add(pt);
-
-    const root = new THREE.Group();
-    scene.add(root);
-
-    // Core orb
-    const coreOrb = new THREE.Mesh(
-      new THREE.SphereGeometry(0.75, 48, 48),
-      new THREE.MeshStandardMaterial({
-        color: 0x10b981, roughness: 0.12, metalness: 0.3,
-        emissive: 0x059669, emissiveIntensity: 0.65,
-      })
-    );
-    root.add(coreOrb);
-
-    // Wireframe shell
-    const shell = new THREE.Mesh(
-      new THREE.SphereGeometry(0.9, 24, 24),
-      new THREE.MeshBasicMaterial({ color: 0x6ee7b7, wireframe: true, transparent: true, opacity: 0.22 })
-    );
-    root.add(shell);
-
-    // Inner frosted ring
-    const innerRing = new THREE.Mesh(
-      new THREE.TorusGeometry(1.15, 0.04, 16, 64),
-      new THREE.MeshStandardMaterial({ color: 0x6ee7b7, roughness: 0.2, metalness: 0.3, transparent: true, opacity: 0.65 })
-    );
-    root.add(innerRing);
-
-    // Outer Möbius ring 1 — emerald
-    const ring1 = new THREE.Mesh(
-      new THREE.TorusGeometry(1.75, 0.048, 16, 80),
-      new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.2, metalness: 0.6, emissive: 0x047857, emissiveIntensity: 0.3 })
-    );
-    ring1.rotation.x = Math.PI / 3;
-    ring1.rotation.y = Math.PI / 6;
-    root.add(ring1);
-
-    // Outer ring 2 — cyan
-    const ring2 = new THREE.Mesh(
-      new THREE.TorusGeometry(2.0, 0.04, 16, 80),
-      new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.2, metalness: 0.6, emissive: 0x0891b2, emissiveIntensity: 0.3 })
-    );
-    ring2.rotation.x = -Math.PI / 3.5;
-    ring2.rotation.z = Math.PI / 4;
-    root.add(ring2);
-
-    // Orbit ellipse lines
-    const makeOrbit = (radiusX: number, radiusY: number, rotX: number, color: number) => {
-      const curve = new THREE.EllipseCurve(0, 0, radiusX, radiusY, 0, 2 * Math.PI, false, 0);
-      const pts = curve.getPoints(100);
-      const geo = new THREE.BufferGeometry().setFromPoints(pts);
-      const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.3 }));
-      line.rotation.x = rotX;
-      root.add(line);
-      return line;
-    };
-    makeOrbit(2.2, 2.0, Math.PI * 0.38, 0x34d399);
-    makeOrbit(2.4, 2.1, Math.PI * 0.55, 0x2dd4bf);
-
-    // Arrow cones on ring1
-    const arrowMat = new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x10b981, emissiveIntensity: 0.4 });
-    const arrowConeGeo = new THREE.ConeGeometry(0.09, 0.22, 12);
-    const arrows: { mesh: THREE.Mesh; offset: number }[] = [];
-    for (let i = 0; i < 3; i++) {
-      const m = new THREE.Mesh(arrowConeGeo, arrowMat);
-      root.add(m);
-      arrows.push({ mesh: m, offset: (i * Math.PI * 2) / 3 });
-    }
-
-    // Floating recyclables
-    // PET Bottle
-    const bottle = new THREE.Group();
-    bottle.add(new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.38, 16), new THREE.MeshStandardMaterial({ color: 0x67e8f9, roughness: 0.1, transparent: true, opacity: 0.88 })));
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.09, 0.18, 16), new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.88 }));
-    neck.position.y = 0.27;
-    bottle.add(neck);
-    root.add(bottle);
-
-    // Aluminum can
-    const can = new THREE.Group();
-    can.add(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.34, 20), new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.88, roughness: 0.22 })));
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.02, 8, 20), new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.92 }));
-    rim.rotation.x = Math.PI / 2;
-    rim.position.y = 0.17;
-    can.add(rim);
-    root.add(can);
-
-    // Box
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(0.3, 0.26, 0.28),
-      new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.8, metalness: 0.05 })
-    );
-    root.add(box);
-
-    // Leaves
-    const leafGeo = new THREE.SphereGeometry(0.17, 8, 8);
-    leafGeo.scale(1.4, 0.2, 0.6);
-    const leafMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.4, emissive: 0x15803d, emissiveIntensity: 0.25 });
-    const leaf1 = new THREE.Mesh(leafGeo, leafMat);
-    const leaf2 = new THREE.Mesh(leafGeo, leafMat);
-    root.add(leaf1);
-    root.add(leaf2);
-
-    // Particles
-    const pCount = 55;
-    const pPos = new Float32Array(pCount * 3);
-    for (let i = 0; i < pCount * 3; i += 3) {
-      pPos[i] = (Math.random() - 0.5) * 5;
-      pPos[i + 1] = (Math.random() - 0.5) * 4.5;
-      pPos[i + 2] = (Math.random() - 0.5) * 4;
-    }
-    const pGeo = new THREE.BufferGeometry();
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-    const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x34d399, size: 0.055, transparent: true, opacity: 0.7 }));
-    root.add(particles);
-
-    // Drag orbit controls
-    let dragging = false, prevX = 0, prevY = 0, rotY = 0, rotX = 0;
-    const onDown = (e: MouseEvent | TouchEvent) => {
-      dragging = true;
-      const src = 'touches' in e ? e.touches[0] : e;
-      prevX = src.clientX; prevY = src.clientY;
-    };
-    const onMove = (e: MouseEvent | TouchEvent) => {
-      if (!dragging) return;
-      const src = 'touches' in e ? e.touches[0] : e;
-      rotY += (src.clientX - prevX) * 0.008;
-      rotX += (src.clientY - prevY) * 0.006;
-      prevX = src.clientX; prevY = src.clientY;
-    };
-    const onUp = () => { dragging = false; };
-    container.addEventListener('mousedown', onDown);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    container.addEventListener('touchstart', onDown, { passive: true });
-    window.addEventListener('touchmove', onMove, { passive: true });
-    window.addEventListener('touchend', onUp);
-
-    const handleResize = () => {
-      width = container.clientWidth || 480;
-      height = container.clientHeight || 480;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    };
-    window.addEventListener('resize', handleResize);
-
-    const clock = new THREE.Clock();
-    let raf: number;
-
-    const animate = () => {
-      raf = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
-
-      // Smooth inertia
-      root.rotation.y += (rotY - root.rotation.y) * 0.08 + 0.005;
-      root.rotation.x += (rotX - root.rotation.x) * 0.08;
-
-      // Core pulse
-      const p = 1 + Math.sin(t * 2.2) * 0.04;
-      coreOrb.scale.set(p, p, p);
-
-      // Shell + inner ring spin
-      shell.rotation.y -= 0.007;
-      shell.rotation.x += 0.003;
-      innerRing.rotation.z += 0.008;
-
-      // Rings
-      ring1.rotation.z += 0.005;
-      ring2.rotation.y += 0.007;
-
-      const sp = t * 0.85;
-
-      // Orbit recyclables
-      bottle.position.set(Math.cos(sp) * 1.75, Math.sin(sp * 1.5) * 0.4 + 0.1, Math.sin(sp) * 1.75);
-      bottle.rotation.x = sp * 1.2; bottle.rotation.y = sp * 0.8;
-
-      can.position.set(Math.cos(sp + 1.6) * 1.85, Math.sin(sp * 1.2 + 1) * 0.35 - 0.1, Math.sin(sp + 1.6) * 1.85);
-      can.rotation.z = sp * 1.4; can.rotation.x = sp * 0.6;
-
-      box.position.set(Math.cos(sp + 3.2) * 1.8, Math.sin(sp * 0.9 + 2) * 0.45, Math.sin(sp + 3.2) * 1.8);
-      box.rotation.x = sp * 0.8; box.rotation.y = sp * 1.1;
-
-      leaf1.position.set(Math.cos(sp + 4.6) * 1.9, Math.sin(sp * 1.4 + 3) * 0.35 + 0.2, Math.sin(sp + 4.6) * 1.9);
-      leaf1.rotation.y = sp * 1.5; leaf1.rotation.z = Math.sin(sp * 2) * 0.4;
-
-      leaf2.position.set(Math.cos(sp + 5.3) * 1.65, Math.sin(sp * 1.1 + 4) * 0.38 - 0.2, Math.sin(sp + 5.3) * 1.65);
-      leaf2.rotation.x = sp * 1.2;
-
-      arrows.forEach(a => {
-        const th = sp * 1.1 + a.offset;
-        a.mesh.position.set(Math.cos(th) * 1.75, Math.sin(th * 0.8) * 0.3, Math.sin(th) * 1.75);
-        a.mesh.rotation.y = -th; a.mesh.rotation.z = Math.PI / 2;
-      });
-
-      particles.rotation.y += 0.001;
-      pt.intensity = 2.2 + Math.sin(t * 1.5) * 0.5;
-
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', handleResize);
-      container.removeEventListener('mousedown', onDown);
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-      container.removeEventListener('touchstart', onDown);
-      window.removeEventListener('touchmove', onMove);
-      window.removeEventListener('touchend', onUp);
-      renderer.dispose();
-    };
-  }, []);
-
-  return (
-    <div
-      ref={containerRef}
-      className="w-full h-full cursor-grab active:cursor-grabbing touch-none select-none"
-    >
-      <canvas ref={canvasRef} className="w-full h-full block" />
-    </div>
-  );
-}
-
-// ─── Live Clock ───────────────────────────────────────────────
+// ─── Live Clock Component ─────────────────────────────────────
 function LiveClock() {
   const [time, setTime] = useState('');
   useEffect(() => {
     const update = () => {
-      setTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
+      setTime(
+        new Date().toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+        })
+      );
     };
     update();
     const t = setInterval(update, 1000);
@@ -313,65 +58,94 @@ function LiveClock() {
   return <span className="font-mono tabular-nums">{time}</span>;
 }
 
-// ─── Main Landing Page ────────────────────────────────────────
 export default function HomePage() {
   const { theme, setTheme } = useApp();
   const router = useRouter();
   const { greeting, emoji } = useGreeting();
   const [mounted, setMounted] = useState(false);
   const [checking, setChecking] = useState(true);
+
+  // Auth modal states
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [authError, setAuthError] = useState('');
   const [signingIn, setSigningIn] = useState(false);
+  const [redirectedFrom, setRedirectedFrom] = useState('/resident/dashboard');
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const from = params.get('redirectedFrom');
+      if (from) {
+        setRedirectedFrom(from);
+        setShowAuthModal(true);
+      }
+    }
+
     const checkAuth = async () => {
       try {
         const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           const ADMIN_EMAILS = ['deepakdeshmukh667@gmail.com'];
           const isAdmin = ADMIN_EMAILS.includes(user.email?.toLowerCase().trim() || '');
           if (!isAdmin) {
-            const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-            if (profile?.role === 'admin' || profile?.role === 'society_admin' || profile?.role === 'municipal_admin') {
-              router.replace('/admin/dashboard'); return;
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', user.id)
+              .single();
+            if (
+              profile?.role === 'admin' ||
+              profile?.role === 'society_admin' ||
+              profile?.role === 'municipal_admin'
+            ) {
+              router.replace('/admin/dashboard');
+              return;
             }
           } else {
-            router.replace('/admin/dashboard'); return;
+            router.replace('/admin/dashboard');
+            return;
           }
-          router.replace('/resident/dashboard'); return;
+          router.replace('/resident/dashboard');
+          return;
         }
-      } catch { /* not logged in */ }
+      } catch {
+        /* not logged in */
+      }
       setChecking(false);
     };
     checkAuth();
   }, [router]);
 
-  const [redirectedFrom, setRedirectedFrom] = useState('/resident/dashboard');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const from = params.get('redirectedFrom');
-      if (from) setRedirectedFrom(from);
-    }
-  }, []);
-
-  const isDark = mounted && (theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches));
+  const isDark =
+    mounted &&
+    (theme === 'dark' ||
+      (theme === 'system' &&
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches));
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { setAuthError('Please enter your email and password.'); return; }
+    if (!email || !password) {
+      setAuthError('Please enter your email and password.');
+      return;
+    }
     setSigningIn(true);
     setAuthError('');
     try {
       const supabase = createClient();
       const { error, data } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setAuthError(error.message); setSigningIn(false); return; }
+      if (error) {
+        setAuthError(error.message);
+        setSigningIn(false);
+        return;
+      }
       if (data.user) {
         if (typeof document !== 'undefined') {
           document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
@@ -381,15 +155,25 @@ export default function HomePage() {
         const isAdmin = ADMIN_EMAILS.includes(userEmail);
         let adminRole = isAdmin;
         if (!adminRole) {
-          const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
-          adminRole = profile?.role === 'admin' || profile?.role === 'society_admin' || profile?.role === 'municipal_admin';
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single();
+          adminRole =
+            profile?.role === 'admin' ||
+            profile?.role === 'society_admin' ||
+            profile?.role === 'municipal_admin';
         }
         router.push(adminRole ? '/admin/dashboard' : redirectedFrom);
       }
-    } catch { setAuthError('Something went wrong. Please try again.'); setSigningIn(false); }
+    } catch {
+      setAuthError('Something went wrong. Please try again.');
+      setSigningIn(false);
+    }
   };
 
-  const handleDemoLogin = () => {
+  const handleDemoResidentLogin = () => {
     if (typeof document !== 'undefined') {
       document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
       document.cookie = 'ecoloop_demo=true; path=/; max-age=604800; SameSite=Lax';
@@ -399,223 +183,564 @@ export default function HomePage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0b1120]">
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-[#0f131b]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin"></div>
-          <span className="text-sm text-slate-500 dark:text-slate-400">Loading EcoLoop…</span>
+          <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Loading EcoLoop…</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDark ? 'dark' : ''}`}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-teal-50/40 dark:from-[#0b1120] dark:via-[#0d1a12] dark:to-[#0a1520] text-slate-900 dark:text-white transition-colors duration-300 flex flex-col relative overflow-hidden">
+    <div className={`min-h-screen ${isDark ? 'dark' : ''}`}>
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f131b] text-slate-900 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-300 relative overflow-hidden flex flex-col">
 
-        {/* Background ambient glows */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-emerald-400/15 dark:bg-emerald-500/10 rounded-full blur-[140px]"></div>
-          <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] bg-teal-400/15 dark:bg-teal-500/10 rounded-full blur-[130px]"></div>
-          <div className="absolute -bottom-40 left-1/3 w-[400px] h-[400px] bg-cyan-400/10 dark:bg-cyan-500/8 rounded-full blur-[120px]"></div>
-        </div>
+        {/* ── ATMOSPHERIC AMBIENT GLOWS ── */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[520px] bg-gradient-to-tr from-emerald-500/15 via-teal-400/20 to-cyan-500/10 blur-[130px] rounded-full pointer-events-none -z-10"></div>
+        <div className="absolute top-[750px] right-0 w-[600px] h-[500px] bg-gradient-to-bl from-teal-400/10 via-emerald-500/15 to-transparent blur-[120px] rounded-full pointer-events-none -z-10"></div>
+        <div className="absolute top-[1600px] left-0 w-[550px] h-[450px] bg-gradient-to-tr from-cyan-400/15 via-teal-400/10 to-transparent blur-[110px] rounded-full pointer-events-none -z-10"></div>
 
-        {/* ── NAVBAR ── */}
-        <nav className="relative z-30 w-full flex items-center justify-between px-6 md:px-10 py-4 border-b border-slate-200/60 dark:border-white/5 bg-white/60 dark:bg-[#0b1120]/70 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/20">
-              <span className="material-symbols-outlined text-white text-[20px]">recycling</span>
+        {/* ── TOP HEADER / NAVBAR ── */}
+        <header className="fixed top-0 left-0 w-full z-50 bg-white/80 dark:bg-[#0f131b]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+          <div className="h-20 max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-[0_0_24px_-4px_rgba(13,148,136,0.35)]">
+                <span className="material-symbols-outlined text-[24px]">eco</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight leading-tight">
+                  EcoLoop
+                </span>
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase">
+                  Circular Tech
+                </span>
+              </div>
             </div>
-            <span className="font-extrabold text-lg tracking-tight">Eco<span className="text-emerald-500">Loop</span></span>
-            <div className="hidden sm:flex items-center gap-1.5 ml-2 px-2.5 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold uppercase tracking-widest">Vision Engine v4.2</span>
+
+            {/* Navigation Links */}
+            <nav className="hidden md:flex items-center gap-8">
+              <a
+                href="#features"
+                className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#how-it-works"
+                className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              >
+                How It Works
+              </a>
+              <a
+                href="#impact"
+                className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              >
+                Impact
+              </a>
+            </nav>
+
+            {/* Right Tools & Auth */}
+            <div className="flex items-center gap-3">
+              {/* Real-time greeting badge */}
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                <span>{emoji}</span>
+                <span>{greeting}</span>
+                <span className="text-slate-400 dark:text-slate-500">|</span>
+                <LiveClock />
+              </div>
+
+              {/* Theme toggle */}
+              <button
+                type="button"
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                aria-label="Toggle theme"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors"
+              >
+                <span className="material-symbols-outlined text-[19px]">
+                  {mounted && isDark ? 'light_mode' : 'dark_mode'}
+                </span>
+              </button>
+
+              {/* Sign In button */}
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="hidden sm:inline-flex text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                Sign In
+              </button>
+
+              {/* Get Started / Instant Demo */}
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold shadow-[0_0_24px_-4px_rgba(16,185,129,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                <span>Get Started</span>
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </button>
             </div>
           </div>
+        </header>
 
-          <div className="flex items-center gap-2">
-            {/* Live clock */}
-            <div className="hidden md:flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-              <span className="material-symbols-outlined text-[14px] text-emerald-500">schedule</span>
-              <LiveClock />
-            </div>
+        {/* ── MAIN CONTENT ── */}
+        <main className="w-full pt-28 pb-16 flex-1 flex flex-col items-center">
 
-            {/* Theme toggle */}
-            <button
-              onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className="w-9 h-9 rounded-full bg-white/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:scale-105 active:scale-95 transition-all"
-              aria-label="Toggle theme"
+          {/* ── HERO SECTION ── */}
+          <section className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-14 flex flex-col items-center text-center relative">
+            {/* Eyebrow Pill */}
+            <div
+              onClick={() => setShowAuthModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 shadow-xs mb-6 hover:border-emerald-500/40 transition-all duration-300 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">{mounted && isDark ? 'light_mode' : 'dark_mode'}</span>
-            </button>
-
-            <Link href="/admin/login" className="hidden md:inline-flex items-center text-xs font-semibold px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-              Admin Portal
-            </Link>
-          </div>
-        </nav>
-
-        {/* ── MAIN SPLIT LAYOUT ── */}
-        <div className="relative z-10 flex-1 flex flex-col lg:flex-row">
-
-          {/* LEFT — 3D Hero Panel */}
-          <div className="flex-1 flex flex-col items-center justify-center px-8 md:px-12 py-10 lg:py-0">
-
-            {/* Real-time greeting */}
-            <div className="flex items-center gap-2 mb-5 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/60 border border-slate-200/70 dark:border-white/8 shadow-sm backdrop-blur-md">
-              <span className="text-lg">{emoji}</span>
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{greeting}, Welcome to EcoLoop</span>
+              <span className="inline-block w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></span>
+              <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 tracking-wide">
+                Next-Gen AI Recycling • Powered by Computer Vision →
+              </span>
             </div>
 
-            {/* Hero headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-center tracking-tight leading-[1.1] mb-5 max-w-2xl">
-              Recycle Smarter.{' '}
-              <span className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 bg-clip-text text-transparent block">
-                Live Greener.
-              </span>
-              <span className="bg-gradient-to-r from-teal-500 via-cyan-400 to-emerald-400 bg-clip-text text-transparent block">
-                Close the Loop.
+            {/* Main Headline */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight max-w-4xl mx-auto leading-[1.08] mb-6">
+              Recycle Smarter.
+              <br />
+              <span className="bg-gradient-to-r from-[#10b981] via-[#14b8a6] to-[#0ea5e9] bg-clip-text text-transparent">
+                Live Greener. Close the Loop.
               </span>
             </h1>
 
-            <p className="text-base text-slate-600 dark:text-slate-300 text-center max-w-md mb-8">
-              AI-powered recycling platform that identifies waste, builds community habits, and makes every sustainable action count.
+            {/* Subtitle */}
+            <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-8 font-normal leading-relaxed">
+              AI-powered recycling that helps you identify waste, build better habits, and make every sustainable action count.
             </p>
 
-            {/* CTA row */}
-            <div className="flex items-center gap-4 mb-8">
-              <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-                <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                AI Scan
-              </div>
-              <div className="flex items-center gap-2 text-sm text-teal-700 dark:text-teal-400 font-medium">
-                <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                Rewards
-              </div>
-              <div className="flex items-center gap-2 text-sm text-cyan-700 dark:text-cyan-400 font-medium">
-                <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                Community
-              </div>
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#0D9488] to-[#10B981] text-white text-sm font-bold hover:shadow-[0_0_28px_-2px_rgba(16,185,129,0.45)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              >
+                <span>Start Recycling</span>
+                <span className="material-symbols-outlined text-[19px]">arrow_forward</span>
+              </button>
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-emerald-300 transition-all duration-200 shadow-xs"
+              >
+                <span className="material-symbols-outlined text-[20px] text-teal-600 dark:text-teal-400">view_in_ar</span>
+                <span>Explore EcoLoop</span>
+              </a>
             </div>
 
-            {/* ── 3D Scene ── */}
-            <div className="relative w-full max-w-md h-72 md:h-80 lg:h-96">
-              {/* Glow halo behind canvas */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-72 h-72 rounded-full bg-gradient-to-tr from-emerald-400/35 via-teal-400/25 to-cyan-400/30 blur-3xl"></div>
-              </div>
-              <EcoLoop3DScene />
-            </div>
-
-            {/* 360 pill */}
-            <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-white/8 backdrop-blur-md shadow-sm pointer-events-none">
-              <span className="material-symbols-outlined text-emerald-500 text-[17px]">view_in_ar</span>
-              <span className="text-xs font-medium text-slate-700 dark:text-slate-200">360° Live Waste Classifier · Drag to Rotate</span>
-            </div>
-
-            {/* Telemetry Matrix */}
-            <div className="mt-6 w-full max-w-sm rounded-2xl p-4 bg-white/80 dark:bg-slate-800/60 backdrop-blur-xl border border-slate-200/60 dark:border-white/8 shadow-lg">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">EcoLoop Intelligence Matrix</span>
-                </div>
-                <span className="text-[10px] font-mono font-bold text-teal-600 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">REALTIME</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { icon: 'eco', label: 'Habit', value: '92%', sub: <div className="w-full h-0.5 bg-slate-200 dark:bg-slate-700 rounded-full mt-1.5 overflow-hidden"><div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" style={{ width: '92%' }}></div></div>, color: 'text-teal-600 dark:text-teal-400' },
-                  { icon: 'toll', label: 'Points', value: '1,240', sub: <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 mt-1"><span className="material-symbols-outlined text-[11px]">trending_up</span>+180</span>, color: 'text-emerald-600 dark:text-emerald-400' },
-                  { icon: 'task_alt', label: 'Verified', value: '86', sub: <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-1">items scan</span>, color: 'text-cyan-600 dark:text-cyan-400' },
-                ].map(({ icon, label, value, sub, color }) => (
-                  <div key={label} className="flex flex-col items-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800 text-center">
-                    <div className={`flex items-center gap-1 mb-1 ${color}`}>
-                      <span className="material-symbols-outlined text-[14px]">{icon}</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{label}</span>
-                    </div>
-                    <span className="text-base font-bold text-slate-900 dark:text-white">{value}</span>
-                    {sub}
-                  </div>
-                ))}
-              </div>
-              <div className="mt-2 flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800 text-[11px]">
-                <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
-                  <span className="material-symbols-outlined text-[13px] text-teal-600 dark:text-teal-400">filter_center_focus</span>
-                  Latest: PET Bottle Sorted
+            {/* Trust Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-slate-500 dark:text-slate-400 text-xs sm:text-sm mb-12">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#10b981]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  verified
                 </span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">+15 pts</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">99.4% Recognition Accuracy</span>
+              </div>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#0ea5e9]">bolt</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">Real-time Sorting Guides</span>
+              </div>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#14b8a6]">sync_alt</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">Verified Material Traceability</span>
               </div>
             </div>
-          </div>
 
-          {/* RIGHT — Sign In Panel (StockFlow style) */}
-          <div className="w-full lg:w-[440px] xl:w-[480px] flex flex-col items-center justify-center px-8 md:px-12 py-12 lg:py-0 lg:border-l border-slate-200/60 dark:border-white/5 bg-white/50 dark:bg-[#0d1520]/60 backdrop-blur-xl">
+            {/* ── 3D INTERACTIVE CONTAINER ── */}
+            <div className="w-full relative rounded-2xl p-2 bg-gradient-to-b from-white/90 via-white/50 to-white/95 dark:from-slate-900/90 dark:via-slate-900/50 dark:to-slate-900/95 border border-emerald-100/80 dark:border-white/10 shadow-[0_20px_50px_-15px_rgba(16,185,129,0.12)] backdrop-blur-md">
+              <div className="relative w-full rounded-xl overflow-hidden bg-gradient-to-b from-emerald-50/60 via-teal-50/30 to-white dark:from-[#0d1625] dark:via-[#09101b] dark:to-[#0f131b] border border-emerald-100/60 dark:border-white/5 min-h-[460px] sm:min-h-[520px]">
 
-            <div className="w-full max-w-sm">
-              {/* Logo + branding */}
-              <div className="flex flex-col items-center mb-8">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-xl shadow-emerald-600/25 mb-4">
-                  <span className="material-symbols-outlined text-white text-[32px]">recycling</span>
+                {/* Soft Radial Background Glow */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-400/20 via-teal-300/10 to-transparent pointer-events-none"></div>
+
+                {/* Live HUD Overlays */}
+                <div className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-emerald-200/60 dark:border-emerald-700/60 shadow-xs">
+                  <span className="w-2 h-2 rounded-full bg-[#10b981] animate-ping"></span>
+                  <span className="font-mono text-xs text-slate-800 dark:text-slate-200 font-semibold tracking-tight">
+                    360° Interactive Eco-Mesh
+                  </span>
                 </div>
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-1">Sign in to EcoLoop</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
-                  Enter your credentials to access your sustainable workspace
+
+                <div className="absolute top-4 right-4 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-700 shadow-xs">
+                  <span className="material-symbols-outlined text-[16px] text-slate-500 dark:text-slate-400">touch_app</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                    Drag to Orbit • Mouse Parallax Active
+                  </span>
+                </div>
+
+                {/* Embedded Three.js 3D Scene */}
+                <div className="w-full h-[460px] sm:h-[520px] bg-transparent block relative z-0">
+                  <Landing3DScene />
+                </div>
+
+                {/* Ambient Bottom Scrim for seamless blend */}
+                <div className="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t from-white via-white/70 to-transparent dark:from-[#0f131b] dark:via-[#0f131b]/70 dark:to-transparent pointer-events-none z-10"></div>
+              </div>
+
+              {/* ── ECOLOOP INTELLIGENCE MATRIX CARD (Floating Overlap) ── */}
+              <div className="relative -mt-10 sm:-mt-14 mx-auto max-w-4xl z-30 p-4 sm:p-6 rounded-2xl bg-white/95 dark:bg-[#151c28]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-[0_16px_36px_-8px_rgba(15,23,42,0.08)]">
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/10">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#0D9488] dark:text-teal-400 text-[20px]">hub</span>
+                      <span className="text-base font-bold text-slate-900 dark:text-white">EcoLoop Intelligence Matrix</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[#005236] dark:text-emerald-300 font-mono text-xs font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></span>
+                      STREAM ACTIVE
+                    </div>
+                  </div>
+
+                  {/* Real-Time Metrics Strip */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Metric 1 */}
+                    <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 flex items-center justify-between">
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Eco Habit Index</span>
+                        <span className="text-2xl font-bold text-slate-900 dark:text-white">92%</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="inline-flex items-center text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/70 px-2 py-0.5 rounded-full">
+                          ↑ +4% this week
+                        </span>
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Tier: Sovereign</span>
+                      </div>
+                    </div>
+
+                    {/* Metric 2 */}
+                    <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 flex items-center justify-between">
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Recycling Points</span>
+                        <span className="text-2xl font-bold text-slate-900 dark:text-white">1,240</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="inline-flex items-center text-xs font-semibold text-teal-700 dark:text-teal-400 bg-teal-100 dark:bg-teal-950/70 px-2 py-0.5 rounded-full">
+                          +180 pts today
+                        </span>
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">32.4 kg CO₂ saved</span>
+                      </div>
+                    </div>
+
+                    {/* Metric 3 */}
+                    <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 flex items-center justify-between">
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Verified Scans</span>
+                        <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                          86 <span className="text-xs font-normal text-slate-500 dark:text-slate-400">items</span>
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="inline-flex items-center text-xs font-semibold text-cyan-800 dark:text-cyan-300 bg-cyan-100 dark:bg-cyan-950/70 px-2 py-0.5 rounded-full">
+                          Zero Error Rate
+                        </span>
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">100% compliant</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Feed Ticker */}
+                  <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-800/40 text-left">
+                    <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">sensors</span>
+                    <div className="flex-1 font-mono text-xs text-slate-700 dark:text-slate-300 overflow-hidden text-ellipsis whitespace-nowrap">
+                      <span className="font-bold text-emerald-800 dark:text-emerald-400">FEED:</span> PET Bottle Sorted •{' '}
+                      <span className="text-teal-700 dark:text-teal-300 font-medium">+15 pts credited</span> • 2.4s classification • Hub #402 •{' '}
+                      <span className="text-slate-500 dark:text-slate-400">Just now</span>
+                    </div>
+                    <span className="text-xs text-slate-400 font-mono hidden sm:inline-block">Sync 12ms</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── FEATURES SECTION ── */}
+          <section id="features" className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 relative scroll-mt-24">
+            {/* Section Header */}
+            <div className="max-w-3xl mb-12 text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 text-xs font-semibold mb-3">
+                <span className="material-symbols-outlined text-[16px] text-teal-600 dark:text-teal-400">precision_manufacturing</span>
+                <span>High-Precision Infrastructure</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight mb-3 leading-tight">
+                Engineered for Zero Waste Ecosystems
+              </h2>
+              <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
+                Hardware-agnostic computer vision algorithms trained on over 2.4 million material samples for instantaneous sorting guidance.
+              </p>
+            </div>
+
+            {/* 3 Clean Grid Feature Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+              {/* Feature Card 1 */}
+              <div className="group flex flex-col p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#151c28] border border-slate-200 dark:border-white/10 hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-[0_16px_32px_-6px_rgba(16,185,129,0.12)] transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200">
+                  <span className="material-symbols-outlined text-[26px]">speed</span>
+                </div>
+                <div className="inline-flex items-center gap-2 mb-2 font-mono text-xs text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50/80 dark:bg-emerald-950/40 px-2 py-0.5 rounded w-fit">
+                  <span>&lt;85ms LATENCY</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  Sub-Second Classification
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6 flex-1">
+                  Deep neural vision isolates mixed polymers, bioplastics, non-rigid films, and composite multilayer packaging under variable natural lighting conditions.
+                </p>
+                <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  <span>Accuracy rate: 99.4%</span>
+                  <span className="material-symbols-outlined text-[18px] text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
+                    arrow_forward
+                  </span>
+                </div>
+              </div>
+
+              {/* Feature Card 2 */}
+              <div className="group flex flex-col p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#151c28] border border-slate-200 dark:border-white/10 hover:border-teal-400 dark:hover:border-teal-500 hover:shadow-[0_16px_32px_-6px_rgba(20,184,166,0.12)] transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200">
+                  <span className="material-symbols-outlined text-[26px]">share_location</span>
+                </div>
+                <div className="inline-flex items-center gap-2 mb-2 font-mono text-xs text-teal-700 dark:text-teal-400 font-semibold bg-teal-50/80 dark:bg-teal-950/40 px-2 py-0.5 rounded w-fit">
+                  <span>1,400+ ACTIVE HUBS</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  Local Facility Dispatch
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6 flex-1">
+                  Dynamic municipal routing rules synced continuously with regional MRFs, specialized electronics recyclers, and chemical downcycling plants.
+                </p>
+                <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  <span>Geo-mesh verified</span>
+                  <span className="material-symbols-outlined text-[18px] text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform">
+                    arrow_forward
+                  </span>
+                </div>
+              </div>
+
+              {/* Feature Card 3 */}
+              <div className="group flex flex-col p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#151c28] border border-slate-200 dark:border-white/10 hover:border-cyan-400 dark:hover:border-cyan-500 hover:shadow-[0_16px_32px_-6px_rgba(14,165,233,0.12)] transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200">
+                  <span className="material-symbols-outlined text-[26px]">token</span>
+                </div>
+                <div className="inline-flex items-center gap-2 mb-2 font-mono text-xs text-cyan-700 dark:text-cyan-400 font-semibold bg-cyan-50/80 dark:bg-cyan-950/40 px-2 py-0.5 rounded w-fit">
+                  <span>100% ON-CHAIN</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  EcoCredit Liquidity
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6 flex-1">
+                  Instantly convert validated waste deposits into utility credits for public transit vouchers, grocery micro-rebates, and verified Gold Standard carbon offsets.
+                </p>
+                <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  <span>Instant ledger settlement</span>
+                  <span className="material-symbols-outlined text-[18px] text-cyan-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform">
+                    arrow_forward
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── IMPACT SECTION ── */}
+          <section id="impact" className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative scroll-mt-24">
+            <div className="p-8 sm:p-10 rounded-3xl bg-slate-900 text-white flex flex-col lg:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-96 h-96 bg-gradient-to-bl from-emerald-500/20 via-teal-500/20 to-transparent blur-3xl pointer-events-none"></div>
+              <div className="flex flex-col text-left z-10 max-w-xl">
+                <span className="text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-2">
+                  Automated Environmental Ledger
+                </span>
+                <h4 className="text-2xl sm:text-3xl font-bold mb-3 leading-snug">
+                  Over 38,400 Metric Tons of Ocean-Bound Plastics Diverted in 2024
+                </h4>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  Deployed across 42 smart cities and university campuses across North America &amp; Europe with certified chain-of-custody.
                 </p>
               </div>
 
-              {/* Security badge */}
-              <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/50 mb-6">
-                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
-                  <span className="material-symbols-outlined text-[16px]">verified_user</span>
-                  <span className="text-xs font-semibold">Enterprise Cloud Security</span>
+              <div className="flex flex-wrap items-center gap-8 sm:gap-12 z-10">
+                <div className="flex flex-col">
+                  <span className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">4.2M+</span>
+                  <span className="text-xs text-slate-400 uppercase tracking-wider mt-1">Monthly Scans</span>
                 </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/50 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">ENCRYPTED</span>
+                <div className="w-px h-14 bg-slate-800 hidden sm:block"></div>
+                <div className="flex flex-col">
+                  <span className="text-4xl sm:text-5xl font-extrabold text-emerald-400 tracking-tight">95.8%</span>
+                  <span className="text-xs text-slate-400 uppercase tracking-wider mt-1">Campus Diversion Avg</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── HOW IT WORKS / INSTITUTIONAL CTA SECTION ── */}
+          <section id="how-it-works" className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 relative scroll-mt-24">
+            <div className="w-full rounded-3xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-cyan-50 dark:from-[#0d1625] dark:via-[#111b2b] dark:to-[#0c1421] border border-emerald-200/80 dark:border-white/10 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 text-left shadow-sm">
+              <div className="max-w-xl">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/70 dark:bg-emerald-950/60 text-[#005236] dark:text-emerald-300 text-xs font-semibold mb-3">
+                  <span className="material-symbols-outlined text-[16px]">domain</span>
+                  Institutional Partnership Program
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+                  Empower your campus or city to reach 95%+ diversion rates
+                </h3>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Integrate EcoLoop&apos;s turnkey optical sorting APIs into municipal bins, reverse vending machines, or resident mobile suites within 48 hours.
+                </p>
               </div>
 
-              {/* Sign-in form */}
-              <form onSubmit={handleSignIn} className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowAuthModal(true)}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-200 shadow-md active:scale-95"
+                >
+                  <span>Book Live Demo</span>
+                  <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDemoResidentLogin}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-slate-300 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 active:scale-95"
+                >
+                  <span>Instant Resident Demo</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+        </main>
+
+        {/* ── FOOTER ── */}
+        <footer className="w-full border-t border-slate-200/80 dark:border-white/5 py-10 bg-white/40 dark:bg-[#0a0e15]">
+          <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                <span className="material-symbols-outlined text-[20px]">eco</span>
+              </div>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                © {new Date().getFullYear()} EcoLoop Circular Tech Systems. All rights reserved.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-6 text-xs text-slate-500 dark:text-slate-400">
+              <Link href="/resident/privacy" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                Privacy Policy
+              </Link>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <a href="#features" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                Features
+              </a>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <Link href="/admin/login" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                Admin Portal
+              </Link>
+            </div>
+          </div>
+        </footer>
+
+        {/* ── AUTH MODAL OVERLAY ── */}
+        {showAuthModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn">
+            <div
+              className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#121927] border border-slate-200 dark:border-white/10 shadow-2xl animate-scaleUp"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(false)}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors"
+                aria-label="Close"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+
+              {/* Header */}
+              <div className="flex flex-col items-center text-center mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-600/25 mb-3">
+                  <span className="material-symbols-outlined text-[26px]">eco</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Sign in to EcoLoop
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Access your AI waste classification workspace
+                </p>
+              </div>
+
+              {/* 1-Click Resident Demo Button */}
+              <button
+                type="button"
+                onClick={handleDemoResidentLogin}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-emerald-500/40 dark:border-emerald-500/30 text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40 active:scale-[0.98] transition-all mb-4"
+              >
+                <span className="material-symbols-outlined text-[18px] text-emerald-600 dark:text-emerald-400">bolt</span>
+                1-Click Resident Demo Login
+              </button>
+
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+                <span className="text-xs text-slate-400 font-medium">or email & password</span>
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSignIn} className="flex flex-col gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email Address</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Email Address
+                  </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 dark:text-slate-500 text-[18px]">mail</span>
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[18px]">
+                      mail
+                    </span>
                     <input
                       type="email"
                       placeholder="name@society.com"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Password
+                  </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 dark:text-slate-500 text-[18px]">lock</span>
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[18px]">
+                      lock
+                    </span>
                     <input
                       type={showPass ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-12 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                      className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPass(!showPass)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                     >
-                      <span className="material-symbols-outlined text-[18px]">{showPass ? 'visibility_off' : 'visibility'}</span>
+                      <span className="material-symbols-outlined text-[18px]">
+                        {showPass ? 'visibility_off' : 'visibility'}
+                      </span>
                     </button>
                   </div>
                 </div>
 
                 {authError && (
-                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs">
-                    <span className="material-symbols-outlined text-[15px]">error</span>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs">
+                    <span className="material-symbols-outlined text-[16px]">error</span>
                     {authError}
                   </div>
                 )}
@@ -623,7 +748,7 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={signingIn}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/35 active:scale-[0.98] disabled:opacity-60 transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-600/25 active:scale-95 disabled:opacity-60 transition-all mt-1"
                 >
                   {signingIn ? (
                     <>
@@ -639,38 +764,19 @@ export default function HomePage() {
                 </button>
               </form>
 
-              {/* Divider */}
-              <div className="flex items-center gap-3 my-5">
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
-                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">or</span>
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
-              </div>
-
-              {/* Alt login links */}
-              <div className="flex flex-col gap-2.5">
-                <button
-                  type="button"
-                  onClick={handleDemoLogin}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-emerald-500/40 dark:border-emerald-500/30 text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40 active:scale-[0.98] transition-all"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-emerald-600 dark:text-emerald-400">bolt</span>
-                  1-Click Resident Demo Login
-                </button>
+              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400">Society Admin?</span>
                 <Link
                   href="/admin/login"
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white/60 dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                  className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
                 >
-                  <span className="material-symbols-outlined text-[18px] text-teal-500">admin_panel_settings</span>
-                  Admin Portal
+                  Admin Portal →
                 </Link>
               </div>
-
-              <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
-                © {new Date().getFullYear()} EcoLoop · AI-Powered Waste Segregation Platform
-              </p>
             </div>
           </div>
-        </div>
+        )}
+
       </div>
     </div>
   );
