@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+<!-- STITCH_THREEJS_START:ANIMATION_1 class="fixed inset-0 w-full h-full bg-transparent" -->
+<div class="fixed inset-0 w-full h-full bg-transparent" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_1" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_1');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  // Three.js Interactive 3D Sustainability Scene for EcoLoop
+// Container fallback handling
+const width = container.clientWidth || window.innerWidth || 390;
+const height = container.clientHeight || 450;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+camera.position.set(0, 0, 9.5);
+
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+renderer.setSize(width, height);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+container.appendChild(renderer.domElement);
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+scene.add(ambientLight);
+
+const dirLight1 = new THREE.DirectionalLight(0x34d399, 1.8); // Emerald
+dirLight1.position.set(5, 8, 6);
+scene.add(dirLight1);
+
+const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 1.5); // Sky / Cyan
+dirLight2.position.set(-6, -4, 4);
+scene.add(dirLight2);
+
+const pointLight = new THREE.PointLight(0x10b981, 2.5, 12);
+pointLight.position.set(0, 0, 1);
+scene.add(pointLight);
+
+// Master Group for Mouse Parallax and Orbit
+const masterGroup = new THREE.Group();
+scene.add(masterGroup);
+
+// 1. Central Glowing Core Sphere
+const coreGeo = new THREE.SphereGeometry(1.2, 48, 48);
+const coreMat = new THREE.MeshPhongMaterial({
+  color: 0x10b981,
+  emissive: 0x059669,
+  emissiveIntensity: 0.5,
+  shininess: 100,
+  specular: 0x6ee7b7,
+  transparent: true,
+  opacity: 0.92
+});
+const coreOrb = new THREE.Mesh(coreGeo, coreMat);
+masterGroup.add(coreOrb);
+
+// Outer Frosted Glass Ring around Core
+const innerRingGeo = new THREE.TorusGeometry(1.45, 0.05, 16, 64);
+const innerRingMat = new THREE.MeshStandardMaterial({
+  color: 0x6ee7b7,
+  roughness: 0.2,
+  metalness: 0.3,
+  transparent: true,
+  opacity: 0.7
+});
+const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+masterGroup.add(innerRing);
+
+// 2. Futuristic Möbius / Circular Loop Orbit Band (The "EcoLoop")
+const loopGroup = new THREE.Group();
+masterGroup.add(loopGroup);
+
+// Circular orbital rings
+const orbitRadius = 2.7;
+const orbitCurve = new THREE.EllipseCurve(0, 0, orbitRadius, orbitRadius * 0.92, 0, 2 * Math.PI, false, 0);
+const points = orbitCurve.getPoints(80);
+const orbitGeo = new THREE.BufferGeometry().setFromPoints(points);
+const orbitMat = new THREE.LineBasicMaterial({ color: 0x2dd4bf, transparent: true, opacity: 0.45 });
+const orbitLine1 = new THREE.Line(orbitGeo, orbitMat);
+orbitLine1.rotation.x = Math.PI * 0.38;
+orbitLine1.rotation.y = Math.PI * 0.15;
+loopGroup.add(orbitLine1);
+
+const orbitLine2 = orbitLine1.clone();
+orbitLine2.rotation.x = -Math.PI * 0.32;
+orbitLine2.rotation.z = Math.PI * 0.25;
+loopGroup.add(orbitLine2);
+
+// Circular Arrowheads representing recycling loop flow
+const arrowMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.3, metalness: 0.2 });
+for (let i = 0; i < 3; i++) {
+  const angle = (i * Math.PI * 2) / 3;
+  const coneGeo = new THREE.ConeGeometry(0.12, 0.3, 16);
+  const arrowCone = new THREE.Mesh(coneGeo, arrowMat);
+  arrowCone.position.set(Math.cos(angle) * orbitRadius, Math.sin(angle) * (orbitRadius * 0.92), 0);
+  arrowCone.rotation.z = angle + Math.PI / 2;
+  orbitLine1.add(arrowCone);
+}
+
+// 3. Floating 3D Sustainability Objects around the central orb
+const floatingItems = [];
+
+// Helper function to build stylized recyclable items
+function addFloatingItem(mesh, initialPos, rotSpeed, floatSpeed, phase) {
+  const pivot = new THREE.Group();
+  pivot.position.copy(initialPos);
+  pivot.add(mesh);
+  masterGroup.add(pivot);
+  floatingItems.push({ pivot, mesh, basePos: initialPos.clone(), rotSpeed, floatSpeed, phase });
+}
+
+// Item A: Glass Water Bottle
+const bottleGroup = new THREE.Group();
+const bottleBodyGeo = new THREE.CylinderGeometry(0.24, 0.26, 0.85, 24);
+const glassMat = new THREE.MeshPhysicalMaterial({
+  color: 0x38bdf8,
+  roughness: 0.1,
+  metalness: 0.1,
+  transmission: 0.85,
+  transparent: true,
+  opacity: 0.88,
+  reflectivity: 0.9
+});
+const bottleBody = new THREE.Mesh(bottleBodyGeo, glassMat);
+bottleGroup.add(bottleBody);
+const bottleNeckGeo = new THREE.CylinderGeometry(0.1, 0.18, 0.35, 16);
+const bottleNeck = new THREE.Mesh(bottleNeckGeo, glassMat);
+bottleNeck.position.y = 0.55;
+bottleGroup.add(bottleNeck);
+const bottleCapGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.1, 16);
+const capMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.3 });
+const bottleCap = new THREE.Mesh(bottleCapGeo, capMat);
+bottleCap.position.y = 0.75;
+bottleGroup.add(bottleCap);
+bottleGroup.scale.set(0.9, 0.9, 0.9);
+addFloatingItem(bottleGroup, new THREE.Vector3(-2.3, 1.2, 0.8), { x: 0.008, y: 0.012, z: 0.005 }, 1.4, 0.2);
+
+// Item B: Aluminum Recyclable Can
+const canGroup = new THREE.Group();
+const canBodyGeo = new THREE.CylinderGeometry(0.26, 0.26, 0.72, 24);
+const canMat = new THREE.MeshStandardMaterial({
+  color: 0x94a3b8,
+  metalness: 0.75,
+  roughness: 0.25,
+  wireframe: false
+});
+const canBody = new THREE.Mesh(canBodyGeo, canMat);
+canGroup.add(canBody);
+const canRimGeo = new THREE.TorusGeometry(0.25, 0.03, 12, 24);
+const canRimMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.9, roughness: 0.2 });
+const canRimTop = new THREE.Mesh(canRimGeo, canRimMat);
+canRimTop.rotation.x = Math.PI / 2;
+canRimTop.position.y = 0.36;
+canGroup.add(canRimTop);
+const canRimBot = canRimTop.clone();
+canRimBot.position.y = -0.36;
+canGroup.add(canRimBot);
+// Eco mark ring on can
+const canBadgeGeo = new THREE.CylinderGeometry(0.265, 0.265, 0.3, 24, 1, true);
+const canBadgeMat = new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.6 });
+const canBadge = new THREE.Mesh(canBadgeGeo, canBadgeMat);
+canGroup.add(canBadge);
+addFloatingItem(canGroup, new THREE.Vector3(2.4, -0.9, 1.1), { x: -0.01, y: 0.008, z: 0.007 }, 1.6, 1.8);
+
+// Item C: Minimal 3D Paper / Cardboard Box (Geometric & Modern)
+const boxGroup = new THREE.Group();
+const boxGeo = new THREE.BoxGeometry(0.65, 0.65, 0.65);
+const boxMat = new THREE.MeshStandardMaterial({
+  color: 0xd97706,
+  roughness: 0.75,
+  metalness: 0.05
+});
+const boxMesh = new THREE.Mesh(boxGeo, boxMat);
+boxGroup.add(boxMesh);
+// Tape accent
+const tapeGeo = new THREE.BoxGeometry(0.68, 0.15, 0.68);
+const tapeMat = new THREE.MeshBasicMaterial({ color: 0xfef3c7, transparent: true, opacity: 0.8 });
+boxGroup.add(new THREE.Mesh(tapeGeo, tapeMat));
+boxGroup.rotation.set(0.4, 0.6, 0.2);
+addFloatingItem(boxGroup, new THREE.Vector3(2.1, 1.6, -0.6), { x: 0.006, y: -0.01, z: 0.004 }, 1.2, 3.4);
+
+// Item D: Stylized 3D Botanical Leaves (Eco Symbolism)
+function createLeafMesh() {
+  const leafShape = new THREE.Shape();
+  leafShape.moveTo(0, 0);
+  leafShape.quadraticCurveTo(0.28, 0.4, 0, 0.85);
+  leafShape.quadraticCurveTo(-0.28, 0.4, 0, 0);
+  const extrudeSettings = { depth: 0.04, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.02, bevelThickness: 0.02 };
+  const leafGeo = new THREE.ExtrudeGeometry(leafShape, extrudeSettings);
+  const leafMat = new THREE.MeshStandardMaterial({
+    color: 0x10b981,
+    emissive: 0x065f46,
+    emissiveIntensity: 0.25,
+    roughness: 0.35,
+    metalness: 0.15,
+    side: THREE.DoubleSide
+  });
+  return new THREE.Mesh(leafGeo, leafMat);
+}
+
+const leaf1 = createLeafMesh();
+leaf1.scale.set(1.1, 1.1, 1.1);
+addFloatingItem(leaf1, new THREE.Vector3(-1.8, -1.5, 0.9), { x: 0.012, y: 0.014, z: -0.008 }, 1.8, 2.5);
+
+const leaf2 = createLeafMesh();
+leaf2.scale.set(0.85, 0.85, 0.85);
+addFloatingItem(leaf2, new THREE.Vector3(0.5, 2.2, 0.5), { x: -0.01, y: 0.007, z: 0.01 }, 1.5, 4.2);
+
+// Item E: 3D Mobius / Recycling Loop Emblem floating
+const mobiusRingGeo = new THREE.TorusKnotGeometry(0.38, 0.08, 64, 16, 2, 3);
+const mobiusMat = new THREE.MeshStandardMaterial({
+  color: 0x22d3ee,
+  roughness: 0.2,
+  metalness: 0.5,
+  emissive: 0x0891b2,
+  emissiveIntensity: 0.35
+});
+const mobiusMesh = new THREE.Mesh(mobiusRingGeo, mobiusMat);
+addFloatingItem(mobiusMesh, new THREE.Vector3(-1.2, 1.8, -0.8), { x: 0.015, y: -0.015, z: 0.01 }, 2.0, 5.0);
+
+// 4. Glowing Sustainable Particle System
+const particleCount = 120;
+const particleGeo = new THREE.BufferGeometry();
+const particlePos = new Float32Array(particleCount * 3);
+const particleColors = new Float32Array(particleCount * 3);
+
+const colorPalette = [
+  new THREE.Color(0x34d399), // Emerald
+  new THREE.Color(0x38bdf8), // Cyan
+  new THREE.Color(0xa7f3d0), // Mint
+  new THREE.Color(0x67e8f9)  // Teal
+];
+
+for (let i = 0; i < particleCount; i++) {
+  const i3 = i * 3;
+  const radius = 1.6 + Math.random() * 3.5;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = (Math.random() - 0.5) * Math.PI;
+
+  particlePos[i3] = radius * Math.cos(phi) * Math.sin(theta);
+  particlePos[i3 + 1] = radius * Math.sin(phi);
+  particlePos[i3 + 2] = radius * Math.cos(phi) * Math.cos(theta);
+
+  const pickedColor = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+  particleColors[i3] = pickedColor.r;
+  particleColors[i3 + 1] = pickedColor.g;
+  particleColors[i3 + 2] = pickedColor.b;
+}
+
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+particleGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+
+const particleMat = new THREE.PointsMaterial({
+  size: 0.07,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.85,
+  blending: THREE.AdditiveBlending
+});
+const particles = new THREE.Points(particleGeo, particleMat);
+masterGroup.add(particles);
+
+// Mouse parallax state
+let targetMouseX = 0;
+let targetMouseY = 0;
+let mouseX = 0;
+let mouseY = 0;
+
+function onMouseMove(event) {
+  const rect = container.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  targetMouseX = ((x / rect.width) * 2 - 1) * 0.5;
+  targetMouseY = (-(y / rect.height) * 2 + 1) * 0.4;
+}
+
+// Touch support for mobile parallax
+function onTouchMove(event) {
+  if (event.touches.length > 0) {
+    const rect = container.getBoundingClientRect();
+    const touch = event.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    targetMouseX = ((x / rect.width) * 2 - 1) * 0.4;
+    targetMouseY = (-(y / rect.height) * 2 + 1) * 0.3;
+  }
+}
+
+window.addEventListener('mousemove', onMouseMove);
+window.addEventListener('touchmove', onTouchMove, { passive: true });
+
+// Resize handling
+function onResize() {
+  const newW = container.clientWidth || window.innerWidth || 390;
+  const newH = container.clientHeight || 450;
+  camera.aspect = newW / newH;
+  camera.updateProjectionMatrix();
+  renderer.setSize(newW, newH);
+}
+window.addEventListener('resize', onResize);
+
+// Animation Loop
+let clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const elapsedTime = clock.getElapsedTime();
+
+  // Smooth lerp mouse parallax
+  mouseX += (targetMouseX - mouseX) * 0.05;
+  mouseY += (targetMouseY - mouseY) * 0.05;
+
+  masterGroup.rotation.y = elapsedTime * 0.12 + mouseX;
+  masterGroup.rotation.x = Math.sin(elapsedTime * 0.2) * 0.05 + mouseY * 0.6;
+
+  // Pulse & rotate central core orb
+  const pulse = 1.0 + Math.sin(elapsedTime * 2.2) * 0.04;
+  coreOrb.scale.set(pulse, pulse, pulse);
+  coreOrb.rotation.y = elapsedTime * 0.35;
+  innerRing.rotation.z = -elapsedTime * 0.45;
+  innerRing.rotation.x = Math.PI * 0.3 + Math.sin(elapsedTime * 0.8) * 0.15;
+
+  // Loop band continuous orbit rotation
+  loopGroup.rotation.z = elapsedTime * 0.2;
+  loopGroup.rotation.y = Math.sin(elapsedTime * 0.15) * 0.2;
+
+  // Animate floating sustainability objects
+  for (let i = 0; i < floatingItems.length; i++) {
+    const item = floatingItems[i];
+    item.pivot.position.y = item.basePos.y + Math.sin(elapsedTime * item.floatSpeed + item.phase) * 0.16;
+    item.pivot.position.x = item.basePos.x + Math.cos(elapsedTime * item.floatSpeed * 0.7 + item.phase) * 0.08;
+    item.mesh.rotation.x += item.rotSpeed.x;
+    item.mesh.rotation.y += item.rotSpeed.y;
+    item.mesh.rotation.z += item.rotSpeed.z;
+  }
+
+  // Swirl particles slowly
+  particles.rotation.y = -elapsedTime * 0.06;
+  particles.rotation.x = Math.sin(elapsedTime * 0.08) * 0.08;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_1 -->
+</body>
+</html>

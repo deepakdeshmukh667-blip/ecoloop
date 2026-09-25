@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -115,6 +115,26 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   ),
+  Google: ({ className = 'w-4 h-4' }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.15C3.26 21.3 7.31 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.39l3.99-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.61l3.99 3.15c.95-2.85 3.6-4.96 6.72-4.96z"
+      />
+    </svg>
+  ),
 };
 
 // ─── Real-time Greeting Hook ──────────────────────────────────
@@ -177,25 +197,71 @@ export default function HomePage() {
 
   // Auth modal states
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [authSuccess, setAuthSuccess] = useState('');
   const [signingIn, setSigningIn] = useState(false);
+  const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [redirectedFrom, setRedirectedFrom] = useState('/resident/dashboard');
+
+  // Sign up OTP states
+  const [signUpStep, setSignUpStep] = useState<'form' | 'otp'>('form');
+  const [signUpOtp, setSignUpOtp] = useState(['', '', '', '', '', '']);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpCountdown, setOtpCountdown] = useState(0);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (otpCountdown > 0) {
+      timer = setTimeout(() => setOtpCountdown(otpCountdown - 1), 1000);
+    }
+    return () => clearInterval(timer);
+  }, [otpCountdown]);
 
   useEffect(() => {
     setMounted(true);
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const from = params.get('redirectedFrom');
-      if (from) {
+      const err = params.get('error') || params.get('error_description');
+      if (err) {
+        const decoded = decodeURIComponent(err);
+        if (decoded.includes('provider is not enabled') || decoded.includes('validation_failed')) {
+          setAuthError('Google Sign-In is not yet enabled. Please use Email & Password login or the 1-Click Demo.');
+        } else if (decoded.includes('google_signin_failed') || decoded.includes('link_expired') || decoded.includes('invalid_auth')) {
+          setAuthError('Google Sign-In failed or the link expired. Please try again or use Email & Password.');
+        } else if (decoded.includes('provider') || decoded.includes('oauth')) {
+          setAuthError('OAuth provider error. Please use Email & Password login instead.');
+        } else {
+          setAuthError(decoded);
+        }
+        setShowAuthModal(true);
+      } else if (from) {
         setRedirectedFrom(from);
         setShowAuthModal(true);
       }
     }
 
+    const timer = setTimeout(() => {
+      setChecking(false);
+    }, 1500);
+
     const checkAuth = async () => {
+      // If we came back from an OAuth error, don't auto-redirect — show the error
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('error') || params.get('error_description')) {
+          clearTimeout(timer);
+          setChecking(false);
+          return;
+        }
+      }
+
       try {
         const supabase = createClient();
         const {
@@ -215,23 +281,30 @@ export default function HomePage() {
               profile?.role === 'society_admin' ||
               profile?.role === 'municipal_admin'
             ) {
+              clearTimeout(timer);
               router.replace('/admin/dashboard');
               return;
             }
           } else {
+            clearTimeout(timer);
             router.replace('/admin/dashboard');
             return;
           }
+          clearTimeout(timer);
           router.replace('/resident/dashboard');
           return;
         }
       } catch {
         /* not logged in */
       }
+      clearTimeout(timer);
       setChecking(false);
     };
     checkAuth();
+
+    return () => clearTimeout(timer);
   }, [router]);
+
 
   const isDark =
     mounted &&
@@ -248,11 +321,20 @@ export default function HomePage() {
     }
     setSigningIn(true);
     setAuthError('');
+    setAuthSuccess('');
     try {
       const supabase = createClient();
-      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
       if (error) {
-        setAuthError(error.message);
+        const msg = error.message.toLowerCase();
+        if (msg.includes('invalid login credentials')) {
+          setAuthError('Invalid email or password. If you are a new user, click "Create Account" to sign up!');
+        } else {
+          setAuthError(error.message);
+        }
         setSigningIn(false);
         return;
       }
@@ -278,8 +360,212 @@ export default function HomePage() {
         router.push(adminRole ? '/admin/dashboard' : redirectedFrom);
       }
     } catch {
-      setAuthError('Something went wrong. Please try again.');
+      setAuthError('Something went wrong. Please check your connection and try again.');
       setSigningIn(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim() || !email.trim() || !password) {
+      setAuthError('Please enter your full name, email, and password.');
+      return;
+    }
+    if (password.length < 6) {
+      setAuthError('Password must be at least 6 characters long.');
+      return;
+    }
+    setSigningIn(true);
+    setAuthError('');
+    setAuthSuccess('');
+    try {
+      const supabase = createClient();
+      const siteUrl = (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) || 'https://ecoloop-deepakdeshmukh667-7678.vercel.app';
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+          },
+          emailRedirectTo: `${siteUrl}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        setAuthError(error.message);
+        setSigningIn(false);
+        return;
+      }
+
+      if (data.session) {
+        if (typeof document !== 'undefined') {
+          document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
+        }
+        router.push(redirectedFrom);
+      } else {
+        // Switch to OTP verification step
+        setSignUpStep('otp');
+        setOtpCountdown(60);
+        setAuthSuccess(`A 6-digit OTP verification code has been sent to ${email}. Please check your inbox.`);
+        setSigningIn(false);
+        setTimeout(() => {
+          otpInputRefs.current[0]?.focus();
+        }, 100);
+      }
+    } catch {
+      setAuthError('Failed to create account. Please check your connection and try again.');
+      setSigningIn(false);
+    }
+  };
+
+  const handleVerifySignUpOtp = async (tokenToVerify?: string) => {
+    const token = tokenToVerify || signUpOtp.join('');
+    if (token.length !== 6) {
+      setAuthError('Please enter the complete 6-digit OTP code.');
+      return;
+    }
+    setOtpVerifying(true);
+    setAuthError('');
+    setAuthSuccess('');
+    try {
+      const supabase = createClient();
+      const normalizedEmail = email.trim().toLowerCase();
+
+      let { data, error } = await supabase.auth.verifyOtp({
+        email: normalizedEmail,
+        token: token.trim(),
+        type: 'signup',
+      });
+
+      if (error) {
+        const fallback = await supabase.auth.verifyOtp({
+          email: normalizedEmail,
+          token: token.trim(),
+          type: 'email',
+        });
+        data = fallback.data;
+        error = fallback.error;
+      }
+
+      if (error) {
+        setAuthError(error.message || 'Verification failed. Please check the code and try again.');
+        setOtpVerifying(false);
+        return;
+      }
+
+      if (typeof document !== 'undefined') {
+        document.cookie = 'ecoloop_session=true; path=/; max-age=604800; SameSite=Lax';
+      }
+
+      if (data.user) {
+        await supabase.from('profiles').upsert(
+          {
+            id: data.user.id,
+            auth_user_id: data.user.id,
+            email: normalizedEmail,
+            full_name: fullName.trim() || 'Eco Resident',
+            role: 'resident',
+            eco_points: 50,
+            current_streak: 0,
+            consistency_score: 80,
+          },
+          { onConflict: 'id' }
+        );
+      }
+
+      router.push(redirectedFrom);
+    } catch {
+      setAuthError('OTP verification error. Please try again.');
+      setOtpVerifying(false);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    const cleanVal = value.replace(/\D/g, '').slice(-1);
+    const newOtp = [...signUpOtp];
+    newOtp[index] = cleanVal;
+    setSignUpOtp(newOtp);
+
+    if (cleanVal && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+
+    if (newOtp.join('').length === 6) {
+      handleVerifySignUpOtp(newOtp.join(''));
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !signUpOtp[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pastedData) return;
+
+    const newOtp = [...signUpOtp];
+    for (let i = 0; i < pastedData.length; i++) {
+      newOtp[i] = pastedData[i];
+    }
+    setSignUpOtp(newOtp);
+
+    const nextIndex = Math.min(pastedData.length, 5);
+    otpInputRefs.current[nextIndex]?.focus();
+
+    if (pastedData.length === 6) {
+      handleVerifySignUpOtp(pastedData);
+    }
+  };
+
+  const handleResendSignUpOtp = async () => {
+    if (otpCountdown > 0) return;
+    setAuthError('');
+    setAuthSuccess('');
+    try {
+      const supabase = createClient();
+      const siteUrl = (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) || 'https://ecoloop-deepakdeshmukh667-7678.vercel.app';
+      await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: { full_name: fullName.trim() },
+          emailRedirectTo: `${siteUrl}/auth/callback`,
+        },
+      });
+
+      setAuthSuccess(`Verification OTP code resent to ${email}. Check your inbox.`);
+      setOtpCountdown(60);
+      setSignUpOtp(['', '', '', '', '', '']);
+      otpInputRefs.current[0]?.focus();
+    } catch {
+      setAuthError('Failed to resend OTP code.');
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleSigningIn(true);
+    setAuthError('');
+    setAuthSuccess('');
+    try {
+      const supabase = createClient();
+      const siteUrl = (typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) || 'https://ecoloop-deepakdeshmukh667-7678.vercel.app';
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${siteUrl}/auth/callback`,
+        },
+      });
+      if (error) {
+        setAuthError(error.message);
+        setIsGoogleSigningIn(false);
+      }
+    } catch {
+      setAuthError('Google sign-in failed. Please try again.');
+      setIsGoogleSigningIn(false);
     }
   };
 
@@ -756,132 +1042,347 @@ export default function HomePage() {
               {/* Close Button */}
               <button
                 type="button"
-                onClick={() => setShowAuthModal(false)}
+                onClick={() => {
+                  setShowAuthModal(false);
+                  setSignUpStep('form');
+                }}
                 className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors"
                 aria-label="Close"
               >
                 <Icons.Close className="w-4 h-4" />
               </button>
 
+              {/* Mode Tabs (Sign In vs Create Account) */}
+              <div className="flex p-1 mb-5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('signin');
+                    setSignUpStep('form');
+                    setAuthError('');
+                    setAuthSuccess('');
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    authMode === 'signin'
+                      ? 'bg-white dark:bg-[#1e293b] text-emerald-700 dark:text-emerald-400 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('signup');
+                    setSignUpStep('form');
+                    setAuthError('');
+                    setAuthSuccess('');
+                  }}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    authMode === 'signup'
+                      ? 'bg-white dark:bg-[#1e293b] text-emerald-700 dark:text-emerald-400 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
+
               {/* Header */}
-              <div className="flex flex-col items-center text-center mb-6">
+              <div className="flex flex-col items-center text-center mb-5">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-600/25 mb-3">
                   <Icons.Leaf className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Sign in to EcoLoop
+                  {authMode === 'signin'
+                    ? 'Sign in to EcoLoop'
+                    : signUpStep === 'otp'
+                    ? 'Verify Email OTP'
+                    : 'Create Your EcoLoop Account'}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Access your AI waste classification workspace
+                  {authMode === 'signin'
+                    ? 'Access your AI waste classification workspace'
+                    : signUpStep === 'otp'
+                    ? `Enter 6-digit code sent to ${email}`
+                    : 'Join your society in circular zero-waste initiative'}
                 </p>
               </div>
 
-              {/* 1-Click Resident Demo Button */}
-              <button
-                type="button"
-                onClick={handleDemoResidentLogin}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-emerald-500/40 dark:border-emerald-500/30 text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40 active:scale-[0.98] transition-all mb-4"
-              >
-                <Icons.Bolt className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                1-Click Resident Demo Login
-              </button>
+              {/* STEP: SIGN UP OTP VERIFICATION */}
+              {authMode === 'signup' && signUpStep === 'otp' ? (
+                <div className="flex flex-col gap-4">
+                  {authSuccess && (
+                    <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
+                      {authSuccess}
+                    </div>
+                  )}
 
-              <div className="flex items-center gap-3 my-4">
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
-                <span className="text-xs text-slate-400 font-medium">or email & password</span>
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
-              </div>
+                  {authError && (
+                    <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-medium">
+                      {authError}
+                    </div>
+                  )}
 
-              {/* Form */}
-              <form onSubmit={handleSignIn} className="flex flex-col gap-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                      <Icons.Mail className="w-4 h-4" />
-                    </span>
-                    <input
-                      type="email"
-                      placeholder="name@society.com"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      required
-                    />
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 text-center mb-2">
+                      Enter 6-Digit Email OTP Code
+                    </label>
+                    <div className="flex justify-between gap-2 sm:gap-2.5">
+                      {signUpOtp.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={el => {
+                            otpInputRefs.current[idx] = el;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={1}
+                          value={digit}
+                          onChange={e => handleOtpChange(idx, e.target.value)}
+                          onKeyDown={e => handleOtpKeyDown(idx, e)}
+                          onPaste={handleOtpPaste}
+                          disabled={otpVerifying}
+                          className="w-10 h-12 text-center text-lg font-bold bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all disabled:opacity-50"
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                      <Icons.Lock className="w-4 h-4" />
-                    </span>
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      required
-                    />
+                  <button
+                    type="button"
+                    onClick={() => handleVerifySignUpOtp()}
+                    disabled={otpVerifying || signUpOtp.join('').length !== 6}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-600/25 active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
+                  >
+                    {otpVerifying ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Verifying Code…
+                      </>
+                    ) : (
+                      <>
+                        Verify OTP & Create Account
+                        <Icons.ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-white/5">
                     <button
                       type="button"
-                      onClick={() => setShowPass(!showPass)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      onClick={() => setSignUpStep('form')}
+                      className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                     >
-                      {showPass ? (
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
+                      ← Edit details
                     </button>
+                    {otpCountdown > 0 ? (
+                      <span className="text-slate-400 font-medium">Resend in {otpCountdown}s</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendSignUpOtp}
+                        className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                      >
+                        Resend OTP Code
+                      </button>
+                    )}
                   </div>
                 </div>
+              ) : (
+                /* STEP: NORMAL SIGN IN OR SIGN UP FORM */
+                <>
+                  {/* OAuth & 1-Click Resident Demo */}
+                  <div className="flex flex-col gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      disabled={isGoogleSigningIn}
+                      className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 active:scale-[0.98] transition-all cursor-pointer"
+                    >
+                      {isGoogleSigningIn ? (
+                        <div className="w-4 h-4 border-2 border-slate-400 border-t-emerald-500 rounded-full animate-spin"></div>
+                      ) : (
+                        <Icons.Google className="w-4 h-4" />
+                      )}
+                      <span>{authMode === 'signin' ? 'Continue with Google' : 'Sign up with Google'}</span>
+                    </button>
 
-                {authError && (
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs">
-                    {authError}
+                    <button
+                      type="button"
+                      onClick={handleDemoResidentLogin}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-emerald-500/40 dark:border-emerald-500/30 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40 active:scale-[0.98] transition-all cursor-pointer"
+                    >
+                      <Icons.Bolt className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      1-Click Resident Demo Login
+                    </button>
                   </div>
-                )}
 
-                <button
-                  type="submit"
-                  disabled={signingIn}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-600/25 active:scale-95 disabled:opacity-60 transition-all mt-1"
-                >
-                  {signingIn ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Signing in…
-                    </>
-                  ) : (
-                    <>
-                      Sign In to Dashboard
-                      <Icons.ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </form>
+                  <div className="flex items-center gap-3 my-3">
+                    <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+                    <span className="text-xs text-slate-400 font-medium">or email & password</span>
+                    <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+                  </div>
 
-              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Society Admin?</span>
-                <Link
-                  href="/admin/login"
-                  className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
-                >
-                  Admin Portal →
-                </Link>
-              </div>
+                  {/* Form */}
+                  <form
+                    onSubmit={authMode === 'signin' ? handleSignIn : handleSignUp}
+                    className="flex flex-col gap-3"
+                  >
+                    {authMode === 'signup' && (
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Full Name
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                            <Icons.User className="w-4 h-4" />
+                          </span>
+                          <input
+                            type="text"
+                            placeholder="Deepak Deshmukh"
+                            value={fullName}
+                            onChange={e => setFullName(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Email Address
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                          <Icons.Mail className="w-4 h-4" />
+                        </span>
+                        <input
+                          type="email"
+                          placeholder="name@society.com"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                          <Icons.Lock className="w-4 h-4" />
+                        </span>
+                        <input
+                          type={showPass ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPass(!showPass)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                        >
+                          {showPass ? (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {authError && (
+                      <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs font-medium">
+                        {authError}
+                      </div>
+                    )}
+
+                    {authSuccess && (
+                      <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
+                        {authSuccess}
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={signingIn}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-600/25 active:scale-95 disabled:opacity-60 transition-all mt-1 cursor-pointer"
+                    >
+                      {signingIn ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          {authMode === 'signin' ? 'Signing in…' : 'Sending OTP Code…'}
+                        </>
+                      ) : (
+                        <>
+                          {authMode === 'signin' ? 'Sign In to Dashboard' : 'Send Verification OTP'}
+                          <Icons.ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex flex-col gap-2 text-xs">
+                    {authMode === 'signin' ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500 dark:text-slate-400">New to EcoLoop?</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthMode('signup');
+                            setSignUpStep('form');
+                            setAuthError('');
+                            setAuthSuccess('');
+                          }}
+                          className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                        >
+                          Create Account →
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500 dark:text-slate-400">Already have an account?</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthMode('signin');
+                            setSignUpStep('form');
+                            setAuthError('');
+                            setAuthSuccess('');
+                          }}
+                          className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                        >
+                          Sign In →
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-100/60 dark:border-white/5">
+                      <span className="text-slate-400 dark:text-slate-500">Society Administrator?</span>
+                      <Link
+                        href="/admin/login"
+                        className="font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+                      >
+                        Admin Portal →
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

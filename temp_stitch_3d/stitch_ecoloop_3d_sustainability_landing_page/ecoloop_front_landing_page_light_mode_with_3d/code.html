@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+
+<html class="" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_blank" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&amp;family=Sora:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-container": "#00302b", "on-secondary-fixed": "#002113", "surface-glass-fill": "rgba(15, 23, 42, 0.65)", "on-error-container": "#ffdad6", "on-error": "#690005", "surface-dim": "#0f131b", "secondary-fixed": "#6ffbbe", "primary-container": "#29a195", "secondary-fixed-dim": "#4edea3", "surface-container-lowest": "#0a0e15", "on-primary-fixed-variant": "#005049", "on-secondary-container": "#00311f", "surface-bright": "#353941", "surface-container-high": "#262a32", "error-container": "#93000a", "on-surface": "#dfe2ed", "glow-emerald": "rgba(16, 185, 129, 0.15)", "on-secondary-fixed-variant": "#005236", "on-tertiary-fixed-variant": "#004e5c", "on-primary": "#003732", "on-background": "#dfe2ed", "outline-variant": "#3d4947", "inverse-surface": "#dfe2ed", "surface-container-highest": "#31353d", "background": "#0f131b", "surface-tint": "#6bd8cb", "tertiary-container": "#009eb9", "on-tertiary-container": "#002f38", "tertiary-fixed": "#acedff", "tertiary": "#4cd7f6", "surface-charcoal": "#0F172A", "primary": "#6bd8cb", "on-tertiary": "#003640", "on-primary-fixed": "#00201d", "surface-variant": "#31353d", "tertiary-fixed-dim": "#4cd7f6", "on-surface-variant": "#bcc9c6", "surface-container-low": "#181c23", "inverse-primary": "#006a61", "glow-cyan": "rgba(6, 182, 212, 0.18)", "inverse-on-surface": "#2d3038", "primary-fixed-dim": "#6bd8cb", "on-secondary": "#003824", "on-tertiary-fixed": "#001f26", "primary-fixed": "#89f5e7", "secondary-container": "#00a572", "error": "#ffb4ab", "secondary": "#4edea3", "outline": "#879391", "text-muted": "#94A3B8", "surface-glass-border": "rgba(255, 255, 255, 0.08)", "surface": "#0f131b", "surface-container": "#1c2027" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-3xl": "6rem", "space-xs": "0.25rem", "space-2xl": "4rem", "margin": "4rem", "space-md": "1rem", "margin-mobile": "1.25rem", "gutter": "1.5rem", "space-sm": "0.5rem", "gutter-mobile": "1rem", "space-lg": "1.5rem", "space-xl": "2.5rem" }, "fontFamily": { "body-xl": ["Manrope"], "headline-xl-mobile": ["Sora"], "body-md": ["Manrope"], "label-md": ["Sora"], "label-sm": ["Sora"], "display-hero-mobile": ["Sora"], "body-sm": ["Manrope"], "code-mono": ["JetBrains Mono"], "headline-md": ["Sora"], "display-hero": ["Sora"], "headline-sm": ["Sora"], "headline-xl": ["Sora"], "headline-lg": ["Sora"] }, "fontSize": { "body-xl": ["1.25rem", { "lineHeight": "1.875rem", "fontWeight": "400" }], "headline-xl-mobile": ["2rem", { "lineHeight": "2.5rem", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-md": ["1rem", { "lineHeight": "1.6rem", "fontWeight": "400" }], "label-md": ["0.875rem", { "lineHeight": "1.25rem", "letterSpacing": "0.02em", "fontWeight": "500" }], "label-sm": ["0.75rem", { "lineHeight": "1rem", "letterSpacing": "0.04em", "fontWeight": "600" }], "display-hero-mobile": ["2.5rem", { "lineHeight": "3rem", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-sm": ["0.875rem", { "lineHeight": "1.4rem", "fontWeight": "400" }], "code-mono": ["0.8125rem", { "lineHeight": "1.25rem", "fontWeight": "400" }], "headline-md": ["1.5rem", { "lineHeight": "2rem", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-hero": ["4rem", { "lineHeight": "4.5rem", "letterSpacing": "-0.03em", "fontWeight": "700" }], "headline-sm": ["1.25rem", { "lineHeight": "1.75rem", "fontWeight": "500" }], "headline-xl": ["3rem", { "lineHeight": "3.5rem", "letterSpacing": "-0.025em", "fontWeight": "600" }], "headline-lg": ["2rem", { "lineHeight": "2.5rem", "letterSpacing": "-0.015em", "fontWeight": "600" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-slate-50 dark:bg-background text-slate-800 dark:text-on-surface font-body-md text-body-md transition-colors duration-300 min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white dark:selection:bg-primary dark:selection:text-on-primary pt-safe pb-safe"><main class="flex-1 w-full bg-slate-50 dark:bg-background flex flex-col transition-colors duration-500"><div class="flex flex-col w-full relative overflow-hidden transition-colors duration-500">
+<!-- Ambient Specular Glow Underlays -->
+<div class="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 bg-teal-400/20 dark:bg-primary/20 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="absolute top-64 -left-20 w-72 h-72 bg-emerald-400/20 dark:bg-secondary/15 rounded-full blur-[110px] pointer-events-none"></div>
+<div class="absolute top-96 -right-20 w-72 h-72 bg-cyan-400/20 dark:bg-tertiary/15 rounded-full blur-[110px] pointer-events-none"></div>
+<!-- Interactive Top Utility Bar (Quick Switch & Live Eco Stream) -->
+<div class="w-full px-4 pt-2 pb-1 flex items-center justify-between z-20">
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 dark:bg-surface-container-high/60 backdrop-blur-md shadow-sm dark:shadow-none border border-slate-200/60 dark:border-white/5 transition-colors">
+<span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-secondary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-slate-600 dark:text-on-surface-variant uppercase tracking-wider font-semibold">Vision Engine v4.2</span>
+</div>
+<button aria-label="Toggle visual mode" class="w-9 h-9 rounded-full bg-white/80 dark:bg-surface-container-high/70 backdrop-blur-md flex items-center justify-center text-teal-600 dark:text-primary shadow-sm dark:shadow-none border border-slate-200/60 dark:border-white/5 active:scale-95 transition-transform duration-200" id="themeToggleBtn" type="button">
+<span class="material-symbols-outlined text-[19px]" id="themeToggleIcon">dark_mode</span>
+</button>
+</div>
+<!-- Main Hero Section -->
+<section class="flex flex-col items-center text-center px-4 pt-4 pb-2 z-10">
+<!-- Shimmering Pill Tag -->
+<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 dark:bg-surface-container-low shadow-sm border border-slate-200/80 dark:border-transparent mb-4 transition-colors">
+<span class="material-symbols-outlined text-emerald-600 dark:text-secondary text-[16px]">recycling</span>
+<span class="font-label-sm text-label-sm text-teal-700 dark:text-primary tracking-wide font-medium">Next-Gen AI Recycling • Powered by Computer Vision</span>
+</div>
+<!-- Impact Hero Headline -->
+<h1 class="font-display-hero-mobile text-display-hero-mobile text-slate-900 dark:text-on-surface max-w-sm tracking-tight leading-[1.15] mb-3 transition-colors">
+      Recycle Smarter.<br/>
+<span class="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 dark:from-secondary dark:via-primary dark:to-tertiary bg-clip-text text-transparent">Live Greener.</span><br/>
+<span class="bg-gradient-to-r from-teal-600 via-cyan-600 to-emerald-600 dark:from-primary dark:via-tertiary dark:to-secondary bg-clip-text text-transparent">Close the Loop.</span>
+</h1>
+<!-- Value Statement Subtext -->
+<p class="font-body-md text-body-md text-slate-600 dark:text-on-surface-variant max-w-xs mb-4 transition-colors">
+      AI-powered recycling that helps you identify waste, build better habits, and make every sustainable action count.
+    </p>
+<!-- Hero Action Buttons -->
+<div class="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-xs mb-2">
+<button class="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white dark:from-secondary-container dark:to-primary-container dark:text-on-primary font-label-md text-label-md shadow-lg shadow-emerald-500/25 dark:shadow-primary/20 active:scale-95 transition-all" id="startRecycleBtn" type="button">
+<span>Start Recycling</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+<button class="w-full sm:w-auto flex items-center justify-center px-6 py-3 rounded-full bg-white/90 text-slate-700 border border-slate-200/90 shadow-sm hover:bg-slate-100 dark:border-transparent dark:bg-surface-container-high/80 dark:text-on-surface dark:shadow-none font-label-md text-label-md dark:hover:bg-surface-bright active:scale-95 transition-all" id="exploreBtn" type="button">
+        Explore EcoLoop
+      </button>
+</div>
+</section>
+<!-- 3D Interactive Centerpiece Container -->
+<section class="relative w-full px-2 py-1 flex flex-col items-center justify-center">
+<!-- Radial Ambient Backlight for 3D Assets -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-72 h-72 rounded-full bg-gradient-to-tr from-emerald-400/25 via-teal-400/25 to-cyan-400/25 dark:from-secondary/25 dark:via-primary/20 dark:to-tertiary/20 blur-3xl"></div>
+</div>
+<!-- 3D Scene Viewport -->
+<div class="relative w-full max-w-xs h-64 mx-auto flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none" id="threejs-container">
+<canvas class="w-full h-full block" id="recycling-canvas"></canvas>
+</div>
+<!-- Floating Interactive Micro-Pill -->
+<div class="relative mt-2 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 dark:bg-surface-container-highest/80 backdrop-blur-md shadow-sm border border-slate-200/70 dark:border-white/5 pointer-events-none transition-colors">
+<span class="material-symbols-outlined text-emerald-600 dark:text-secondary text-[15px]">view_in_ar</span>
+<span class="font-label-sm text-label-sm text-slate-800 dark:text-on-surface font-medium">360° Live Waste Classifier</span>
+</div>
+</section>
+<!-- Bottom Floating Telemetry Intelligence Matrix -->
+<section class="w-full px-4 pt-3 pb-6 z-10">
+<div class="w-full max-w-sm mx-auto rounded-xl p-4 bg-white/85 dark:bg-surface-container-high/70 backdrop-blur-xl shadow-lg dark:shadow-xl border border-slate-200/70 dark:border-white/5 flex flex-col gap-3 transition-colors">
+<!-- Card Header -->
+<div class="flex items-center justify-between pb-1">
+<div class="flex items-center gap-2">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 dark:bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 dark:bg-secondary"></span>
+</span>
+<span class="font-label-md text-label-md text-slate-900 dark:text-on-surface font-semibold">EcoLoop Intelligence Matrix</span>
+</div>
+<span class="font-code-mono text-code-mono text-teal-700 bg-teal-50 dark:text-primary dark:bg-primary/10 px-2 py-0.5 rounded-full border border-teal-200/50 dark:border-transparent font-medium">REALTIME</span>
+</div>
+<!-- Telemetry Columns -->
+<div class="grid grid-cols-3 gap-2 pt-1">
+<!-- Habit Index Pill -->
+<div class="flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-50/80 dark:bg-surface-container-lowest/70 border border-slate-200/60 dark:border-transparent text-center transition-colors">
+<div class="flex items-center gap-1 mb-1 text-teal-600 dark:text-primary">
+<span class="material-symbols-outlined text-[15px]">eco</span>
+<span class="font-label-sm text-label-sm text-slate-500 dark:text-on-surface-variant font-medium">Habit</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-slate-900 dark:text-on-surface font-semibold tracking-tight">92%</span>
+<!-- Mini Custom Arc/Bar Indicator -->
+<div class="w-full h-1 bg-slate-200 dark:bg-surface-variant rounded-full mt-2 overflow-hidden">
+<div class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-secondary dark:via-primary rounded-full" style="width: 92%;"></div>
+</div>
+</div>
+<!-- Recycling Points Pill -->
+<div class="flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-50/80 dark:bg-surface-container-lowest/70 border border-slate-200/60 dark:border-transparent text-center transition-colors">
+<div class="flex items-center gap-1 mb-1 text-emerald-600 dark:text-secondary">
+<span class="material-symbols-outlined text-[15px]">toll</span>
+<span class="font-label-sm text-label-sm text-slate-500 dark:text-on-surface-variant font-medium">Points</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-slate-900 dark:text-on-surface font-semibold tracking-tight">1,240</span>
+<span class="font-label-sm text-label-sm text-emerald-600 dark:text-secondary mt-1 flex items-center gap-0.5 font-medium">
+<span class="material-symbols-outlined text-[12px]">trending_up</span>+180
+          </span>
+</div>
+<!-- Waste Verified Pill -->
+<div class="flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-50/80 dark:bg-surface-container-lowest/70 border border-slate-200/60 dark:border-transparent text-center transition-colors">
+<div class="flex items-center gap-1 mb-1 text-cyan-600 dark:text-tertiary">
+<span class="material-symbols-outlined text-[15px]">task_alt</span>
+<span class="font-label-sm text-label-sm text-slate-500 dark:text-on-surface-variant font-medium">Verified</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-slate-900 dark:text-on-surface font-semibold tracking-tight">86</span>
+<span class="font-code-mono text-code-mono text-slate-500 dark:text-on-surface-variant text-[10px] mt-1">items scan</span>
+</div>
+</div>
+<!-- Live Stream Sub-ticker -->
+<div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-100/70 dark:bg-surface-container/50 text-slate-600 dark:text-on-surface-variant text-label-sm font-label-sm border border-slate-200/50 dark:border-transparent transition-colors">
+<span class="flex items-center gap-1.5 font-medium">
+<span class="material-symbols-outlined text-[14px] text-teal-600 dark:text-primary">animated_images</span>
+<span>Latest: PET Bottle Sorted</span>
+</span>
+<span class="text-emerald-600 dark:text-secondary font-code-mono text-code-mono font-medium">+15 pts</span>
+</div>
+</div>
+</section>
+</div>
+<script>
+  // 3D Three.js Interactive Circular Recycling Sustainability Scene
+  (function initThreeScene() {
+    const container = document.getElementById('threejs-container');
+    const canvas = document.getElementById('recycling-canvas');
+    if (!container || !canvas || typeof THREE === 'undefined') return;
+
+    let width = container.clientWidth || 320;
+    let height = container.clientHeight || 256;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 1.2, 5.2);
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      alpha: true,
+      antialias: true
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Ambient and Directional Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.1);
+    scene.add(ambientLight);
+
+    const dirLight1 = new THREE.DirectionalLight(0x10b981, 1.4);
+    dirLight1.position.set(4, 5, 4);
+    scene.add(dirLight1);
+
+    const dirLight2 = new THREE.DirectionalLight(0x06b6d4, 1.2);
+    dirLight2.position.set(-4, -2, -3);
+    scene.add(dirLight2);
+
+    const pointLight = new THREE.PointLight(0x34d399, 2.2, 8);
+    pointLight.position.set(0, 0, 0);
+    scene.add(pointLight);
+
+    // Main Group for interactive rotation
+    const rootGroup = new THREE.Group();
+    scene.add(rootGroup);
+
+    // 1. Central Glowing EcoLoop Core Orb
+    const coreGeo = new THREE.SphereGeometry(0.72, 32, 32);
+    const coreMat = new THREE.MeshStandardMaterial({
+      color: 0x10b981,
+      roughness: 0.15,
+      metalness: 0.25,
+      emissive: 0x059669,
+      emissiveIntensity: 0.55,
+      wireframe: false
+    });
+    const coreOrb = new THREE.Mesh(coreGeo, coreMat);
+    rootGroup.add(coreOrb);
+
+    // Outer subtle translucent pulse shell for Core
+    const shellGeo = new THREE.SphereGeometry(0.85, 24, 24);
+    const shellMat = new THREE.MeshBasicMaterial({
+      color: 0x6ee7b7,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.25
+    });
+    const coreShell = new THREE.Mesh(shellGeo, shellMat);
+    rootGroup.add(coreShell);
+
+    // 2. Orbiting Möbius / Recycling Rings
+    const ringMat1 = new THREE.MeshStandardMaterial({
+      color: 0x059669,
+      roughness: 0.2,
+      metalness: 0.6,
+      emissive: 0x047857,
+      emissiveIntensity: 0.25
+    });
+    const ringGeo1 = new THREE.TorusGeometry(1.65, 0.045, 16, 80);
+    const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
+    ring1.rotation.x = Math.PI / 3;
+    ring1.rotation.y = Math.PI / 6;
+    rootGroup.add(ring1);
+
+    const ringMat2 = new THREE.MeshStandardMaterial({
+      color: 0x06b6d4,
+      roughness: 0.2,
+      metalness: 0.6,
+      emissive: 0x0891b2,
+      emissiveIntensity: 0.25
+    });
+    const ringGeo2 = new THREE.TorusGeometry(1.9, 0.038, 16, 80);
+    const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+    ring2.rotation.x = -Math.PI / 3.5;
+    ring2.rotation.z = Math.PI / 4;
+    rootGroup.add(ring2);
+
+    // Recycling Directional Arrows on rings
+    const arrowConeGeo = new THREE.ConeGeometry(0.09, 0.22, 12);
+    const arrowMat = new THREE.MeshStandardMaterial({
+      color: 0x34d399,
+      emissive: 0x10b981,
+      emissiveIntensity: 0.4
+    });
+    const arrows = [];
+    for (let i = 0; i < 3; i++) {
+      const arrowMesh = new THREE.Mesh(arrowConeGeo, arrowMat);
+      rootGroup.add(arrowMesh);
+      arrows.push({ mesh: arrowMesh, offset: (i * Math.PI * 2) / 3, radius: 1.65, tilt: ring1.rotation });
+    }
+
+    // 3. Floating Recyclable Waste Items on Orbit
+    const itemsGroup = new THREE.Group();
+    rootGroup.add(itemsGroup);
+
+    // (A) Glass / PET Bottle
+    const bottleGroup = new THREE.Group();
+    const bottleBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.12, 0.35, 16),
+      new THREE.MeshStandardMaterial({
+        color: 0x67e8f9,
+        roughness: 0.1,
+        metalness: 0.1,
+        transparent: true,
+        opacity: 0.85
+      })
+    );
+    const bottleNeck = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.05, 0.09, 0.16, 16),
+      new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.85 })
+    );
+    bottleNeck.position.y = 0.24;
+    bottleGroup.add(bottleBody);
+    bottleGroup.add(bottleNeck);
+    itemsGroup.add(bottleGroup);
+
+    // (B) Aluminum Can
+    const canGroup = new THREE.Group();
+    const canMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.14, 0.14, 0.32, 20),
+      new THREE.MeshStandardMaterial({
+        color: 0x94a3b8,
+        metalness: 0.85,
+        roughness: 0.25
+      })
+    );
+    const canRim = new THREE.Mesh(
+      new THREE.TorusGeometry(0.14, 0.02, 8, 20),
+      new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9 })
+    );
+    canRim.rotation.x = Math.PI / 2;
+    canRim.position.y = 0.16;
+    canGroup.add(canMesh);
+    canGroup.add(canRim);
+    itemsGroup.add(canGroup);
+
+    // (C) Cardboard Box
+    const boxMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, 0.24, 0.26),
+      new THREE.MeshStandardMaterial({
+        color: 0xd97706,
+        roughness: 0.8,
+        metalness: 0.05
+      })
+    );
+    itemsGroup.add(boxMesh);
+
+    // (D) Bio Organic Leaves (2 stylized leaf shapes)
+    const leafGeo = new THREE.SphereGeometry(0.16, 8, 8);
+    leafGeo.scale(1.4, 0.2, 0.6);
+    const leafMat = new THREE.MeshStandardMaterial({
+      color: 0x22c55e,
+      roughness: 0.4,
+      emissive: 0x15803d,
+      emissiveIntensity: 0.25
+    });
+    const leaf1 = new THREE.Mesh(leafGeo, leafMat);
+    const leaf2 = new THREE.Mesh(leafGeo, leafMat);
+    itemsGroup.add(leaf1);
+    itemsGroup.add(leaf2);
+
+    // 4. Ambient Floating Energy & Sparkle Particles
+    const particleCount = 42;
+    const particleGeo = new THREE.BufferGeometry();
+    const particlePos = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      particlePos[i] = (Math.random() - 0.5) * 4.2;
+      particlePos[i + 1] = (Math.random() - 0.5) * 3.6;
+      particlePos[i + 2] = (Math.random() - 0.5) * 3.5;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+    const particleMat = new THREE.PointsMaterial({
+      color: 0x34d399,
+      size: 0.055,
+      transparent: true,
+      opacity: 0.75
+    });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    rootGroup.add(particles);
+
+    // Interactive Drag / Touch Orbit Controls
+    let isDragging = false;
+    let prevMouseX = 0;
+    let prevMouseY = 0;
+    let targetRotationY = 0;
+    let targetRotationX = 0;
+
+    function onPointerDown(e) {
+      isDragging = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      prevMouseX = clientX;
+      prevMouseY = clientY;
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const deltaX = clientX - prevMouseX;
+      const deltaY = clientY - prevMouseY;
+      targetRotationY += deltaX * 0.008;
+      targetRotationX += deltaY * 0.006;
+      prevMouseX = clientX;
+      prevMouseY = clientY;
+    }
+
+    function onPointerUp() {
+      isDragging = false;
+    }
+
+    container.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+
+    container.addEventListener('touchstart', onPointerDown, { passive: true });
+    window.addEventListener('touchmove', onPointerMove, { passive: true });
+    window.addEventListener('touchend', onPointerUp);
+
+    // Responsive Canvas Resize
+    function handleResize() {
+      if (!container || !renderer || !camera) return;
+      width = container.clientWidth || 320;
+      height = container.clientHeight || 256;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+    window.addEventListener('resize', handleResize);
+
+    // Animation Render Loop
+    let clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsedTime = clock.getElapsedTime();
+
+      // Smooth inertia rotation
+      rootGroup.rotation.y += (targetRotationY - rootGroup.rotation.y) * 0.08 + 0.006;
+      rootGroup.rotation.x += (targetRotationX - rootGroup.rotation.x) * 0.08;
+
+      // Pulse Core
+      const pulse = 1 + Math.sin(elapsedTime * 2.2) * 0.04;
+      coreOrb.scale.set(pulse, pulse, pulse);
+      coreShell.rotation.y -= 0.008;
+      coreShell.rotation.x += 0.004;
+
+      // Rings spin
+      ring1.rotation.z += 0.005;
+      ring2.rotation.y += 0.007;
+
+      // Orbiting recyclables
+      const speed = elapsedTime * 0.85;
+
+      // Bottle
+      bottleGroup.position.set(
+        Math.cos(speed) * 1.65,
+        Math.sin(speed * 1.5) * 0.35 + 0.1,
+        Math.sin(speed) * 1.65
+      );
+      bottleGroup.rotation.x = speed * 1.2;
+      bottleGroup.rotation.y = speed * 0.8;
+
+      // Can
+      canGroup.position.set(
+        Math.cos(speed + 1.6) * 1.75,
+        Math.sin(speed * 1.2 + 1) * 0.3 - 0.1,
+        Math.sin(speed + 1.6) * 1.75
+      );
+      canGroup.rotation.z = speed * 1.4;
+      canGroup.rotation.x = speed * 0.6;
+
+      // Cardboard box
+      boxMesh.position.set(
+        Math.cos(speed + 3.2) * 1.7,
+        Math.sin(speed * 0.9 + 2) * 0.4,
+        Math.sin(speed + 3.2) * 1.7
+      );
+      boxMesh.rotation.x = speed * 0.8;
+      boxMesh.rotation.y = speed * 1.1;
+
+      // Bio Leaf 1
+      leaf1.position.set(
+        Math.cos(speed + 4.6) * 1.8,
+        Math.sin(speed * 1.4 + 3) * 0.3 + 0.2,
+        Math.sin(speed + 4.6) * 1.8
+      );
+      leaf1.rotation.y = speed * 1.5;
+      leaf1.rotation.z = Math.sin(speed * 2) * 0.4;
+
+      // Bio Leaf 2
+      leaf2.position.set(
+        Math.cos(speed + 5.3) * 1.55,
+        Math.sin(speed * 1.1 + 4) * 0.35 - 0.2,
+        Math.sin(speed + 5.3) * 1.55
+      );
+      leaf2.rotation.x = speed * 1.2;
+
+      // Orbiting Arrows positioning
+      arrows.forEach((arr, index) => {
+        const theta = speed * 1.1 + arr.offset;
+        arr.mesh.position.set(
+          Math.cos(theta) * arr.radius,
+          Math.sin(theta * 0.8) * 0.3,
+          Math.sin(theta) * arr.radius
+        );
+        arr.mesh.rotation.y = -theta;
+        arr.mesh.rotation.z = Math.PI / 2;
+      });
+
+      // Subtle particle float
+      particles.rotation.y += 0.0015;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  })();
+
+  // Landing Page Interactive Features
+  (function initLandingInteractions() {
+    const htmlEl = document.documentElement;
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeToggleIcon');
+
+    function updateThemeIcon() {
+      if (htmlEl.classList.contains('dark')) {
+        themeIcon.textContent = 'light_mode';
+      } else {
+        themeIcon.textContent = 'dark_mode';
+      }
+    }
+
+    if (themeBtn && themeIcon) {
+      updateThemeIcon();
+      themeBtn.addEventListener('click', () => {
+        htmlEl.classList.toggle('dark');
+        updateThemeIcon();
+      });
+    }
+
+    const startBtn = document.getElementById('startRecycleBtn');
+    if (startBtn) {
+      startBtn.addEventListener('click', () => {
+        startBtn.classList.add('scale-95');
+        setTimeout(() => startBtn.classList.remove('scale-95'), 150);
+      });
+    }
+  })();
+</script></main></body></html>

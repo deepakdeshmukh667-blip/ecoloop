@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Sora:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"secondary-fixed-dim":"#4edea3","on-tertiary-fixed-variant":"#004e5c","on-background":"#dfe2ed","surface-glass-border":"rgba(255, 255, 255, 0.08)","tertiary-container":"#009eb9","surface-container-lowest":"#0a0e15","error-container":"#93000a","inverse-primary":"#006a61","on-primary-fixed":"#00201d","primary-fixed":"#89f5e7","on-primary-container":"#00302b","on-secondary-fixed":"#002113","secondary-container":"#00a572","on-secondary-fixed-variant":"#005236","inverse-surface":"#dfe2ed","surface":"#0f131b","surface-variant":"#31353d","inverse-on-surface":"#2d3038","text-muted":"#94A3B8","on-tertiary-fixed":"#001f26","tertiary-fixed":"#acedff","tertiary-fixed-dim":"#4cd7f6","on-tertiary-container":"#002f38","primary-container":"#29a195","on-primary":"#003732","on-surface":"#dfe2ed","surface-container-high":"#262a32","on-surface-variant":"#bcc9c6","on-primary-fixed-variant":"#005049","surface-charcoal":"#0F172A","surface-glass-fill":"rgba(15, 23, 42, 0.65)","surface-bright":"#353941","error":"#ffb4ab","on-secondary":"#003824","on-tertiary":"#003640","surface-container":"#1c2027","surface-container-low":"#181c23","on-secondary-container":"#00311f","glow-cyan":"rgba(6, 182, 212, 0.18)","primary":"#6bd8cb","on-error-container":"#ffdad6","primary-fixed-dim":"#6bd8cb","secondary":"#4edea3","surface-dim":"#0f131b","outline":"#879391","surface-container-highest":"#31353d","outline-variant":"#3d4947","glow-emerald":"rgba(16, 185, 129, 0.15)","background":"#0f131b","tertiary":"#4cd7f6","surface-tint":"#6bd8cb","on-error":"#690005","secondary-fixed":"#6ffbbe"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xl":"2.5rem","space-2xl":"4rem","space-xs":"0.25rem","space-lg":"1.5rem","space-3xl":"6rem","space-md":"1rem","margin":"4rem","gutter":"1.5rem","gutter-mobile":"1rem","space-sm":"0.5rem","margin-mobile":"1.25rem"},"fontFamily":{"body-sm":["Manrope"],"body-xl":["Manrope"],"headline-md":["Sora"],"headline-xl-mobile":["Sora"],"body-md":["Manrope"],"label-md":["Sora"],"label-sm":["Sora"],"headline-lg":["Sora"],"display-hero":["Sora"],"code-mono":["JetBrains Mono"],"headline-sm":["Sora"],"display-hero-mobile":["Sora"],"headline-xl":["Sora"]},"fontSize":{"body-sm":["0.875rem",{"lineHeight":"1.4rem","fontWeight":"400"}],"body-xl":["1.25rem",{"lineHeight":"1.875rem","fontWeight":"400"}],"headline-md":["1.5rem",{"lineHeight":"2rem","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-xl-mobile":["2rem",{"lineHeight":"2.5rem","letterSpacing":"-0.02em","fontWeight":"600"}],"body-md":["1rem",{"lineHeight":"1.6rem","fontWeight":"400"}],"label-md":["0.875rem",{"lineHeight":"1.25rem","letterSpacing":"0.02em","fontWeight":"500"}],"label-sm":["0.75rem",{"lineHeight":"1rem","letterSpacing":"0.04em","fontWeight":"600"}],"headline-lg":["2rem",{"lineHeight":"2.5rem","letterSpacing":"-0.015em","fontWeight":"600"}],"display-hero":["4rem",{"lineHeight":"4.5rem","letterSpacing":"-0.03em","fontWeight":"700"}],"code-mono":["0.8125rem",{"lineHeight":"1.25rem","fontWeight":"400"}],"headline-sm":["1.25rem",{"lineHeight":"1.75rem","fontWeight":"500"}],"display-hero-mobile":["2.5rem",{"lineHeight":"3rem","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-xl":["3rem",{"lineHeight":"3.5rem","letterSpacing":"-0.025em","fontWeight":"600"}]}}}};</script></head><body class="bg-background font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 max-w-[1200px] mx-auto px-gutter flex items-center justify-between"><div class="flex items-center gap-space-md"><div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary shadow-[0_0_24px_-4px_rgba(13,148,136,0.35)]"><span class="material-symbols-outlined text-[24px]">eco</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">EcoLoop</span><span class="font-label-sm text-label-sm text-primary tracking-widest uppercase">Circular Tech</span></div></div><nav class="hidden md:flex items-center gap-space-xl" data-active-classes="text-primary font-semibold"><a aria-current="page" class="transition-colors text-primary font-semibold" data-path="features" href="#">Features</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="how-it-works" href="#">How It Works</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="impact" href="#">Impact</a></nav><div class="flex items-center gap-space-md"><button aria-label="Toggle color mode" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">dark_mode</span></button><a class="hidden sm:inline-flex font-label-md text-label-md text-on-surface-variant hover:text-on-surface px-space-sm py-space-xs transition-colors" data-path="sign-in" href="#">Sign In</a><a class="inline-flex items-center gap-space-xs px-space-lg py-space-sm rounded-full bg-secondary text-on-secondary font-label-md text-label-md hover:bg-secondary-fixed transition-all shadow-[0_0_24px_-4px_rgba(16,185,129,0.35)]" data-path="get-started" href="#"><span>Get Started</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background"><div class="flex flex-col w-full bg-[#f8fafc] text-surface-charcoal antialiased selection:bg-primary-fixed selection:text-on-primary-fixed relative overflow-hidden">
+<!-- Atmospheric Ambient Light Glows (Light Mode) -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[520px] bg-gradient-to-tr from-secondary/15 via-primary/20 to-tertiary/10 blur-[130px] rounded-full pointer-events-none -z-10"></div>
+<div class="absolute top-[750px] right-0 w-[600px] h-[500px] bg-gradient-to-bl from-primary/10 via-secondary/15 to-transparent blur-[120px] rounded-full pointer-events-none -z-10"></div>
+<div class="absolute top-[1600px] left-0 w-[550px] h-[450px] bg-gradient-to-tr from-tertiary/15 via-primary/10 to-transparent blur-[110px] rounded-full pointer-events-none -z-10"></div>
+<!-- Hero Section -->
+<section class="w-full max-w-[1200px] mx-auto px-gutter pt-space-xl pb-space-3xl flex flex-col items-center text-center relative">
+<!-- Eyebrow Pill -->
+<div class="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 shadow-sm mb-space-lg hover:border-emerald-500/40 transition-all duration-300 cursor-pointer">
+<span class="inline-block w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-[#005236] font-semibold tracking-wide">
+        Next-Gen AI Recycling • Powered by Computer Vision →
+      </span>
+</div>
+<!-- Main Headline -->
+<h1 class="font-display-hero text-display-hero text-surface-charcoal font-bold tracking-tight max-w-4xl mx-auto leading-[1.08] mb-space-md">
+      Recycle Smarter.<br/>
+<span class="bg-gradient-to-r from-[#10b981] via-[#14b8a6] to-[#0ea5e9] bg-clip-text text-transparent">
+        Live Greener. Close the Loop.
+      </span>
+</h1>
+<!-- Subtitle -->
+<p class="font-body-xl text-body-xl text-slate-600 max-w-2xl mx-auto mb-space-xl font-normal leading-relaxed">
+      AI-powered recycling that helps you identify waste, build better habits, and make every sustainable action count.
+    </p>
+<!-- CTAs -->
+<div class="flex flex-wrap items-center justify-center gap-space-md mb-space-xl">
+<a class="inline-flex items-center gap-space-xs px-8 py-3.5 rounded-full bg-gradient-to-r from-[#0D9488] to-[#10B981] text-white font-label-md text-label-md font-semibold hover:shadow-[0_0_28px_-2px_rgba(16,185,129,0.45)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200" data-path="get-started" href="#">
+<span>Start Recycling</span>
+<span class="material-symbols-outlined text-[19px]">arrow_forward</span>
+</a>
+<a class="inline-flex items-center gap-space-xs px-7 py-3.5 rounded-full bg-white/80 backdrop-blur-md border border-slate-200 text-slate-700 font-label-md text-label-md font-semibold hover:bg-slate-50 hover:border-emerald-300 hover:text-emerald-700 shadow-sm transition-all duration-200" href="#how-it-works">
+<span class="material-symbols-outlined text-[20px] text-teal-600">view_in_ar</span>
+<span>Explore EcoLoop</span>
+</a>
+</div>
+<!-- Trust Badges & Social Proof -->
+<div class="flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-slate-500 font-label-sm text-label-sm mb-space-2xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-[#10b981]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-medium text-slate-700">99.4% Recognition Accuracy</span>
+</div>
+<span class="text-slate-300">•</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-[#0ea5e9]">bolt</span>
+<span class="font-medium text-slate-700">Real-time Sorting Guides</span>
+</div>
+<span class="text-slate-300">•</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-[#14b8a6]">sync_alt</span>
+<span class="font-medium text-slate-700">Verified Material Traceability</span>
+</div>
+</div>
+<!-- 3D Interactive Container -->
+<div class="w-full relative rounded-2xl p-2 bg-gradient-to-b from-white/90 via-white/50 to-white/95 border border-emerald-100/80 shadow-[0_20px_50px_-15px_rgba(16,185,129,0.12)] backdrop-blur-md">
+<div class="relative w-full rounded-xl overflow-hidden bg-gradient-to-b from-emerald-50/60 via-teal-50/30 to-white border border-emerald-100/60 min-h-[520px]">
+<!-- Soft Radial Emerald / Teal Background Glow -->
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-400/20 via-teal-300/10 to-transparent pointer-events-none"></div>
+<!-- Live HUD Overlays -->
+<div class="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-emerald-200/60 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-[#10b981] animate-ping"></span>
+<span class="font-code-mono text-code-mono text-slate-700 font-semibold tracking-tight">360° Interactive Eco-Mesh</span>
+</div>
+<div class="absolute top-4 right-4 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-md border border-slate-200/80 shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-slate-500">touch_app</span>
+<span class="font-label-sm text-label-sm text-slate-600 font-medium">Drag to Orbit • Mouse Parallax Active</span>
+</div>
+<!-- Embedded Three.js 3D Sustainability Scene -->
+<!-- STITCH_THREEJS_START:ANIMATION_16 class="w-full h-[520px] bg-transparent block relative z-0" -->
+<div class="w-full h-[520px] bg-transparent block relative z-0" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_16" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_16');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  // Three.js Interactive 3D Sustainability Scene for EcoLoop
+const width = (container && container.clientWidth) ? container.clientWidth : 1100;
+const height = (container && container.clientHeight) ? container.clientHeight : 520;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
+camera.position.set(0, 0, 9);
+
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(width, height);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.3;
+container.appendChild(renderer.domElement);
+
+// Lighting designed for high contrast and pop on light/pearl backdrops
+const ambLight = new THREE.AmbientLight(0xffffff, 1.3);
+scene.add(ambLight);
+
+const keyLight = new THREE.DirectionalLight(0x059669, 2.8); // Emerald
+keyLight.position.set(5, 7, 6);
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0x0284c7, 2.4); // Deep Cyan
+fillLight.position.set(-6, -3, 5);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0x10b981, 1.8);
+rimLight.position.set(0, -6, -3);
+scene.add(rimLight);
+
+const centerPointLight = new THREE.PointLight(0x34d399, 2.5, 12);
+centerPointLight.position.set(0, 0, 1.5);
+scene.add(centerPointLight);
+
+// Master Interaction Group
+const masterGroup = new THREE.Group();
+scene.add(masterGroup);
+
+// 1. Central Emerald Eco-Core Orb
+const coreGeo = new THREE.SphereGeometry(1.25, 48, 48);
+const coreMat = new THREE.MeshPhongMaterial({
+  color: 0x059669,
+  emissive: 0x065f46,
+  emissiveIntensity: 0.5,
+  shininess: 90,
+  specular: 0xa7f3d0,
+  transparent: true,
+  opacity: 0.95
+});
+const coreOrb = new THREE.Mesh(coreGeo, coreMat);
+masterGroup.add(coreOrb);
+
+// Outer Frosted Ring
+const innerRingGeo = new THREE.TorusGeometry(1.65, 0.05, 16, 64);
+const innerRingMat = new THREE.MeshStandardMaterial({
+  color: 0x14b8a6,
+  roughness: 0.25,
+  metalness: 0.3,
+  transparent: true,
+  opacity: 0.85
+});
+const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+masterGroup.add(innerRing);
+
+// 2. Dual Circular Möbius Recycling Loop Tracks with Directional Cones
+const loopGroup = new THREE.Group();
+masterGroup.add(loopGroup);
+
+const orbitRadius = 2.9;
+const orbitCurve = new THREE.EllipseCurve(0, 0, orbitRadius, orbitRadius * 0.9, 0, 2 * Math.PI, false, 0);
+const points = orbitCurve.getPoints(90);
+const orbitGeo = new THREE.BufferGeometry().setFromPoints(points);
+const orbitMat = new THREE.LineBasicMaterial({ color: 0x0d9488, linewidth: 2, transparent: true, opacity: 0.85 });
+
+const orbitLine1 = new THREE.Line(orbitGeo, orbitMat);
+orbitLine1.rotation.x = Math.PI * 0.36;
+orbitLine1.rotation.y = Math.PI * 0.12;
+loopGroup.add(orbitLine1);
+
+const orbitLine2 = orbitLine1.clone();
+orbitLine2.rotation.x = -Math.PI * 0.34;
+orbitLine2.rotation.z = Math.PI * 0.28;
+loopGroup.add(orbitLine2);
+
+// Recycling Arrow Markers on the Track
+const arrowMat = new THREE.MeshPhongMaterial({ color: 0x047857, shininess: 80 });
+for (let i = 0; i < 3; i++) {
+  const angle = (i * Math.PI * 2) / 3;
+  const coneGeo = new THREE.ConeGeometry(0.14, 0.32, 16);
+  const arrowCone = new THREE.Mesh(coneGeo, arrowMat);
+  arrowCone.position.set(Math.cos(angle) * orbitRadius, Math.sin(angle) * (orbitRadius * 0.9), 0);
+  arrowCone.rotation.z = angle + Math.PI / 2;
+  orbitLine1.add(arrowCone);
+}
+
+// 3. Floating 3D Recyclable Objects
+const floatingItems = [];
+function addFloatingItem(mesh, initialPos, rotSpeed, floatSpeed, phase) {
+  const pivot = new THREE.Group();
+  pivot.position.copy(initialPos);
+  pivot.add(mesh);
+  masterGroup.add(pivot);
+  floatingItems.push({ pivot, mesh, basePos: initialPos.clone(), rotSpeed, floatSpeed, phase });
+}
+
+// Item A: Translucent Recycled Glass Bottle (Solid high-contrast cyan/teal)
+const bottleGroup = new THREE.Group();
+const bottleBodyGeo = new THREE.CylinderGeometry(0.24, 0.26, 0.82, 24);
+const bottleMat = new THREE.MeshPhongMaterial({
+  color: 0x0284c7,
+  emissive: 0x0369a1,
+  emissiveIntensity: 0.2,
+  shininess: 100,
+  specular: 0xbae6fd,
+  transparent: true,
+  opacity: 0.92
+});
+const bottleBody = new THREE.Mesh(bottleBodyGeo, bottleMat);
+bottleGroup.add(bottleBody);
+const neckGeo = new THREE.CylinderGeometry(0.1, 0.18, 0.32, 16);
+const neck = new THREE.Mesh(neckGeo, bottleMat);
+neck.position.y = 0.52;
+bottleGroup.add(neck);
+const capGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.1, 16);
+const capMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.3 });
+const cap = new THREE.Mesh(capGeo, capMat);
+cap.position.y = 0.72;
+bottleGroup.add(cap);
+addFloatingItem(bottleGroup, new THREE.Vector3(-2.6, 1.2, 0.8), { x: 0.008, y: 0.012, z: 0.005 }, 1.4, 0.2);
+
+// Item B: Aluminum Recyclable Soda Can
+const canGroup = new THREE.Group();
+const canBodyGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.72, 24);
+const canMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8, roughness: 0.25 });
+canGroup.add(new THREE.Mesh(canBodyGeo, canMat));
+const canBadgeGeo = new THREE.CylinderGeometry(0.285, 0.285, 0.3, 24, 1, true);
+const canBadgeMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+canGroup.add(new THREE.Mesh(canBadgeGeo, canBadgeMat));
+const canRimGeo = new THREE.TorusGeometry(0.27, 0.03, 12, 24);
+const rimMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.7, roughness: 0.3 });
+const rimTop = new THREE.Mesh(canRimGeo, rimMat);
+rimTop.rotation.x = Math.PI / 2;
+rimTop.position.y = 0.36;
+canGroup.add(rimTop);
+const rimBot = rimTop.clone();
+rimBot.position.y = -0.36;
+canGroup.add(rimBot);
+addFloatingItem(canGroup, new THREE.Vector3(2.6, -1.0, 1.0), { x: -0.01, y: 0.009, z: 0.006 }, 1.6, 1.8);
+
+// Item C: Sustainable Paper / Cardboard Package Box
+const boxGroup = new THREE.Group();
+const boxGeo = new THREE.BoxGeometry(0.68, 0.68, 0.68);
+const boxMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.65 });
+boxGroup.add(new THREE.Mesh(boxGeo, boxMat));
+const tapeGeo = new THREE.BoxGeometry(0.7, 0.16, 0.7);
+const tapeMat = new THREE.MeshBasicMaterial({ color: 0xfef3c7 });
+boxGroup.add(new THREE.Mesh(tapeGeo, tapeMat));
+boxGroup.rotation.set(0.4, 0.5, 0.2);
+addFloatingItem(boxGroup, new THREE.Vector3(2.4, 1.6, -0.6), { x: 0.007, y: -0.01, z: 0.004 }, 1.2, 3.4);
+
+// Item D: Botanical 3D Green Leaf Meshes
+function createLeaf() {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0);
+  shape.quadraticCurveTo(0.3, 0.45, 0, 0.95);
+  shape.quadraticCurveTo(-0.3, 0.45, 0, 0);
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.04, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.02, bevelThickness: 0.02 });
+  const mat = new THREE.MeshStandardMaterial({ color: 0x059669, emissive: 0x047857, emissiveIntensity: 0.3, roughness: 0.35, side: THREE.DoubleSide });
+  return new THREE.Mesh(geo, mat);
+}
+const leaf1 = createLeaf();
+leaf1.scale.set(1.2, 1.2, 1.2);
+addFloatingItem(leaf1, new THREE.Vector3(-2.1, -1.5, 1.1), { x: 0.01, y: 0.012, z: -0.006 }, 1.8, 2.5);
+
+const leaf2 = createLeaf();
+leaf2.scale.set(0.9, 0.9, 0.9);
+addFloatingItem(leaf2, new THREE.Vector3(0.5, 2.4, 0.5), { x: -0.01, y: 0.008, z: 0.01 }, 1.5, 4.2);
+
+// Item E: 3D Torus Knot Möbius Loop Emblem
+const mobiusGeo = new THREE.TorusKnotGeometry(0.38, 0.08, 64, 16, 2, 3);
+const mobiusMat = new THREE.MeshStandardMaterial({ color: 0x0891b2, roughness: 0.2, metalness: 0.5, emissive: 0x0e7490, emissiveIntensity: 0.3 });
+addFloatingItem(new THREE.Mesh(mobiusGeo, mobiusMat), new THREE.Vector3(-1.4, 2.0, -0.7), { x: 0.015, y: -0.014, z: 0.008 }, 2.0, 5.0);
+
+// 4. Bio-Luminescent Sustainability Particle Cloud
+const pCount = 130;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(pCount * 3);
+const pColors = new Float32Array(pCount * 3);
+const pPalette = [new THREE.Color(0x059669), new THREE.Color(0x0284c7), new THREE.Color(0x10b981), new THREE.Color(0x0d9488)];
+
+for (let i = 0; i < pCount; i++) {
+  const i3 = i * 3;
+  const r = 1.5 + Math.random() * 3.6;
+  const th = Math.random() * Math.PI * 2;
+  const ph = (Math.random() - 0.5) * Math.PI;
+  pPos[i3] = r * Math.cos(ph) * Math.sin(th);
+  pPos[i3 + 1] = r * Math.sin(ph);
+  pPos[i3 + 2] = r * Math.cos(ph) * Math.cos(th);
+  const c = pPalette[Math.floor(Math.random() * pPalette.length)];
+  pColors[i3] = c.r; pColors[i3 + 1] = c.g; pColors[i3 + 2] = c.b;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+const pMat = new THREE.PointsMaterial({ size: 0.09, vertexColors: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending });
+masterGroup.add(new THREE.Points(pGeo, pMat));
+
+// Mouse Parallax & Window Resize handling
+let targetMouseX = 0, targetMouseY = 0, mouseX = 0, mouseY = 0;
+function onMouseMove(e) {
+  const rect = container.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  targetMouseX = ((x / rect.width) * 2 - 1) * 0.5;
+  targetMouseY = (-(y / rect.height) * 2 + 1) * 0.4;
+}
+window.addEventListener('mousemove', onMouseMove);
+
+function onResize() {
+  const w = container.clientWidth || window.innerWidth || 1100;
+  const h = container.clientHeight || 520;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+
+// Render loop
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+  mouseX += (targetMouseX - mouseX) * 0.05;
+  mouseY += (targetMouseY - mouseY) * 0.05;
+
+  masterGroup.rotation.y = time * 0.15 + mouseX;
+  masterGroup.rotation.x = Math.sin(time * 0.2) * 0.05 + mouseY * 0.5;
+
+  const pulse = 1.0 + Math.sin(time * 2.2) * 0.04;
+  coreOrb.scale.set(pulse, pulse, pulse);
+  coreOrb.rotation.y = time * 0.3;
+  innerRing.rotation.z = -time * 0.4;
+
+  loopGroup.rotation.z = time * 0.2;
+  loopGroup.rotation.y = Math.sin(time * 0.15) * 0.2;
+
+  for (let i = 0; i < floatingItems.length; i++) {
+    const it = floatingItems[i];
+    it.pivot.position.y = it.basePos.y + Math.sin(time * it.floatSpeed + it.phase) * 0.18;
+    it.pivot.position.x = it.basePos.x + Math.cos(time * it.floatSpeed * 0.7 + it.phase) * 0.1;
+    it.mesh.rotation.x += it.rotSpeed.x;
+    it.mesh.rotation.y += it.rotSpeed.y;
+    it.mesh.rotation.z += it.rotSpeed.z;
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_16 -->
+<!-- Ambient Bottom Scrim for seamless blend -->
+<div class="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t from-white via-white/70 to-transparent pointer-events-none z-10"></div>
+</div>
+<!-- EcoLoop Intelligence Matrix Card (Floating Overlap) -->
+<div class="relative sm:-mt-12 mx-auto max-w-4xl z-30 p-space-md sm:p-space-lg rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_16px_36px_-8px_rgba(15,23,42,0.08)]">
+<div class="flex flex-col gap-space-md">
+<div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#0D9488] text-[20px]">hub</span>
+<span class="font-headline-sm text-headline-sm text-slate-900 font-semibold">EcoLoop Intelligence Matrix</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#005236] font-code-mono text-code-mono font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+              STREAM ACTIVE
+            </div>
+</div>
+<!-- Real-Time Metrics Strip -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Metric 1 -->
+<div class="p-3.5 rounded-xl bg-slate-50/70 border border-slate-100 flex items-center justify-between">
+<div class="flex flex-col text-left">
+<span class="font-label-sm text-label-sm text-slate-500 font-medium">Eco Habit Index</span>
+<span class="font-headline-md text-headline-md text-slate-900 font-bold">92%</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  ↑ +4% this week
+                </span>
+<span class="text-[11px] text-slate-400 mt-1">Tier: Sovereign</span>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="p-3.5 rounded-xl bg-slate-50/70 border border-slate-100 flex items-center justify-between">
+<div class="flex flex-col text-left">
+<span class="font-label-sm text-label-sm text-slate-500 font-medium">Recycling Points</span>
+<span class="font-headline-md text-headline-md text-slate-900 font-bold">1,240</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="inline-flex items-center text-xs font-semibold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">
+                  +180 pts today
+                </span>
+<span class="text-[11px] text-slate-400 mt-1">32.4 kg CO₂ saved</span>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="p-3.5 rounded-xl bg-slate-50/70 border border-slate-100 flex items-center justify-between">
+<div class="flex flex-col text-left">
+<span class="font-label-sm text-label-sm text-slate-500 font-medium">Verified Scans</span>
+<span class="font-headline-md text-headline-md text-slate-900 font-bold">86 <span class="font-body-sm text-body-sm font-normal text-slate-500">items</span></span>
+</div>
+<div class="flex flex-col items-end">
+<span class="inline-flex items-center text-xs font-semibold text-cyan-800 bg-cyan-100 px-2 py-0.5 rounded-full">
+                  Zero Error Rate
+                </span>
+<span class="text-[11px] text-slate-400 mt-1">100% compliant</span>
+</div>
+</div>
+</div>
+<!-- Live Feed Ticker -->
+<div class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-200/50 text-left">
+<span class="material-symbols-outlined text-emerald-600 text-[18px]">sensors</span>
+<div class="flex-1 font-code-mono text-code-mono text-slate-700 overflow-hidden text-ellipsis whitespace-nowrap">
+<span class="font-bold text-emerald-800">FEED:</span> PET Bottle Sorted • <span class="text-teal-700 font-medium">+15 pts credited</span> • 2.4s classification • Hub #402 • <span class="text-slate-500">Just now</span>
+</div>
+<span class="text-xs text-slate-400 font-mono hidden sm:inline-block">Sync 12ms</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- StockFlow Inspired SaaS Feature Section -->
+<section class="w-full max-w-[1200px] mx-auto px-gutter py-space-2xl relative">
+<!-- Section Header -->
+<div class="max-w-3xl mb-space-2xl text-left">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 font-label-sm text-label-sm mb-3">
+<span class="material-symbols-outlined text-[16px] text-teal-600">precision_manufacturing</span>
+<span>High-Precision Infrastructure</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-slate-900 font-bold tracking-tight mb-space-sm leading-tight">
+        Engineered for Zero Waste Ecosystems
+      </h2>
+<p class="font-body-lg text-slate-600 text-body-md max-w-2xl leading-relaxed">
+        Hardware-agnostic computer vision algorithms trained on over 2.4 million material samples for instantaneous sorting guidance.
+      </p>
+</div>
+<!-- 3 Clean Grid Feature Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg mb-space-2xl">
+<!-- Feature Card 1 -->
+<div class="group flex flex-col p-space-lg rounded-2xl bg-white border border-slate-200 hover:border-emerald-400 hover:shadow-[0_16px_32px_-6px_rgba(16,185,129,0.12)] transition-all duration-300">
+<div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-space-md group-hover:scale-110 transition-transform duration-200">
+<span class="material-symbols-outlined text-[26px]">speed</span>
+</div>
+<div class="inline-flex items-center gap-2 mb-2 font-code-mono text-xs text-emerald-700 font-semibold bg-emerald-50/80 px-2 py-0.5 rounded w-fit">
+<span>&lt;85ms LATENCY</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-slate-900 font-bold mb-space-xs">
+          Sub-Second Classification
+        </h3>
+<p class="font-body-md text-body-md text-slate-600 leading-relaxed mb-space-md flex-1">
+          Deep neural vision isolates mixed polymers, bioplastics, non-rigid films, and composite multilayer packaging under variable natural lighting conditions.
+        </p>
+<div class="pt-space-sm border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span>Accuracy rate: 99.4%</span>
+<span class="material-symbols-outlined text-[18px] text-emerald-600 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Feature Card 2 -->
+<div class="group flex flex-col p-space-lg rounded-2xl bg-white border border-slate-200 hover:border-teal-400 hover:shadow-[0_16px_32px_-6px_rgba(20,184,166,0.12)] transition-all duration-300">
+<div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-space-md group-hover:scale-110 transition-transform duration-200">
+<span class="material-symbols-outlined text-[26px]">share_location</span>
+</div>
+<div class="inline-flex items-center gap-2 mb-2 font-code-mono text-xs text-teal-700 font-semibold bg-teal-50/80 px-2 py-0.5 rounded w-fit">
+<span>1,400+ ACTIVE HUBS</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-slate-900 font-bold mb-space-xs">
+          Local Facility Dispatch
+        </h3>
+<p class="font-body-md text-body-md text-slate-600 leading-relaxed mb-space-md flex-1">
+          Dynamic municipal routing rules synced continuously with regional MRFs, specialized electronics recyclers, and chemical downcycling plants.
+        </p>
+<div class="pt-space-sm border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span>Geo-mesh verified</span>
+<span class="material-symbols-outlined text-[18px] text-teal-600 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Feature Card 3 -->
+<div class="group flex flex-col p-space-lg rounded-2xl bg-white border border-slate-200 hover:border-cyan-400 hover:shadow-[0_16px_32px_-6px_rgba(14,165,233,0.12)] transition-all duration-300">
+<div class="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center mb-space-md group-hover:scale-110 transition-transform duration-200">
+<span class="material-symbols-outlined text-[26px]">token</span>
+</div>
+<div class="inline-flex items-center gap-2 mb-2 font-code-mono text-xs text-cyan-700 font-semibold bg-cyan-50/80 px-2 py-0.5 rounded w-fit">
+<span>100% ON-CHAIN</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-slate-900 font-bold mb-space-xs">
+          EcoCredit Liquidity
+        </h3>
+<p class="font-body-md text-body-md text-slate-600 leading-relaxed mb-space-md flex-1">
+          Instantly convert validated waste deposits into utility credits for public transit vouchers, grocery micro-rebates, and verified Gold Standard carbon offsets.
+        </p>
+<div class="pt-space-sm border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+<span>Instant ledger settlement</span>
+<span class="material-symbols-outlined text-[18px] text-cyan-600 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Visual Storytelling Metric Bar -->
+<div class="p-space-lg rounded-2xl bg-slate-900 text-white flex flex-col lg:flex-row items-center justify-between gap-space-lg shadow-xl relative overflow-hidden mb-space-2xl">
+<div class="absolute right-0 top-0 w-96 h-96 bg-gradient-to-bl from-emerald-500/20 via-teal-500/20 to-transparent blur-3xl pointer-events-none"></div>
+<div class="flex flex-col text-left z-10 max-w-xl">
+<span class="font-label-sm text-label-sm text-emerald-400 font-semibold uppercase tracking-wider mb-2">Automated Environmental Ledger</span>
+<h4 class="font-headline-md text-headline-md font-bold mb-2">Over 38,400 Metric Tons of Ocean-Bound Plastics Diverted in 2024</h4>
+<p class="font-body-sm text-body-sm text-slate-400">Deployed across 42 smart cities and university campuses across North America &amp; Europe with certified chain-of-custody.</p>
+</div>
+<div class="flex flex-wrap items-center gap-space-lg z-10">
+<div class="flex flex-col">
+<span class="font-headline-lg text-headline-lg font-bold text-white tracking-tight">4.2M+</span>
+<span class="font-label-sm text-label-sm text-slate-400">Monthly Scans</span>
+</div>
+<div class="w-px h-12 bg-slate-800 hidden sm:block"></div>
+<div class="flex flex-col">
+<span class="font-headline-lg text-headline-lg font-bold text-emerald-400 tracking-tight">95.8%</span>
+<span class="font-label-sm text-label-sm text-slate-400">Campus Diversion Avg</span>
+</div>
+</div>
+</div>
+<!-- Enterprise/Community CTA Banner -->
+<div class="w-full rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-cyan-50 border border-emerald-200/80 p-space-xl sm:p-space-2xl flex flex-col md:flex-row items-center justify-between gap-space-lg text-left shadow-sm">
+<div class="max-w-xl">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/70 text-[#005236] font-label-sm text-label-sm font-semibold mb-3">
+<span class="material-symbols-outlined text-[16px]">domain</span>
+          Institutional Partnership Program
+        </div>
+<h3 class="font-headline-lg text-headline-lg text-slate-900 font-bold mb-space-xs">
+          Empower your campus or city to reach 95%+ diversion rates
+        </h3>
+<p class="font-body-md text-body-md text-slate-600">
+          Integrate EcoLoop's turnkey optical sorting APIs into municipal bins, reverse vending machines, or resident mobile suites within 48 hours.
+        </p>
+</div>
+<div class="flex flex-col sm:flex-row items-center gap-space-sm w-full sm:w-auto">
+<button class="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-8 py-3.5 rounded-full bg-slate-900 text-white font-label-md text-label-md font-semibold hover:bg-slate-800 transition-all duration-200 shadow-md" type="button">
+<span>Book Live Demo</span>
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+</button>
+<button class="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-6 py-3.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:border-slate-300 font-label-md text-label-md font-semibold hover:bg-slate-50 transition-all duration-200" type="button">
+<span>Download Whitepaper</span>
+</button>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-surface-container-lowest py-space-2xl"><div class="max-w-[1200px] mx-auto px-gutter flex flex-col md:flex-row items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md"><div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[20px]">eco</span></div><span class="font-body-sm text-body-sm text-on-surface-variant">© 2025 EcoLoop Circular Tech Systems. All rights reserved.</span></div><div class="flex items-center gap-space-lg"><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="privacy-policy" href="#">Privacy Policy</a><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="terms-of-service" href="#">Terms of Service</a><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Security</a></div></div></footer></body></html>
